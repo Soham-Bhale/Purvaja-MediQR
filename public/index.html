@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard - Purvaja MediQR</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<main>
+
+<h1>Purvaja MediQR</h1>
+
+<div id="profile-card">
+
+<p id="name"></p>
+<p id="blood"></p>
+<p id="allergies"></p>
+<p id="emergency"></p>
+
+</div>
+
+<h2>Your QR Code</h2>
+
+<img id="qr" alt="QR Code">
+
+<p>Public Profile URL</p>
+
+<a id="profile" class="url-box" href="#" target="_blank"></a>
+
+<a class="logout" href="/logout">Logout</a>
+
+</main>
+
+<script>
+fetch("/api/dashboard")
+.then(res => res.json())
+.then(data => {
+
+document.getElementById("name").innerText =
+"Name: " + (data.name || "N/A");
+
+document.getElementById("blood").innerText =
+"Blood Group: " + (data.blood_group || "N/A");
+
+document.getElementById("allergies").innerText =
+"Allergies: " + (data.allergies || "N/A");
+
+document.getElementById("emergency").innerText =
+"Emergency Contact: " + (data.emergency_contact || "N/A");
+
+if(data.qrDataUrl){
+document.getElementById("qr").src = data.qrDataUrl;
+}
+
+const profileLink=document.getElementById("profile");
+
+profileLink.href=data.profileUrl || "#";
+profileLink.innerText=data.profileUrl || "Profile unavailable";
+
+});
+</script>
+
+</body>
+</html>

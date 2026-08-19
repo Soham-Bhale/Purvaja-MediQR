@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Signup - Purvaja MediQR</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<main>
+
+<h1>Create Account</h1>
+
+<form action="/signup" method="POST">
+
+<label>Name</label>
+<input type="text" name="name" required>
+
+<label>Email</label>
+<input type="email" name="email" required>
+
+<label>Password</label>
+<input type="password" name="password" required>
+
+<label>Blood Group</label>
+<input type="text" name="blood_group" placeholder="e.g. O+">
+
+<label>Allergies</label>
+<input type="text" name="allergies" placeholder="Optional">
+
+<label>Emergency Contact</label>
+<input type="text" name="emergency_contact" placeholder="Phone Number">
+
+<button type="submit">Create Account</button>
+
+</form>
+
+<div class="auth-link">
+Already have an account?
+<a href="/login.html">Login</a>
+</div>
+
+</main>
+
+</body>
+</html>

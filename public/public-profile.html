@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Emergency Profile - Purvaja MediQR</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<main>
+
+<h1>Emergency Info</h1>
+
+<div id="profile">
+
+<p id="name"><em>Loading...</em></p>
+
+<p>Blood Group: <span id="bg"></span></p>
+
+<p>Allergies: <span id="allergies"></span></p>
+
+<p>Emergency Contact: <span id="emergency"></span></p>
+
+</div>
+
+<p class="info">
+If this is a real emergency, call local emergency services first.
+</p>
+
+</main>
+
+<script>
+async function loadPublic(){
+
+const token=location.pathname.split("/").pop();
+
+const res=await fetch("/api/public/"+token);
+
+if(!res.ok){
+
+document.getElementById("profile").innerHTML="<p>Profile not found.</p>";
+return;
+
+}
+
+const data=await res.json();
+
+document.getElementById("name").innerText=data.name||"Unknown";
+document.getElementById("bg").innerText=data.blood_group||"-";
+document.getElementById("allergies").innerText=data.allergies||"-";
+document.getElementById("emergency").innerText=data.emergency_contact||"-";
+
+}
+
+loadPublic();
+</script>
+
+</body>
+</html>
