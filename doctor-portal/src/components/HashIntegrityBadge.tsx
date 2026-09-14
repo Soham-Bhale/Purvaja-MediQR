@@ -19,28 +19,31 @@ export default function HashIntegrityBadge({
 }: HashIntegrityBadgeProps) {
   if (isTamperFree) {
     return (
-      <div className="sunken-panel p-3 border-2 border-green-800 bg-[#eef7ee] mb-3 text-black font-sans">
-        <div className="flex items-center space-x-2 pb-2 border-b border-green-700">
-          <span className="w-4 h-4 rounded-full bg-green-700 text-white font-bold text-[10px] flex items-center justify-center">
+      <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 text-emerald-950 mb-4 shadow-sm">
+        <div className="flex items-center gap-2.5 pb-2.5 border-b border-emerald-200">
+          <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
             ✓
-          </span>
-          <span className="font-bold text-xs text-green-900 uppercase tracking-wide">
-            [VERIFIED] Tamper-Free: Document Fingerprint Matches Blockchain Ledger (100%)
-          </span>
+          </div>
+          <div>
+            <span className="font-semibold text-sm text-emerald-900 tracking-tight">
+              Tamper-Free: SHA-256 Fingerprint Verified On-Chain
+            </span>
+            <span className="ml-2 text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">100% Match</span>
+          </div>
         </div>
 
-        <p className="text-[11px] text-gray-700 mt-1.5 leading-tight">
-          Cryptographic document checksum is verified against <strong>MedicalRecordLedger.sol</strong>. Authorized in-memory AES-256-GCM decryption.
+        <p className="text-xs text-emerald-800 mt-2">
+          Off-chain document checksum matches the immutable on-chain record in <code className="font-mono bg-emerald-100 px-1 py-0.5 rounded text-emerald-900">MedicalRecordLedger.sol</code>. In-memory AES-256-GCM decryption granted.
         </p>
 
-        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono">
-          <div className="bg-white p-1.5 border border-gray-400">
-            <span className="text-gray-500 font-bold block">TARGET HASH (ON-CHAIN):</span>
-            <span className="text-green-900 font-bold truncate block select-all">{expectedHash}</span>
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
+          <div className="bg-white/80 p-2.5 rounded-lg border border-emerald-200">
+            <span className="text-[10px] text-slate-500 font-semibold block uppercase">Target Hash (On-Chain)</span>
+            <span className="text-emerald-900 font-medium truncate block select-all mt-0.5">{expectedHash}</span>
           </div>
-          <div className="bg-white p-1.5 border border-gray-400">
-            <span className="text-gray-500 font-bold block">COMPUTED DOCUMENT HASH (SHA-256):</span>
-            <span className="text-green-900 font-bold truncate block select-all">{computedHash}</span>
+          <div className="bg-white/80 p-2.5 rounded-lg border border-emerald-200">
+            <span className="text-[10px] text-slate-500 font-semibold block uppercase">Computed Document Hash (SHA-256)</span>
+            <span className="text-emerald-900 font-medium truncate block select-all mt-0.5">{computedHash}</span>
           </div>
         </div>
       </div>
@@ -49,34 +52,37 @@ export default function HashIntegrityBadge({
 
   // TAMPER DETECTED
   return (
-    <div className="sunken-panel p-3 border-2 border-red-700 bg-[#ffebee] mb-3 text-black font-sans animate-pulse">
-      <div className="flex items-center space-x-2 pb-2 border-b border-red-700">
-        <span className="w-4 h-4 bg-red-700 text-white font-bold text-[11px] flex items-center justify-center">
+    <div className="p-4 rounded-xl border-2 border-rose-300 bg-rose-50 text-rose-950 mb-4 shadow-sm animate-pulse">
+      <div className="flex items-center gap-2.5 pb-2.5 border-b border-rose-200">
+        <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
           !
-        </span>
-        <span className="font-bold text-xs text-red-900 uppercase tracking-wide">
-          [CRITICAL SECURITY ALERT] Tamper Detected: Record Compromised
-        </span>
+        </div>
+        <div>
+          <span className="font-bold text-sm text-rose-900 tracking-tight">
+            Security Alert: Cryptographic Tampering Detected
+          </span>
+          <span className="ml-2 text-xs bg-rose-200 text-rose-900 px-2 py-0.5 rounded-full font-bold">Integrity Violation</span>
+        </div>
       </div>
 
-      <p className="text-[11px] text-red-900 font-bold mt-1.5 leading-tight">
-        INTEGRITY VIOLATION: The calculated SHA-256 fingerprint of the off-chain hospital file differs from the immutable blockchain ledger entry! In-memory decryption was ABORTED immediately.
+      <p className="text-xs text-rose-900 font-medium mt-2">
+        CRITICAL: The SHA-256 checksum of the off-chain hospital file differs from the immutable ledger! Decryption was aborted immediately to protect patient safety.
       </p>
 
       {tamperReason && (
-        <div className="mt-1.5 text-[10px] bg-red-100 p-1.5 border border-red-300 text-red-950 font-mono">
+        <div className="mt-2 text-xs bg-rose-100/90 p-2 rounded-lg border border-rose-200 text-rose-950 font-mono">
           Forensic Cause: {tamperReason}
         </div>
       )}
 
-      <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] font-mono">
-        <div className="bg-white p-1.5 border border-gray-400">
-          <span className="text-gray-500 font-bold block">EXPECTED ON-CHAIN FINGERPRINT:</span>
-          <span className="text-gray-800 font-bold truncate block select-all">{expectedHash}</span>
+      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
+        <div className="bg-white p-2.5 rounded-lg border border-slate-300">
+          <span className="text-[10px] text-slate-500 font-semibold block uppercase">Expected On-Chain Fingerprint</span>
+          <span className="text-slate-800 font-medium truncate block select-all mt-0.5">{expectedHash}</span>
         </div>
-        <div className="bg-white p-1.5 border border-red-600 bg-red-50">
-          <span className="text-red-700 font-bold block">⚠️ COMPROMISED FILE HASH (MUTATED):</span>
-          <span className="text-red-700 font-bold truncate block select-all">{computedHash}</span>
+        <div className="bg-white p-2.5 rounded-lg border-2 border-rose-400 bg-rose-50/50">
+          <span className="text-[10px] text-rose-700 font-semibold block uppercase">Mutated Document Hash</span>
+          <span className="text-rose-700 font-bold truncate block select-all mt-0.5">{computedHash}</span>
         </div>
       </div>
     </div>

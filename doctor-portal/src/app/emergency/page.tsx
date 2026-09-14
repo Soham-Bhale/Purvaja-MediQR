@@ -79,28 +79,35 @@ export default function EmergencyTriagePage() {
   }, []);
 
   return (
-    <div className="space-y-3 font-sans text-black">
-      {/* Title */}
-      <div className="bg-[#0a246a] text-white p-2 border border-black flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] text-yellow-300 font-mono font-bold block">
-            [ PARAMEDIC & TRIAGE TERMINAL - OFFLINE DEPLOYED ]
-          </span>
-          <h1 className="text-sm font-bold tracking-wide">
-            Emergency Medical QR Scanner & Parser
+          <div className="flex items-center gap-2 text-xs font-semibold text-rose-600 uppercase tracking-wider">
+            <span>🚑</span> First-Responder Triage Terminal
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 mt-1">
+            Emergency Medical QR Scanner
           </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Offline unauthenticated optical scan parser showing critical allergies, blood group, and emergency contacts.
+          </p>
         </div>
-        <span className="text-xs bg-red-700 text-white font-bold px-2 py-0.5 border border-white">
-          EMERGENCY MODE
+
+        <span className="bg-rose-50 border border-rose-200 text-rose-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span>
+          Emergency Mode Active
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* Left: Input Console */}
-        <div className="space-y-3 lg:col-span-1">
-          <fieldset className="swing-fieldset">
-            <legend>Select Sample Optical Scan</legend>
-            <div className="space-y-1.5 pt-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Input Controls */}
+        <div className="space-y-6 lg:col-span-1">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
+              Sample Optical Scans
+            </h2>
+            <div className="space-y-2">
               {PRESETS.map((preset, idx) => (
                 <button
                   key={idx}
@@ -108,35 +115,36 @@ export default function EmergencyTriagePage() {
                     setActivePresetIndex(idx);
                     handleParse(preset.payload);
                   }}
-                  className={`w-full text-left p-1.5 text-xs font-sans border flex items-center justify-between cursor-pointer ${
+                  className={`w-full text-left p-3 text-xs rounded-lg border transition ${
                     activePresetIndex === idx
-                      ? 'bg-[#0a246a] text-white border-black font-bold'
-                      : 'bg-white text-black border-gray-400 hover:bg-[#f0ede0]'
+                      ? 'border-blue-500 bg-blue-50/50 text-blue-900 font-semibold shadow-xs'
+                      : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                   }`}
                 >
-                  <span>{preset.name}</span>
-                  {activePresetIndex === idx && <span>[ACTIVE]</span>}
+                  {preset.name}
                 </button>
               ))}
             </div>
-          </fieldset>
+          </div>
 
-          <fieldset className="swing-fieldset">
-            <legend>Raw QR Optical Payload (JSON)</legend>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-3">
+            <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+              Optical QR Payload (JSON)
+            </h2>
             <textarea
               rows={8}
               value={qrRawInput}
               onChange={(e) => handleParse(e.target.value)}
               aria-label="Raw QR Optical Payload"
-              placeholder="Paste raw QR optical payload JSON..."
-              className="sunken-box w-full font-mono text-[11px] leading-tight"
+              placeholder="Paste raw QR payload JSON here..."
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 font-mono text-xs text-slate-800 leading-tight focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
             {parseErrors.length > 0 && (
-              <div className="bg-red-100 border border-red-800 text-red-900 p-1.5 text-xs font-mono mt-1">
-                ERROR: {parseErrors.join(', ')}
+              <div className="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-lg text-xs font-mono">
+                {parseErrors.join(', ')}
               </div>
             )}
-          </fieldset>
+          </div>
         </div>
 
         {/* Right: Rendered Vitals Card */}
@@ -144,8 +152,8 @@ export default function EmergencyTriagePage() {
           {parsedTriage ? (
             <TriageCard triage={parsedTriage} patientHash={patientHash || undefined} />
           ) : (
-            <div className="sunken-panel p-8 text-center text-gray-500 font-mono text-xs">
-              [ NO VALID MEDIQR DATA LOADED ]
+            <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-400 font-mono text-xs shadow-sm">
+              No valid MediQR payload loaded.
             </div>
           )}
         </div>

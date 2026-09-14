@@ -10,17 +10,31 @@ interface NavbarProps {
   onDoctorChange: (address: string) => void;
 }
 
+const DOCTOR_OPTIONS = [
+  {
+    address: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8',
+    name: 'Dr. Ramesh Gupta',
+    hospital: 'Apollo Speciality',
+    verified: true,
+  },
+  {
+    address: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc',
+    name: 'Dr. Ananya Sharma',
+    hospital: 'Fortis Healthcare',
+    verified: true,
+  },
+  {
+    address: '0x15d34aaf54267db7d7c367839aaf71a00a2c6a65',
+    name: 'Dr. John Unverified',
+    hospital: 'External Clinic (Unverified)',
+    verified: false,
+  },
+];
+
 export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   const pathname = usePathname();
   const [nodeAStatus, setNodeAStatus] = useState<'UP' | 'DOWN' | 'CHECKING'>('CHECKING');
   const [nodeBStatus, setNodeBStatus] = useState<'UP' | 'DOWN' | 'CHECKING'>('CHECKING');
-  const [currentTime, setCurrentTime] = useState<string>('');
-
-  useEffect(() => {
-    setCurrentTime(new Date().toLocaleTimeString());
-    const clock = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
-    return () => clearInterval(clock);
-  }, []);
 
   useEffect(() => {
     async function checkHealth() {
@@ -42,116 +56,142 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
     return () => clearInterval(interval);
   }, []);
 
+  const navLinks = [
+    { href: '/', label: 'Overview', icon: '📊' },
+    { href: '/emergency', label: 'Triage Scanner', icon: '🚑' },
+    { href: '/doctor', label: 'Doctor Verification', icon: '🩺' },
+    { href: '/hospital', label: 'Hospital Hub', icon: '🏥' },
+    { href: '/simulator', label: 'Tamper Lab', icon: '⚡' },
+  ];
+
+  const currentDoc = DOCTOR_OPTIONS.find(
+    (d) => d.address.toLowerCase() === activeDoctor.toLowerCase()
+  ) || {
+    address: activeDoctor,
+    name: VERIFIED_DOCTORS[activeDoctor.toLowerCase()]?.name || 'Practitioner',
+    hospital: VERIFIED_DOCTORS[activeDoctor.toLowerCase()]?.hospital || 'Consortium Node',
+    verified: !!VERIFIED_DOCTORS[activeDoctor.toLowerCase()],
+  };
+
   return (
-    <div className="bg-[#ece9d8] border-b-2 border-[#404040] select-none text-black">
-      {/* 1. Classic Windows/Java Application Titlebar */}
-      <div className="swing-titlebar">
-        <div className="flex items-center space-x-2">
-          <span className="w-3.5 h-3.5 bg-red-600 text-white text-[10px] font-bold flex items-center justify-center border border-white">
-            +
-          </span>
-          <span className="font-bold tracking-tight text-white text-[11px] font-sans">
-            MediQR Clinical Archive Console v2.0 [Java SE Runtime Enterprise Edition]
-          </span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button type="button" aria-label="Minimize" className="w-4 h-4 bg-[#ece9d8] text-black border-t border-l border-white border-b-black border-r-black text-[9px] font-bold leading-none flex items-center justify-center">
-            _
-          </button>
-          <button type="button" aria-label="Maximize" className="w-4 h-4 bg-[#ece9d8] text-black border-t border-l border-white border-b-black border-r-black text-[9px] font-bold leading-none flex items-center justify-center">
-            □
-          </button>
-          <button type="button" aria-label="Close" className="w-4 h-4 bg-[#ece9d8] text-black border-t border-l border-white border-b-black border-r-black text-[9px] font-bold leading-none flex items-center justify-center">
-            ×
-          </button>
-        </div>
-      </div>
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm font-bold text-lg group-hover:bg-blue-700 transition">
+                +
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-slate-900 text-base tracking-tight">MediQR</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">v2.0</span>
+                </div>
+                <p className="text-[11px] text-slate-500 hidden sm:block">Tamper-Proof Healthcare Ledger</p>
+              </div>
+            </Link>
 
-      {/* 2. Classic Java JMenuBar */}
-      <div className="flex items-center space-x-4 px-2 py-1 bg-[#ece9d8] border-b border-[#a0a0a0] text-xs font-normal">
-        <span className="hover:bg-[#0a246a] hover:text-white px-1.5 py-0.5 cursor-pointer"><u>F</u>ile</span>
-        <span className="hover:bg-[#0a246a] hover:text-white px-1.5 py-0.5 cursor-pointer"><u>E</u>dit</span>
-        <span className="hover:bg-[#0a246a] hover:text-white px-1.5 py-0.5 cursor-pointer"><u>V</u>iew</span>
-        <span className="hover:bg-[#0a246a] hover:text-white px-1.5 py-0.5 cursor-pointer"><u>P</u>ractitioner</span>
-        <span className="hover:bg-[#0a246a] hover:text-white px-1.5 py-0.5 cursor-pointer"><u>T</u>ools</span>
-        <span className="hover:bg-[#0a246a] hover:text-white px-1.5 py-0.5 cursor-pointer"><u>S</u>ecurity</span>
-        <span className="hover:bg-[#0a246a] hover:text-white px-1.5 py-0.5 cursor-pointer"><u>H</u>elp</span>
-      </div>
-
-      {/* 3. Classic Java JToolBar Navigation */}
-      <div className="flex flex-wrap items-center justify-between px-2 py-1.5 bg-[#ece9d8] gap-2 border-b border-[#ffffff]">
-        <div className="flex items-center space-x-1.5">
-          <Link
-            href="/"
-            className={`btn-swing ${pathname === '/' ? 'bg-[#dcd8c4] border-t-[#404040] border-l-[#404040] border-b-white border-r-white font-bold' : ''}`}
-          >
-            🏠 System Overview
-          </Link>
-
-          <Link
-            href="/emergency"
-            className={`btn-swing ${pathname === '/emergency' ? 'bg-[#dcd8c4] border-t-[#404040] border-l-[#404040] border-b-white border-r-white font-bold' : ''}`}
-          >
-            🚑 Triage Terminal
-          </Link>
-
-          <Link
-            href="/doctor"
-            className={`btn-swing ${pathname === '/doctor' ? 'bg-[#dcd8c4] border-t-[#404040] border-l-[#404040] border-b-white border-r-white font-bold text-[#000080]' : ''}`}
-          >
-            🩺 Doctor Verification
-          </Link>
-
-          <Link
-            href="/hospital"
-            className={`btn-swing ${pathname === '/hospital' ? 'bg-[#dcd8c4] border-t-[#404040] border-l-[#404040] border-b-white border-r-white font-bold' : ''}`}
-          >
-            🏥 Hospital Admin
-          </Link>
-
-          <Link
-            href="/simulator"
-            className={`btn-swing ${pathname === '/simulator' ? 'bg-[#dcd8c4] border-t-[#404040] border-l-[#404040] border-b-white border-r-white font-bold text-red-700' : ''}`}
-          >
-            ⚡ Tamper Lab
-          </Link>
-        </div>
-
-        {/* Right side: Practitioner Selector & Node LEDs */}
-        <div className="flex items-center space-x-3 text-[11px]">
-          {/* Node Indicators */}
-          <div className="flex items-center space-x-2">
-            <span className="flex items-center space-x-1 border border-[#808080] px-1.5 py-0.5 bg-white">
-              <span className={`w-2 h-2 rounded-full inline-block ${nodeAStatus === 'UP' ? 'bg-green-600' : 'bg-red-600'}`} />
-              <span className="font-mono text-[10px]">NODE-A:5001</span>
-            </span>
-            <span className="flex items-center space-x-1 border border-[#808080] px-1.5 py-0.5 bg-white">
-              <span className={`w-2 h-2 rounded-full inline-block ${nodeBStatus === 'UP' ? 'bg-green-600' : 'bg-red-600'}`} />
-              <span className="font-mono text-[10px]">NODE-B:5002</span>
-            </span>
+            {/* Navigation Tabs */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>{link.icon}</span>
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
-          {/* Clinician Selector */}
-          <div className="flex items-center space-x-1">
-            <span className="font-bold text-gray-700">Practitioner:</span>
-            <select
-              value={activeDoctor.toLowerCase()}
-              onChange={(e) => onDoctorChange(e.target.value)}
-              aria-label="Practitioner Identity"
-              className="sunken-box text-xs py-0.5 font-sans cursor-pointer bg-white"
-            >
-              {Object.entries(VERIFIED_DOCTORS).map(([addr, doc]) => (
-                <option key={addr} value={addr.toLowerCase()}>
-                  [VERIFIED] {doc.name.split('(')[0]}
-                </option>
-              ))}
-              <option value="0x9999999999999999999999999999999999999999">
-                [UNVERIFIED] 0x9999... (Simulate 403 Forbidden)
-              </option>
-            </select>
+          {/* Right Controls: Hospital Node LEDs & Doctor Switcher */}
+          <div className="flex items-center gap-3">
+            
+            {/* Storage Node Status Pills */}
+            <div className="hidden lg:flex items-center gap-2 text-xs">
+              <div
+                title="Hospital A (Apollo) Storage Node :5001"
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-mono ${
+                  nodeAStatus === 'UP'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-rose-50 text-rose-800 border-rose-200'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${nodeAStatus === 'UP' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <span>Node-A:5001</span>
+              </div>
+
+              <div
+                title="Hospital B (Fortis) Storage Node :5002"
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[11px] font-mono ${
+                  nodeBStatus === 'UP'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-rose-50 text-rose-800 border-rose-200'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${nodeBStatus === 'UP' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <span>Node-B:5002</span>
+              </div>
+            </div>
+
+            {/* Practitioner Identity Selector */}
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+              <div className="text-left pl-2 hidden sm:block">
+                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Practitioner</div>
+                <div className="flex items-center gap-1">
+                  <span className={`w-1.5 h-1.5 rounded-full ${currentDoc.verified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span className="text-xs font-semibold text-slate-800 truncate max-w-[120px]">{currentDoc.name}</span>
+                </div>
+              </div>
+              <select
+                value={activeDoctor.toLowerCase()}
+                onChange={(e) => onDoctorChange(e.target.value)}
+                aria-label="Active Practitioner"
+                className="bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-700 py-1 px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm"
+              >
+                {DOCTOR_OPTIONS.map((doc) => (
+                  <option key={doc.address} value={doc.address.toLowerCase()}>
+                    {doc.verified ? '✓ ' : '✗ '}{doc.name} ({doc.hospital})
+                  </option>
+                ))}
+              </select>
+            </div>
+
           </div>
+
+        </div>
+
+        {/* Mobile Navigation Row */}
+        <div className="flex md:hidden items-center justify-between overflow-x-auto py-2 border-t border-slate-100 gap-2">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`whitespace-nowrap px-2.5 py-1 rounded text-xs font-medium ${
+                  isActive
+                    ? 'bg-blue-100 text-blue-800 font-bold'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {link.icon} {link.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </header>
   );
 }

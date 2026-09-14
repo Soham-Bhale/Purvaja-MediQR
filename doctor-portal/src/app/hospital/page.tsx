@@ -163,155 +163,166 @@ export default function HospitalPortalPage() {
   }
 
   return (
-    <div className="space-y-3 font-sans text-black">
-      {/* Title */}
-      <div className="bg-[#0a246a] text-white p-2 border border-black flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] text-yellow-300 font-mono font-bold block">
-            [ HOSPITAL NODE STORAGE &amp; PATIENT REGISTRATION ENGINE ]
-          </span>
-          <h1 className="text-sm font-bold tracking-wide">
-            Hospital Records Administration &amp; MediQR Issuer
+          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+            <span>🏥</span> Hospital Operations
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 mt-1">
+            Hospital Administration &amp; MediQR Issuer
           </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Issue dual-segment optical MediQRs and upload AES-256-GCM encrypted records directly to distributed hospital storage nodes.
+          </p>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex space-x-1">
+        {/* Tab Switcher */}
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
           <button
             type="button"
             onClick={() => setActiveTab('issue-qr')}
-            className={`btn-swing text-xs ${activeTab === 'issue-qr' ? 'bg-[#dcd8c4] font-bold text-[#000080]' : ''}`}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition ${
+              activeTab === 'issue-qr'
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            [1] Issue Salted MediQR
+            1. Issue MediQR
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('upload-record')}
-            className={`btn-swing text-xs ${activeTab === 'upload-record' ? 'bg-[#dcd8c4] font-bold text-[#000080]' : ''}`}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition ${
+              activeTab === 'upload-record'
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            [2] Upload Encrypted Record
+            2. Upload Clinical Record
           </button>
         </div>
       </div>
 
       {/* TAB 1: ISSUE MEDIQR */}
       {activeTab === 'issue-qr' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <form onSubmit={handleGenerateQR} className="bg-[#ece9d8] border-2 border-t-white border-l-white border-b-black border-r-black p-3 space-y-2">
-            <fieldset className="swing-fieldset">
-              <legend>Patient Demographics &amp; Vitals</legend>
-              <div className="space-y-1.5 pt-1">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <form onSubmit={handleGenerateQR} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
+              Patient Vitals &amp; Emergency Demographics
+            </h2>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Full Legal Name</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Full Name:</label>
+                  <label className="font-semibold block text-slate-700 mb-1">National ID / Citizen Key</label>
                   <input
                     type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    value={nationalId}
+                    onChange={(e) => setNationalId(e.target.value)}
                     required
-                    className="sunken-box w-full"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[11px] font-bold block text-gray-700">National ID / Citizen Key:</label>
-                    <input
-                      type="text"
-                      value={nationalId}
-                      onChange={(e) => setNationalId(e.target.value)}
-                      required
-                      className="sunken-box w-full font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold block text-gray-700">Blood Group:</label>
-                    <select
-                      value={bloodType}
-                      onChange={(e) => setBloodType(e.target.value)}
-                      className="sunken-box w-full"
-                    >
-                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
-                        <option key={bg} value={bg}>{bg}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Critical Allergies (comma-separated):</label>
-                  <input
-                    type="text"
-                    value={criticalAllergies}
-                    onChange={(e) => setCriticalAllergies(e.target.value)}
-                    className="sunken-box w-full font-mono"
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2.5 font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Chronic Medical Conditions:</label>
-                  <input
-                    type="text"
-                    value={chronicConditions}
-                    onChange={(e) => setChronicConditions(e.target.value)}
-                    className="sunken-box w-full"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[11px] font-bold block text-gray-700">Emergency Contact Name:</label>
-                    <input
-                      type="text"
-                      value={contactName}
-                      onChange={(e) => setContactName(e.target.value)}
-                      required
-                      className="sunken-box w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold block text-gray-700">Emergency Telephone:</label>
-                    <input
-                      type="text"
-                      value={contactPhone}
-                      onChange={(e) => setContactPhone(e.target.value)}
-                      required
-                      className="sunken-box w-full font-mono"
-                    />
-                  </div>
+                  <label className="font-semibold block text-slate-700 mb-1">Blood Group</label>
+                  <select
+                    value={bloodType}
+                    onChange={(e) => setBloodType(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            </fieldset>
+
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Critical Drug Allergies (comma-separated)</label>
+                <input
+                  type="text"
+                  value={criticalAllergies}
+                  onChange={(e) => setCriticalAllergies(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Chronic Medical Conditions</label>
+                <input
+                  type="text"
+                  value={chronicConditions}
+                  onChange={(e) => setChronicConditions(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold block text-slate-700 mb-1">Emergency Contact Name</label>
+                  <input
+                    type="text"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    required
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold block text-slate-700 mb-1">Emergency Telephone</label>
+                  <input
+                    type="text"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    required
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2.5 font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
 
             <button
               type="submit"
               disabled={issuing}
-              className="btn-swing-primary w-full py-1.5 text-xs"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium text-xs py-3 rounded-lg shadow-sm transition"
             >
-              {issuing ? '⏳ Computing HMAC-SHA256 Salted Key...' : '⚙ Generate Salted MediQR &amp; Print Card'}
+              {issuing ? 'Computing HMAC-SHA256 Token...' : 'Generate Salted MediQR Card →'}
             </button>
           </form>
 
           {/* QR Display Panel */}
-          <fieldset className="swing-fieldset flex flex-col items-center justify-center p-4">
-            <legend>[ Generated MediQR Card Output ]</legend>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col items-center justify-center text-center">
             {generatedQRUrl ? (
-              <div className="text-center space-y-3 w-full">
-                <div className="inline-block p-2 bg-white border-2 border-black">
-                  <img src={generatedQRUrl} alt="MediQR Card" className="w-44 h-44 mx-auto" />
+              <div className="space-y-4 w-full">
+                <div className="inline-block p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+                  <img src={generatedQRUrl} alt="MediQR Card" className="w-48 h-48 mx-auto" />
                 </div>
 
-                <div className="sunken-box p-2 text-left font-mono text-[10px] break-all">
-                  <span className="text-gray-500 font-bold block">SALTED PATIENT HASH (ON-CHAIN TOKEN):</span>
-                  <span className="text-blue-900 select-all font-bold">{generatedPatientHash}</span>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-left text-xs font-mono break-all">
+                  <span className="text-[10px] uppercase font-semibold text-slate-400 block">Salted Patient Query Hash</span>
+                  <span className="text-blue-800 select-all font-semibold block mt-0.5">{generatedPatientHash}</span>
                 </div>
 
                 <div className="flex gap-2">
                   <a
                     href={generatedQRUrl}
                     download={`mediqr-${fullName.toLowerCase().replace(/\s+/g, '-')}.png`}
-                    className="btn-swing flex-1 text-center py-1"
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg text-xs transition text-center"
                   >
                     💾 Save PNG
                   </a>
@@ -323,164 +334,171 @@ export default function HospitalPortalPage() {
                         setActiveTab('upload-record');
                       }
                     }}
-                    className="btn-swing-primary flex-1 text-center py-1"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-xs transition text-center shadow-sm"
                   >
-                    Upload Records for Patient &gt;&gt;
+                    Upload Records for Patient →
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-500 font-mono text-xs">
-                [ SUBMIT FORM ON LEFT TO COMPOSE MEDIQR ]
+              <div className="text-slate-400 text-xs text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-xl text-slate-400">
+                  📱
+                </div>
+                <p>Fill in patient vitals on the left to generate the optical MediQR.</p>
               </div>
             )}
-          </fieldset>
+          </div>
         </div>
       )}
 
       {/* TAB 2: UPLOAD RECORD */}
       {activeTab === 'upload-record' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <form onSubmit={handleUploadRecord} className="bg-[#ece9d8] border-2 border-t-white border-l-white border-b-black border-r-black p-3 space-y-2">
-            <fieldset className="swing-fieldset">
-              <legend>Target Hospital Node &amp; Record Data</legend>
-              <div className="space-y-1.5 pt-1">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <form onSubmit={handleUploadRecord} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
+              Target Hospital Node &amp; Encrypted Payload
+            </h2>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Target Hospital Storage Node</label>
+                <select
+                  value={targetNode}
+                  onChange={(e) => setTargetNode(e.target.value as any)}
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="http://localhost:5001">Hospital Node A (Apollo Speciality - Port 5001)</option>
+                  <option value="http://localhost:5002">Hospital Node B (Fortis Healthcare - Port 5002)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Patient Hash Token (patientHash)</label>
+                <input
+                  type="text"
+                  value={uploadPatientHash}
+                  onChange={(e) => setUploadPatientHash(e.target.value.trim())}
+                  required
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Target Hospital Storage Node:</label>
+                  <label className="font-semibold block text-slate-700 mb-1">Record Type</label>
                   <select
-                    value={targetNode}
-                    onChange={(e) => setTargetNode(e.target.value as any)}
-                    className="sunken-box w-full font-mono text-xs"
+                    value={recordType}
+                    onChange={(e) => setRecordType(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="http://localhost:5001">Hospital Node A (Apollo Speciality - Port 5001)</option>
-                    <option value="http://localhost:5002">Hospital Node B (Fortis Healthcare - Port 5002)</option>
+                    <option value="CONSULTATION">CONSULTATION</option>
+                    <option value="PRESCRIPTION">PRESCRIPTION</option>
+                    <option value="LAB_RESULT">LAB_RESULT</option>
+                    <option value="DISCHARGE_SUMMARY">DISCHARGE_SUMMARY</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Patient Hash Token (patientHash):</label>
+                  <label className="font-semibold block text-slate-700 mb-1">Attending Clinician</label>
                   <input
                     type="text"
-                    value={uploadPatientHash}
-                    onChange={(e) => setUploadPatientHash(e.target.value.trim())}
-                    required
-                    className="sunken-box w-full font-mono text-xs"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[11px] font-bold block text-gray-700">Record Type:</label>
-                    <select
-                      value={recordType}
-                      onChange={(e) => setRecordType(e.target.value)}
-                      className="sunken-box w-full"
-                    >
-                      <option value="CONSULTATION">CONSULTATION</option>
-                      <option value="PRESCRIPTION">PRESCRIPTION</option>
-                      <option value="LAB_RESULT">LAB_RESULT</option>
-                      <option value="DISCHARGE_SUMMARY">DISCHARGE_SUMMARY</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold block text-gray-700">Attending Clinician:</label>
-                    <input
-                      type="text"
-                      disabled
-                      value={doctorDetails?.name || 'Verified Federation Doctor'}
-                      className="sunken-box w-full bg-[#e8e6dc] text-gray-700 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Clinical Diagnosis:</label>
-                  <input
-                    type="text"
-                    value={diagnosis}
-                    onChange={(e) => setDiagnosis(e.target.value)}
-                    required
-                    className="sunken-box w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Clinical Notes:</label>
-                  <textarea
-                    rows={2}
-                    value={clinicalNotes}
-                    onChange={(e) => setClinicalNotes(e.target.value)}
-                    required
-                    className="sunken-box w-full font-sans text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold block text-gray-700">Medications (comma-separated):</label>
-                  <input
-                    type="text"
-                    value={prescriptionList}
-                    onChange={(e) => setPrescriptionList(e.target.value)}
-                    className="sunken-box w-full font-mono text-xs"
+                    disabled
+                    value={doctorDetails?.name || 'Verified Federation Doctor'}
+                    className="w-full bg-slate-100 border border-slate-300 rounded-lg p-2.5 text-slate-500 cursor-not-allowed"
                   />
                 </div>
               </div>
-            </fieldset>
+
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Clinical Diagnosis</label>
+                <input
+                  type="text"
+                  value={diagnosis}
+                  onChange={(e) => setDiagnosis(e.target.value)}
+                  required
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Clinical Notes</label>
+                <textarea
+                  rows={2}
+                  value={clinicalNotes}
+                  onChange={(e) => setClinicalNotes(e.target.value)}
+                  required
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none font-sans"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block text-slate-700 mb-1">Prescribed Medications (comma-separated)</label>
+                <input
+                  type="text"
+                  value={prescriptionList}
+                  onChange={(e) => setPrescriptionList(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2.5 font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
 
             <button
               type="submit"
               disabled={uploading}
-              className="btn-swing-primary w-full py-1.5 text-xs"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium text-xs py-3 rounded-lg shadow-sm transition"
             >
-              {uploading ? '⏳ Encrypting AES-256-GCM &amp; Anchoring On-Chain...' : '🔒 Encrypt &amp; Commit Record to Ledger'}
+              {uploading ? 'Encrypting & Committing On-Chain...' : '🔒 Encrypt & Commit Record to Ledger →'}
             </button>
           </form>
 
           {/* Output Confirmation Panel */}
-          <fieldset className="swing-fieldset flex flex-col justify-center p-3">
-            <legend>[ Ledger Commitment Receipt ]</legend>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
             {uploadResult ? (
-              <div className="space-y-2 bg-white p-3 border border-gray-400 font-mono text-[11px]">
-                <div className="text-green-800 font-bold border-b border-gray-300 pb-1">
-                  ✓ RECORD ENCRYPTED &amp; FINGERPRINT COMMITTED ON-CHAIN
+              <div className="space-y-3 text-xs">
+                <div className="flex items-center gap-2 text-emerald-700 font-semibold border-b border-slate-100 pb-2.5">
+                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs">✓</span>
+                  Record Encrypted &amp; Fingerprint Anchored On-Chain
                 </div>
 
-                <div>
-                  <span className="text-gray-500 block text-[10px]">RECORD IDENTIFIER:</span>
-                  <span className="font-bold text-black">{uploadResult.recordId}</span>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2 font-mono text-[11px]">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans font-semibold uppercase">Record ID</span>
+                    <span className="font-bold text-slate-900">{uploadResult.recordId}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans font-semibold uppercase">SHA-256 Checksum (On-Chain)</span>
+                    <span className="text-blue-800 font-semibold break-all">{uploadResult.fileHash}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans font-semibold uppercase">Storage Pointer URI</span>
+                    <span className="text-emerald-800 break-all">{uploadResult.storageURI}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-sans font-semibold uppercase">Transaction Hash</span>
+                    <span className="text-slate-600 break-all">{uploadResult.txHash}</span>
+                  </div>
                 </div>
 
-                <div>
-                  <span className="text-gray-500 block text-[10px]">SHA-256 ON-CHAIN FINGERPRINT:</span>
-                  <span className="text-blue-900 font-bold break-all">{uploadResult.fileHash}</span>
-                </div>
-
-                <div>
-                  <span className="text-gray-500 block text-[10px]">OFF-CHAIN NODE STORAGE POINTER:</span>
-                  <span className="text-green-900 break-all">{uploadResult.storageURI}</span>
-                </div>
-
-                <div>
-                  <span className="text-gray-500 block text-[10px]">TRANSACTION RECEIPT HASH:</span>
-                  <span className="text-gray-700 break-all">{uploadResult.txHash}</span>
-                </div>
-
-                <div className="pt-2 border-t border-gray-300">
-                  <Link
-                    href={`/doctor?patientHash=${encodeURIComponent(uploadPatientHash)}`}
-                    className="btn-swing-primary w-full text-center py-1 block text-xs"
-                  >
-                    🩺 Open in Doctor Verification Portal &gt;&gt;
-                  </Link>
-                </div>
+                <Link
+                  href={`/doctor?patientHash=${encodeURIComponent(uploadPatientHash)}`}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-center block text-xs shadow-sm transition"
+                >
+                  Open in Doctor Verification Portal →
+                </Link>
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-500 font-mono text-xs">
-                [ READY TO PROCESS CLINICAL DOCUMENT ]
+              <div className="text-slate-400 text-xs text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-xl text-slate-400">
+                  📄
+                </div>
+                <p>Fill in clinical data on the left to encrypt and commit to ledger.</p>
               </div>
             )}
-          </fieldset>
+          </div>
         </div>
       )}
     </div>
