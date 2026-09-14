@@ -1,0 +1,20 @@
+{
+  "name": "@mediqr/core-crypto",
+  "version": "2.0.0",
+  "description": "Cryptographic engine, HMAC salting, AES-256-GCM, SHA-256 verification and QR generator/parser for MediQR",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "ts-node test/crypto.test.ts"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/qrcode": "^1.5.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

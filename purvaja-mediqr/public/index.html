@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Purvaja MediQR</title>
+</head>
+<body>
+  <h1>Dashboard</h1>
+  <p id="name"></p>
+  <p id="blood"></p>
+  <p id="allergies"></p>
+  <p id="emergency"></p>
+
+  <h2>Your QR Code</h2>
+  <img id="qr" alt="QR Code" />
+
+  <p>Public Profile URL: <a id="profile" href="#" target="_blank"></a></p>
+
+  <br><a href="/logout">Logout</a>
+
+  <script>
+    fetch("/api/dashboard")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("name").innerText = "Name: " + data.name;
+        document.getElementById("blood").innerText = "Blood Group: " + (data.blood_group || "N/A");
+        document.getElementById("allergies").innerText = "Allergies: " + (data.allergies || "N/A");
+        document.getElementById("emergency").innerText = "Emergency Contact: " + (data.emergency_contact || "N/A");
+        document.getElementById("qr").src = data.qrDataUrl;
+        document.getElementById("profile").href = data.profileUrl;
+        document.getElementById("profile").innerText = data.profileUrl;
+      });
+  </script>
+</body>
+</html>

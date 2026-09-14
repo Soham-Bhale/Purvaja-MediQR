@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MediQR Public Profile</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <main>
+    <h1>Emergency Info</h1>
+    <div id="profile">
+      <p id="name"><em>loading...</em></p>
+      <p>Blood group: <span id="bg"></span></p>
+      <p>Allergies: <span id="allergies"></span></p>
+      <p>Emergency contact: <span id="emergency"></span></p>
+    </div>
+    <p>If this is a real emergency, call local emergency services first.</p>
+  </main>
+
+<script>
+async function loadPublic() {
+  // extract token from pathname: /public/:token
+  const parts = location.pathname.split('/');
+  const token = parts[parts.length - 1];
+  const res = await fetch('/api/public/' + token);
+  if (!res.ok) {
+    document.getElementById('profile').innerText = 'Profile not found';
+    return;
+  }
+  const j = await res.json();
+  document.getElementById('name').innerText = j.name || '';
+  document.getElementById('bg').innerText = j.blood_group || '-';
+  document.getElementById('allergies').innerText = j.allergies || '-';
+  document.getElementById('emergency').innerText = j.emergency_contact || '-';
+}
+loadPublic();
+</script>
+</body>
+</html>

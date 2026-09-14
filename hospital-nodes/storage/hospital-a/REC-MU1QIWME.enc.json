@@ -1,0 +1,10 @@
+{
+  "recordId": "REC-MU1QIWME",
+  "patientHash": "0x2ebe30ab9f206f7fdee5a654cff304dbd798f503f978a8c3123cd0caa39ba58b",
+  "hospitalNodeId": "HOSPITAL-NODE-A",
+  "algorithm": "aes-256-gcm",
+  "iv": "Ft4Oao20K23Vtgsx",
+  "authTag": "X5XFTEZJBWEDLs8rgJh8rw==",
+  "ciphertext": "DXBEpd42iPvcHj8uoFnHQ38whYLEvBN2Hf5e+i8QexywHOZRbJ2Tn8dyHJwhAkmpXw+CWpqW6d5fvsNeO6SVrvEotmrEQ74G4cebBduBQeqoaZjjpjvJwqMkavQ3upojhXtwsaWID4/TzBXgaRL3uNjFySuhSGEMXwUuFYUvEMopzYzsdxj3Qu80WyJR6316JLdLyraTvOW5J1vObOw4gCsPijWMb9IjncZ9hSUgaMGetYxqj1COAHbl/OUPofLKeIfKcUw6KNo0XGhNmklfv19JQmJOoD4pwIXdiQHdeaD4c1479d1cDEmenS3kDT3vUHbaC6ASCkyUipjPl+tRGR36nTHiJ8EELx7tb4cUmn5WI1LWtbSZyDWxclhW0G50jpVlYACsVp3cwBbet7mPILsRaac6ya+zzD4atq1dDJcfwR+o/n5vvEqWchEww2eBOJdUlmzF0NeaaKZIOibKzPAluwH15NOxM0u9pnuS8KnPFOwBjL7Rw5/xuVl0+OzP0bmcGZCFoRPrDZWoexzFYarfFFTi6FIEQcQAlVdy9jqqPiIPlQ8+1GoFVo9rO5tD2N5ET+VX71y6dOnfgdJsRGEGbT/d0w2uRQg/CP8YRsgD51LAw+NXnse6vBeorT8he6+tceSS6VegEWrjv1kOuoMrSEahK+naw0+zsGL+tuGTsYoatummW6nfljCTy6NN9Q1n4HzXlGh0PhSdqjxcD/pSOmwRz+y624MYqOF/k7PeUWjZyIkoyKR0pnEeUwEtgGsOvoyCKirVHnz/ladsCHbYTi4m59NKwhVeUBvnrPglZ+O8ymbqQNfF/rrL7EewLvLzUVWERNqDPDYgR2yhoDlEQq/2pOXbSnL5HSAMCU2VSo8skUKyv9Q/XVnUeqOSn1cyAH5Kyn1Ti+dFp5uOABi6bh9sDGNWfxPreWf+8VMPUoEe/DBA8wAIOCd2afY4FITbVBNX2omB7JZU7T2vFsfpb42Y+W+9fAQtppBBmBc9kW1qI7CQ/GayVfd+7hXQwKDLoA7XgknjypbR9OBXwhWxEhntpupmx63cpGacrhSXe2vP/nsdG3+AzyM8cdaIX+17yzDqwqr/c15Sr+7ifjDCTGXXs6Fr4S/K1qlhVHw0g5MZ3SM/j+vZr7PiUFIA68+ZJWby3hKE4N2NeahPu7jU4Q==",
+  "encryptedAt": 1789420098475
+}
