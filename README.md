@@ -2,6 +2,8 @@
 
 Enterprise-grade, distributed, tamper-proof healthcare archive upgraded from the MediQR prototype. Designed for strict HIPAA and DPDP compliance with zero PII stored on-chain.
 
+> 💡 **Non-Technical Visitor?** Read our beginner-friendly guide: **[understandme.md](./understandme.md)** to understand the project, workflows, and life-saving features in 3 minutes without any blockchain jargon!
+
 ---
 
 ## 🏛️ Hybrid Cryptographic Architecture
