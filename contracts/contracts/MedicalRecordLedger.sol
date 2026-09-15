@@ -3,48 +3,82 @@ pragma solidity ^0.8.24;
 
 /**
  * @title MedicalRecordLedger
- * @notice Enterprise-grade on-chain ledger for MediQR healthcare archives.
- * @dev STORES ZERO PII OR PLAIN MEDICAL DATA.
- *      Only SHA-256 hashes (fingerprints), storage pointers/URIs, practitioner signatures,
- *      and immutable access audit logs are maintained on-chain.
+ * @notice Enterprise-grade Consortium Blockchain Ledger for MediQR Healthcare Archives.
+ * @dev Implements Hierarchical Role-Based Access Control (RBAC):
+ *      - Root Consortium Admin: Onboards/suspends hospitals, network-wide governance.
+ *      - Hospital Administrators: Manage certified facility endpoints and accredited medical staff.
+ *      - Verified Practitioners: Commit SHA-256 fingerprints, query patient records with audit logs.
+ *      ZERO PII OR PLAIN HEALTH DATA COMMITTED ON-CHAIN.
  */
 contract MedicalRecordLedger {
-    address public immutable owner;
+    address public owner;
+
+    struct Hospital {
+        bool isActive;
+        string name;
+        string endpoint;
+        string licenseId;
+        address adminWallet;
+        uint256 registeredAt;
+    }
 
     struct Practitioner {
         bool isVerified;
         string name;
-        string hospitalName;
+        string licenseNumber;
+        string department;
+        address hospitalAdmin;
         uint256 registeredAt;
     }
 
     struct RecordMetadata {
         bytes32 fileHash;            // SHA-256 integrity checksum of encrypted off-chain document
         string storageURI;           // Content-addressable URI (e.g. http://hospital-a:5001/api/records/rec-123)
-        address practitionerAddress; // Wallet address of doctor/hospital node committing the record
+        address practitionerAddress; // Wallet address of doctor committing the record
         uint256 timestamp;           // Block timestamp of creation
         string recordType;           // CONSULTATION, PRESCRIPTION, LAB_RESULT, etc.
     }
 
-    // Registry of authorized healthcare providers
-    mapping(address => Practitioner) public verifiedPractitioners;
+    // --- STATE REGISTRIES ---
+    mapping(address => Hospital) public hospitals;
+    address[] public hospitalList;
 
-    // Mapping: patientHash (HMAC-SHA256 of national ID + salt) => array of RecordMetadata
+    mapping(address => Practitioner) public verifiedPractitioners;
+    address[] public practitionerList;
+
+    // patientHash (HMAC-SHA256) => array of RecordMetadata
     mapping(bytes32 => RecordMetadata[]) private patientRecords;
 
     // Access audit trail count
     mapping(bytes32 => uint256) public accessAuditCount;
 
     // --- EVENTS ---
+    event HospitalOnboarded(
+        address indexed adminWallet,
+        string name,
+        string endpoint,
+        string licenseId,
+        uint256 registeredAt
+    );
+
+    event HospitalStatusChanged(
+        address indexed adminWallet,
+        bool isActive,
+        uint256 timestamp
+    );
+
     event PractitionerRegistered(
         address indexed practitioner,
         string name,
-        string hospitalName,
+        string licenseNumber,
+        string department,
+        address indexed hospitalAdmin,
         uint256 registeredAt
     );
 
     event PractitionerRevoked(
         address indexed practitioner,
+        address indexed revokedBy,
         uint256 revokedAt
     );
 
@@ -64,87 +98,198 @@ contract MedicalRecordLedger {
         uint256 recordCount
     );
 
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
+
     // --- MODIFIERS ---
     modifier onlyOwner() {
-        require(msg.sender == owner, "MediQR: Caller is not contract owner");
+        require(msg.sender == owner, "MediQR: Caller is not consortium root admin");
         _;
     }
 
-    modifier onlyVerifiedPractitioner() {
-        require(
-            verifiedPractitioners[msg.sender].isVerified || msg.sender == owner,
-            "MediQR: Access restricted to verified healthcare providers"
-        );
+    modifier onlyAuthorizedPractitioner() {
+        require(isPractitionerActive(msg.sender), "MediQR: Access restricted to authorized active practitioner");
         _;
     }
 
     constructor() {
         owner = msg.sender;
-        // Automatically verify the deployer as initial federation authority
+
+        // Auto-register Root Authority Hospital
+        hospitals[msg.sender] = Hospital({
+            isActive: true,
+            name: "MediQR Consortium Root Authority",
+            endpoint: "https://root.mediqr.org",
+            licenseId: "GOV-MOH-CONSORTIUM-001",
+            adminWallet: msg.sender,
+            registeredAt: block.timestamp
+        });
+        hospitalList.push(msg.sender);
+
+        // Auto-register deployer as initial lead practitioner
         verifiedPractitioners[msg.sender] = Practitioner({
             isVerified: true,
-            name: "MediQR Federation Authority",
-            hospitalName: "Health System Root",
+            name: "Consortium Root Officer",
+            licenseNumber: "MCI-ROOT-001",
+            department: "Consortium Administration",
+            hospitalAdmin: msg.sender,
             registeredAt: block.timestamp
         });
-        emit PractitionerRegistered(msg.sender, "MediQR Federation Authority", "Health System Root", block.timestamp);
+        practitionerList.push(msg.sender);
+
+        emit HospitalOnboarded(msg.sender, "MediQR Consortium Root Authority", "https://root.mediqr.org", "GOV-MOH-CONSORTIUM-001", block.timestamp);
+        emit PractitionerRegistered(msg.sender, "Consortium Root Officer", "MCI-ROOT-001", "Consortium Administration", msg.sender, block.timestamp);
     }
 
-    // --- PRACTITIONER MANAGEMENT ---
+    // --- ROOT ADMIN: HOSPITAL MANAGEMENT ---
 
     /**
-     * @notice Registers and approves a healthcare practitioner wallet address.
+     * @notice Onboards a certified hospital to the organizational consortium blockchain.
+     * @dev Only callable by the consortium root admin.
      */
-    function registerPractitioner(
-        address practitioner,
+    function onboardHospital(
+        address adminWallet,
         string calldata name,
-        string calldata hospitalName
+        string calldata endpoint,
+        string calldata licenseId
     ) external onlyOwner {
-        require(practitioner != address(0), "MediQR: Invalid practitioner address");
-        require(!verifiedPractitioners[practitioner].isVerified, "MediQR: Practitioner already registered");
+        require(adminWallet != address(0), "MediQR: Invalid hospital admin address");
+        require(bytes(name).length > 0, "MediQR: Hospital name required");
+        require(bytes(endpoint).length > 0, "MediQR: Hospital endpoint required");
+        require(bytes(licenseId).length > 0, "MediQR: Hospital license ID required");
+        require(!hospitals[adminWallet].isActive && hospitals[adminWallet].registeredAt == 0, "MediQR: Hospital already registered");
 
-        verifiedPractitioners[practitioner] = Practitioner({
+        hospitals[adminWallet] = Hospital({
+            isActive: true,
+            name: name,
+            endpoint: endpoint,
+            licenseId: licenseId,
+            adminWallet: adminWallet,
+            registeredAt: block.timestamp
+        });
+
+        hospitalList.push(adminWallet);
+
+        emit HospitalOnboarded(adminWallet, name, endpoint, licenseId, block.timestamp);
+    }
+
+    /**
+     * @notice Suspends a hospital node due to regulatory, security, or audit non-compliance.
+     */
+    function suspendHospital(address adminWallet) external onlyOwner {
+        require(hospitals[adminWallet].registeredAt > 0, "MediQR: Hospital not found");
+        require(hospitals[adminWallet].isActive, "MediQR: Hospital already suspended");
+
+        hospitals[adminWallet].isActive = false;
+        emit HospitalStatusChanged(adminWallet, false, block.timestamp);
+    }
+
+    /**
+     * @notice Reactivates a suspended hospital node.
+     */
+    function reactivateHospital(address adminWallet) external onlyOwner {
+        require(hospitals[adminWallet].registeredAt > 0, "MediQR: Hospital not found");
+        require(!hospitals[adminWallet].isActive, "MediQR: Hospital is already active");
+
+        hospitals[adminWallet].isActive = true;
+        emit HospitalStatusChanged(adminWallet, true, block.timestamp);
+    }
+
+    /**
+     * @notice Transfers root ownership to a new governance address.
+     */
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "MediQR: New owner cannot be zero address");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
+
+    // --- PRACTITIONER CREDENTIALING (HOSPITAL ADMIN OR ROOT ADMIN) ---
+
+    /**
+     * @notice Registers and approves a doctor under a specific hospital facility.
+     * @dev Callable by either the affiliated Hospital Admin or the Consortium Root Admin.
+     */
+    function registerDoctor(
+        address doctorWallet,
+        string calldata name,
+        string calldata licenseNumber,
+        string calldata department,
+        address hospitalAdmin
+    ) external {
+        require(doctorWallet != address(0), "MediQR: Invalid doctor address");
+        require(bytes(name).length > 0, "MediQR: Doctor name required");
+        require(bytes(licenseNumber).length > 0, "MediQR: License number required");
+
+        // Auth check: caller must be Root Admin OR the hospital admin for the target hospital
+        require(
+            msg.sender == owner || (msg.sender == hospitalAdmin && hospitals[hospitalAdmin].isActive),
+            "MediQR: Unauthorized. Only accredited hospital admin or root admin can register doctor"
+        );
+
+        // Ensure the affiliated hospital is active
+        require(hospitals[hospitalAdmin].isActive, "MediQR: Affiliated hospital is not active");
+
+        bool isNew = (verifiedPractitioners[doctorWallet].registeredAt == 0);
+
+        verifiedPractitioners[doctorWallet] = Practitioner({
             isVerified: true,
             name: name,
-            hospitalName: hospitalName,
+            licenseNumber: licenseNumber,
+            department: department,
+            hospitalAdmin: hospitalAdmin,
             registeredAt: block.timestamp
         });
 
-        emit PractitionerRegistered(practitioner, name, hospitalName, block.timestamp);
+        if (isNew) {
+            practitionerList.push(doctorWallet);
+        }
+
+        emit PractitionerRegistered(doctorWallet, name, licenseNumber, department, hospitalAdmin, block.timestamp);
     }
 
     /**
-     * @notice Revokes a practitioner's access.
+     * @notice Revokes a doctor's access.
+     * @dev Callable by the doctor's hospital admin or the Consortium Root Admin.
      */
-    function revokePractitioner(address practitioner) external onlyOwner {
-        require(verifiedPractitioners[practitioner].isVerified, "MediQR: Practitioner not active");
-        verifiedPractitioners[practitioner].isVerified = false;
+    function revokeDoctor(address doctorWallet) external {
+        require(verifiedPractitioners[doctorWallet].registeredAt > 0, "MediQR: Doctor not registered");
+        require(verifiedPractitioners[doctorWallet].isVerified, "MediQR: Doctor already revoked");
 
-        emit PractitionerRevoked(practitioner, block.timestamp);
+        address affiliatedHospital = verifiedPractitioners[doctorWallet].hospitalAdmin;
+        require(
+            msg.sender == owner || msg.sender == affiliatedHospital,
+            "MediQR: Unauthorized to revoke this doctor"
+        );
+
+        verifiedPractitioners[doctorWallet].isVerified = false;
+        emit PractitionerRevoked(doctorWallet, msg.sender, block.timestamp);
     }
 
     /**
-     * @notice Checks if an address is an active verified practitioner.
+     * @notice Checks if a practitioner is currently authorized and their affiliated hospital is active.
      */
-    function isPractitionerVerified(address practitioner) external view returns (bool) {
-        return verifiedPractitioners[practitioner].isVerified || practitioner == owner;
+    function isPractitionerActive(address practitioner) public view returns (bool) {
+        if (practitioner == owner) return true;
+        Practitioner memory doc = verifiedPractitioners[practitioner];
+        if (!doc.isVerified) return false;
+        // Check if affiliated hospital is active
+        return hospitals[doc.hospitalAdmin].isActive;
     }
 
-    // --- RECORD LEDGER & AUDIT TRAIL ---
+    // --- RECORD LEDGER OPERATIONS ---
 
     /**
      * @notice Appends a new medical record fingerprint to a patient's on-chain history.
-     * @param patientHash Salted HMAC-SHA256 patient identifier.
-     * @param fileHash SHA-256 checksum of the encrypted record document.
-     * @param storageURI Off-chain storage location pointer / CID.
-     * @param recordType Type of record (e.g. CONSULTATION, PRESCRIPTION, LAB_RESULT).
      */
     function addRecord(
         bytes32 patientHash,
         bytes32 fileHash,
         string calldata storageURI,
         string calldata recordType
-    ) external onlyVerifiedPractitioner {
+    ) external onlyAuthorizedPractitioner {
         require(patientHash != bytes32(0), "MediQR: Patient hash cannot be zero");
         require(fileHash != bytes32(0), "MediQR: File hash cannot be zero");
         require(bytes(storageURI).length > 0, "MediQR: Storage URI required");
@@ -172,11 +317,10 @@ contract MedicalRecordLedger {
     /**
      * @notice Retrieves all record metadata pointers for a patient.
      * @dev Emits an immutable `RecordAccessed` audit event on the blockchain.
-     * @param patientHash Salted HMAC-SHA256 patient identifier.
      */
     function getPatientRecords(bytes32 patientHash)
         external
-        onlyVerifiedPractitioner
+        onlyAuthorizedPractitioner
         returns (RecordMetadata[] memory)
     {
         require(patientHash != bytes32(0), "MediQR: Patient hash cannot be zero");
@@ -195,12 +339,12 @@ contract MedicalRecordLedger {
     }
 
     /**
-     * @notice Read-only view of patient records (for frontend queries without gas, audit event is not emitted).
+     * @notice Read-only view of patient records (for frontend queries without gas, audit event not emitted).
      */
     function viewPatientRecords(bytes32 patientHash)
         external
         view
-        onlyVerifiedPractitioner
+        onlyAuthorizedPractitioner
         returns (RecordMetadata[] memory)
     {
         require(patientHash != bytes32(0), "MediQR: Patient hash cannot be zero");
@@ -212,5 +356,21 @@ contract MedicalRecordLedger {
      */
     function getRecordCount(bytes32 patientHash) external view returns (uint256) {
         return patientRecords[patientHash].length;
+    }
+
+    // --- CONSORTIUM INTROSPECTION HELPERS ---
+
+    /**
+     * @notice Returns array of all registered hospital admin addresses.
+     */
+    function getHospitals() external view returns (address[] memory) {
+        return hospitalList;
+    }
+
+    /**
+     * @notice Returns array of all registered practitioner addresses.
+     */
+    function getPractitioners() external view returns (address[] memory) {
+        return practitionerList;
     }
 }

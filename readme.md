@@ -44,11 +44,16 @@ Enterprise-grade, distributed, tamper-proof healthcare archive upgraded from the
 2. **Off-Chain Multi-Hospital Sharding**:
    - Medical records (prescriptions, lab tests, consultation notes) are encrypted at rest with **AES-256-GCM** (12-byte IV, 16-byte authentication tag, AAD bound to `patientHash:recordId`).
    - Stored across simulated distributed hospital nodes (`Hospital Node A` on port 5001, `Hospital Node B` on port 5002).
-3. **On-Chain Blockchain Ledger (`MedicalRecordLedger.sol`)**:
-   - Stores **zero plain health data or PII**.
-   - Anchors the exact **SHA-256 file checksum** (`bytes32 fileHash`), storage pointer URI, practitioner address, and timestamp.
+3. **Consortium Governance & Smart Contract Ledger (`MedicalRecordLedger.sol`)**:
+   - **Consortium Root Admin (MOH)**: Authorizes and onboards certified hospital institutions, with power to suspend non-compliant facilities.
+   - **Hospital Administrators**: Manage hospital storage endpoints and accredited medical staff.
+   - **Cascading Revocation**: If a hospital node is suspended on-chain, all affiliated physicians are automatically blocked from committing or accessing records.
+   - **Zero PII On-Chain**: Anchors only the 32-byte **SHA-256 file checksum** (`bytes32 fileHash`), storage pointer URI, practitioner address, and timestamp.
    - Emits non-repudiable on-chain `RecordAccessed` audit trail logs upon clinician retrieval.
-4. **Zero-Trust Doctor Verification Portal**:
+4. **Software Distribution Appliance (`deploy/`)**:
+   - Turn-key Docker Compose appliance (`deploy/docker-compose.hospital-appliance.yml`) for hospital IT deployment.
+   - Combines the local AES-256-GCM storage engine and an enterprise Hyperledger Besu / IBFT 2.0 permissioned validator node with zero gas fees.
+5. **Zero-Trust Doctor Verification Portal**:
    - Clinician authenticates with verified practitioner role.
    - Fetches target encrypted payload from the hospital node.
    - Computes live SHA-256 checksum of document in real-time.

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { VERIFIED_DOCTORS } from '../lib/blockchain';
+import { VERIFIED_DOCTORS, ROOT_ADMIN_ADDRESS } from '../lib/blockchain';
 
 interface NavbarProps {
   activeDoctor: string;
@@ -12,15 +12,21 @@ interface NavbarProps {
 
 const DOCTOR_OPTIONS = [
   {
+    address: ROOT_ADMIN_ADDRESS,
+    name: 'Consortium Root Admin (MOH)',
+    hospital: 'Consortium Root Authority',
+    verified: true,
+  },
+  {
     address: '0x70997970c51812dc3a010c7d01b50e0d17dc79c8',
     name: 'Dr. Ramesh Gupta',
-    hospital: 'Apollo Speciality',
+    hospital: 'Apollo Speciality (Node A)',
     verified: true,
   },
   {
     address: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc',
     name: 'Dr. Ananya Sharma',
-    hospital: 'Fortis Healthcare',
+    hospital: 'Fortis Healthcare (Node B)',
     verified: true,
   },
   {
@@ -58,10 +64,11 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
 
   const navLinks = [
     { href: '/', label: 'Overview', icon: '📊' },
-    { href: '/emergency', label: 'Triage Scanner', icon: '🚑' },
+    { href: '/admin', label: 'Consortium Admin', icon: '🛡️' },
     { href: '/doctor', label: 'Doctor Verification', icon: '🩺' },
     { href: '/hospital', label: 'Hospital Hub', icon: '🏥' },
     { href: '/simulator', label: 'Tamper Lab', icon: '⚡' },
+    { href: '/emergency', label: 'Triage Scanner', icon: '🚑' },
   ];
 
   const currentDoc = DOCTOR_OPTIONS.find(
@@ -87,9 +94,9 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-slate-900 text-base tracking-tight">MediQR</span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">v2.0</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">v2.1</span>
                 </div>
-                <p className="text-[11px] text-slate-500 hidden sm:block">Tamper-Proof Healthcare Ledger</p>
+                <p className="text-[11px] text-slate-500 hidden sm:block">Consortium Healthcare Ledger</p>
               </div>
             </Link>
 
@@ -148,7 +155,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
             {/* Practitioner Identity Selector */}
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
               <div className="text-left pl-2 hidden sm:block">
-                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Practitioner</div>
+                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Identity Role</div>
                 <div className="flex items-center gap-1">
                   <span className={`w-1.5 h-1.5 rounded-full ${currentDoc.verified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                   <span className="text-xs font-semibold text-slate-800 truncate max-w-[120px]">{currentDoc.name}</span>

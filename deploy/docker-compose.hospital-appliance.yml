@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------------------
+  # 1. MediQR Hospital Storage Engine (Off-Chain Encrypted Records Node)
+  # -------------------------------------------------------------------------
+  mediqr-storage-node:
+    image: mediqr/hospital-storage-node:2.1.0
+    container_name: mediqr-hospital-storage
+    restart: unless-stopped
+    ports:
+      - "${HOSPITAL_NODE_PORT:-5001}:5001"
+    environment:
+      - PORT=5001
+      - HOSPITAL_NODE_ID=${HOSPITAL_NODE_ID:-HOSPITAL-NODE-A}
+      - HOSPITAL_NAME=${HOSPITAL_NAME:-Apollo Speciality Hospital}
+      - CONSORTIUM_RPC_URL=${CONSORTIUM_RPC_URL:-http://consortium-validator:8545}
+      - CONSORTIUM_LEDGER_CONTRACT=${CONSORTIUM_LEDGER_CONTRACT:-0x5FbDB2315678afecb367f032d93F642f64180aa3}
+      - HOSPITAL_ADMIN_WALLET=${HOSPITAL_ADMIN_WALLET:-0x70997970C51812dc3A010C7d01b50e0d17dc79C8}
+      - AES_MASTER_KEY_HEX=${AES_MASTER_KEY_HEX:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+    volumes:
+      - hospital_data:/app/storage
+      - ./certs:/app/certs:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mediqr-consortium-net
+
+  # -------------------------------------------------------------------------
+  # 2. Local Consortium Blockchain Validator / RPC Node (Hyperledger Besu / EVM)
+  # -------------------------------------------------------------------------
+  consortium-validator:
+    image: hyperledger/besu:24.1.0
+    container_name: mediqr-besu-node
+    restart: unless-stopped
+    ports:
+      - "8545:8545"   # JSON-RPC
+      - "8546:8546"   # WS-RPC
+      - "30303:30303" # P2P Discovery
+    volumes:
+      - besu_chaindata:/var/lib/besu
+      - ./genesis.json:/etc/besu/genesis.json:ro
+    command:
+      - --network=dev
+      - --rpc-http-enabled=true
+      - --rpc-http-host=0.0.0.0
+      - --rpc-http-port=8545
+      - --rpc-http-api=ETH,NET,WEB3,IBFT
+      - --rpc-http-cors-origins=*
+      - --rpc-ws-enabled=true
+      - --rpc-ws-host=0.0.0.0
+      - --rpc-ws-port=8546
+      - --data-path=/var/lib/besu
+      - --min-gas-price=0
+    networks:
+      - mediqr-consortium-net
+
+volumes:
+  hospital_data:
+    driver: local
+  besu_chaindata:
+    driver: local
+
+networks:
+  mediqr-consortium-net:
+    driver: bridge
