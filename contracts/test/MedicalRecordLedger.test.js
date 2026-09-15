@@ -245,4 +245,63 @@ describe("MedicalRecordLedger Consortium Smart Contract", function () {
       ).to.be.revertedWith("MediQR: Access restricted to authorized active practitioner");
     });
   });
+
+  describe("Highest Authority Historical Data Migration", function () {
+    it("should allow Root Admin (Highest Authority) to bulk import legacy records with historical timestamps", async function () {
+      const legacyImports = [
+        {
+          patientHash: "0x" + "11".repeat(32),
+          fileHash: "0x" + "33".repeat(32),
+          storageURI: "http://localhost:5001/api/records/LEGACY-001",
+          recordType: "CONSULTATION",
+          practitionerAddress: doctorA.address,
+          historicalTimestamp: 1672531199
+        },
+        {
+          patientHash: "0x" + "22".repeat(32),
+          fileHash: "0x" + "44".repeat(32),
+          storageURI: "http://localhost:5002/api/records/LEGACY-002",
+          recordType: "LAB_RESULT",
+          practitionerAddress: doctorB.address,
+          historicalTimestamp: 1680000000
+        }
+      ];
+
+      await expect(
+        ledger.connect(rootAdmin).batchImportHistoricalRecords(legacyImports)
+      )
+        .to.emit(ledger, "LegacyBatchImported")
+        .withArgs(2, rootAdmin.address, (val) => val > 0);
+
+      // Verify records are retrievable
+      const recordsP1 = await ledger.connect(rootAdmin).viewPatientRecords(legacyImports[0].patientHash);
+      expect(recordsP1.length).to.equal(1);
+      expect(recordsP1[0].fileHash).to.equal(legacyImports[0].fileHash);
+      expect(recordsP1[0].timestamp).to.equal(1672531199);
+      expect(recordsP1[0].practitionerAddress).to.equal(doctorA.address);
+
+      const recordsP2 = await ledger.connect(rootAdmin).viewPatientRecords(legacyImports[1].patientHash);
+      expect(recordsP2.length).to.equal(1);
+      expect(recordsP2[0].fileHash).to.equal(legacyImports[1].fileHash);
+      expect(recordsP2[0].timestamp).to.equal(1680000000);
+      expect(recordsP2[0].practitionerAddress).to.equal(doctorB.address);
+    });
+
+    it("should reject non-root admin from executing batch historical import", async function () {
+      const legacyImports = [
+        {
+          patientHash: "0x" + "11".repeat(32),
+          fileHash: "0x" + "33".repeat(32),
+          storageURI: "http://localhost:5001/api/records/LEGACY-001",
+          recordType: "CONSULTATION",
+          practitionerAddress: doctorA.address,
+          historicalTimestamp: 1672531199
+        }
+      ];
+
+      await expect(
+        ledger.connect(doctorA).batchImportHistoricalRecords(legacyImports)
+      ).to.be.revertedWith("MediQR: Caller is not consortium root admin");
+    });
+  });
 });

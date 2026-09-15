@@ -15,8 +15,9 @@ export const MEDICAL_RECORD_LEDGER_ABI = [
   "function getPractitioners() view returns (address[])",
   "function verifiedPractitioners(address doctorWallet) view returns (bool isVerified, string name, string licenseNumber, string department, address hospitalAdmin, uint256 registeredAt)",
 
-  // Records & Audit Trail
+  // Records, Batch Migration & Audit Trail
   "function addRecord(bytes32 patientHash, bytes32 fileHash, string storageURI, string recordType)",
+  "function batchImportHistoricalRecords(tuple(bytes32 patientHash, bytes32 fileHash, string storageURI, string recordType, address practitionerAddress, uint256 historicalTimestamp)[] imports)",
   "function getPatientRecords(bytes32 patientHash) returns (tuple(bytes32 fileHash, string storageURI, address practitionerAddress, uint256 timestamp, string recordType)[])",
   "function viewPatientRecords(bytes32 patientHash) view returns (tuple(bytes32 fileHash, string storageURI, address practitionerAddress, uint256 timestamp, string recordType)[])",
   "function getRecordCount(bytes32 patientHash) view returns (uint256)",
@@ -27,5 +28,6 @@ export const MEDICAL_RECORD_LEDGER_ABI = [
   "event PractitionerRegistered(address indexed practitioner, string name, string licenseNumber, string department, address indexed hospitalAdmin, uint256 registeredAt)",
   "event PractitionerRevoked(address indexed practitioner, address indexed revokedBy, uint256 revokedAt)",
   "event RecordAdded(bytes32 indexed patientHash, bytes32 indexed fileHash, string storageURI, address indexed practitioner, uint256 timestamp, string recordType)",
-  "event RecordAccessed(bytes32 indexed patientHash, address indexed practitioner, uint256 timestamp, uint256 recordCount)"
+  "event RecordAccessed(bytes32 indexed patientHash, address indexed practitioner, uint256 timestamp, uint256 recordCount)",
+  "event LegacyBatchImported(uint256 indexed batchSize, address indexed authority, uint256 timestamp)"
 ];

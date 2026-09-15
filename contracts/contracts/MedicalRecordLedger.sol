@@ -39,6 +39,15 @@ contract MedicalRecordLedger {
         string recordType;           // CONSULTATION, PRESCRIPTION, LAB_RESULT, etc.
     }
 
+    struct LegacyRecordImport {
+        bytes32 patientHash;
+        bytes32 fileHash;
+        string storageURI;
+        string recordType;
+        address practitionerAddress;
+        uint256 historicalTimestamp;
+    }
+
     // --- STATE REGISTRIES ---
     mapping(address => Hospital) public hospitals;
     address[] public hospitalList;
@@ -96,6 +105,12 @@ contract MedicalRecordLedger {
         address indexed practitioner,
         uint256 timestamp,
         uint256 recordCount
+    );
+
+    event LegacyBatchImported(
+        uint256 indexed batchSize,
+        address indexed authority,
+        uint256 timestamp
     );
 
     event OwnershipTransferred(
@@ -312,6 +327,41 @@ contract MedicalRecordLedger {
             block.timestamp,
             recordType
         );
+    }
+
+    /**
+     * @notice Bulk imports existing historical records into the consortium ledger.
+     * @dev Restrictable exclusively to the Consortium Root Admin (Highest Authority).
+     *      Preserves original historical timestamps and practitioner signatures from legacy systems.
+     */
+    function batchImportHistoricalRecords(
+        LegacyRecordImport[] calldata imports
+    ) external onlyOwner {
+        uint256 count = imports.length;
+        require(count > 0, "MediQR: Empty batch");
+
+        for (uint256 i = 0; i < count; i++) {
+            bytes32 pHash = imports[i].patientHash;
+            bytes32 fHash = imports[i].fileHash;
+            require(pHash != bytes32(0), "MediQR: Patient hash cannot be zero");
+            require(fHash != bytes32(0), "MediQR: File hash cannot be zero");
+            require(bytes(imports[i].storageURI).length > 0, "MediQR: Storage URI required");
+
+            address signer = imports[i].practitionerAddress == address(0) ? msg.sender : imports[i].practitionerAddress;
+            uint256 recordTime = imports[i].historicalTimestamp == 0 ? block.timestamp : imports[i].historicalTimestamp;
+
+            patientRecords[pHash].push(RecordMetadata({
+                fileHash: fHash,
+                storageURI: imports[i].storageURI,
+                practitionerAddress: signer,
+                timestamp: recordTime,
+                recordType: imports[i].recordType
+            }));
+
+            emit RecordAdded(pHash, fHash, imports[i].storageURI, signer, recordTime, imports[i].recordType);
+        }
+
+        emit LegacyBatchImported(count, msg.sender, block.timestamp);
     }
 
     /**
