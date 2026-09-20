@@ -473,90 +473,79 @@ function DoctorPortalContent() {
 
             return (
               <div key={record.storageURI + index} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                {/* Header */}
+                {/* Clean Record Header */}
                 <div className="bg-slate-50 px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded text-xs font-mono">
+                    <span className="bg-blue-100 text-blue-800 font-semibold px-2.5 py-0.5 rounded text-xs">
                       {record.recordType}
                     </span>
                     <h2 className="font-bold text-sm text-slate-900">
-                      Record #{index + 1}: {decrypted?.diagnosis || 'Encrypted Clinical Record'}
+                      {decrypted?.diagnosis || 'Encrypted Clinical Record'}
                     </h2>
                   </div>
 
-                  {/* Tamper / Restore Controls */}
-                  <div className="flex items-center gap-2">
-                    {isVerifiedFree ? (
-                      <button
-                        type="button"
-                        onClick={() => triggerTamper(record.storageURI)}
-                        disabled={tamperingRecordId === record.storageURI}
-                        className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium px-3 py-1.5 rounded-lg border border-rose-200 text-xs transition"
-                      >
-                        ⚡ Simulate Tamper Attack
-                      </button>
+                  {/* SMALL, CLEAN VERIFICATION PILL */}
+                  <div>
+                    {report ? (
+                      isVerifiedFree ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span>✓ Blockchain Verified</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 animate-pulse shadow-2xs">
+                          <span className="w-2 h-2 rounded-full bg-rose-600"></span>
+                          <span>⚠️ Record Tampered</span>
+                        </span>
+                      )
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => triggerRestore(record.storageURI)}
-                        disabled={tamperingRecordId === record.storageURI}
-                        className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-3 py-1.5 rounded-lg border border-emerald-200 text-xs transition"
-                      >
-                        ↺ Restore Pristine File
-                      </button>
+                      <span className="text-[11px] text-slate-400 animate-pulse">
+                        Verifying on ledger...
+                      </span>
                     )}
-
-                    <a
-                      href={record.storageURI}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-white hover:bg-slate-100 text-slate-600 font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-xs transition"
-                      title="Inspect Raw Hospital Storage JSON"
-                    >
-                      Raw JSON ↗
-                    </a>
                   </div>
                 </div>
 
                 <div className="p-5">
-                  {/* HASH INTEGRITY BADGE */}
-                  {report ? (
-                    <HashIntegrityBadge
-                      isTamperFree={report.isTamperFree}
-                      expectedHash={report.expectedOnChainHash}
-                      computedHash={report.computedLocalHash}
-                      storageURI={record.storageURI}
-                      hospitalNodeId={report.hospitalNodeId}
-                      tamperReason={report.tamperReason}
-                    />
-                  ) : (
-                    <div className="p-3 bg-slate-50 rounded-lg text-xs font-mono text-slate-500 mb-4 animate-pulse">
-                      Verifying SHA-256 fingerprint against Solidity blockchain ledger...
+                  {/* Tampered Warning (If integrity check fails) */}
+                  {!isVerifiedFree && report && (
+                    <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 text-xs text-rose-900 space-y-1">
+                      <div className="font-bold flex items-center gap-1.5 text-sm">
+                        <span>⚠️</span>
+                        <span>Clinical Decryption Blocked: Data Integrity Failure</span>
+                      </div>
+                      <p className="text-[11px] text-rose-800 leading-relaxed">
+                        The off-chain medical file stored on the hospital server does not match the immutable cryptographic fingerprint registered on the blockchain ledger. In-memory decryption was blocked to prevent clinical misdiagnosis.
+                      </p>
                     </div>
                   )}
 
                   {/* DECRYPTED CLINICAL CONTENT */}
                   {isVerifiedFree && decrypted && (
-                    <div className="space-y-4 pt-2">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                    <div className="space-y-4">
+                      {/* Patient & Facility Summary */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                         <div>
-                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Patient</span>
-                          <strong className="text-slate-900">{decrypted.patientName}</strong> ({decrypted.patientId})
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Patient Name</span>
+                          <strong className="text-slate-900 text-sm">{decrypted.patientName}</strong>
+                          <span className="block text-[10px] text-slate-500 font-mono">ID: {decrypted.patientId}</span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Hospital Node</span>
-                          <strong className="text-blue-700">{decrypted.hospitalName}</strong> [{decrypted.hospitalNodeId}]
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Hospital Facility</span>
+                          <strong className="text-blue-700">{decrypted.hospitalName}</strong>
+                          <span className="block text-[10px] text-slate-500 font-mono">Node: {decrypted.hospitalNodeId}</span>
                         </div>
                         <div>
                           <span className="text-slate-400 block text-[10px] uppercase font-semibold">Attending Physician</span>
-                          <strong className="text-slate-900">{decrypted.attendingPhysician?.name}</strong> (Lic: {decrypted.attendingPhysician?.licenseNumber})
+                          <strong className="text-slate-900">{decrypted.attendingPhysician?.name || 'Dr. Physician'}</strong>
+                          <span className="block text-[10px] text-slate-500 font-mono">Lic: {decrypted.attendingPhysician?.licenseNumber || 'Verified'}</span>
                         </div>
                       </div>
 
-                      {/* Clinical Notes */}
+                      {/* Clinical Consultation Notes */}
                       <div>
-                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Clinical Notes</span>
-                        <p className="text-xs bg-slate-50 p-3 rounded-lg border border-slate-200 text-slate-800 leading-relaxed font-sans">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Doctor Consultation Notes</span>
+                        <p className="text-xs bg-white p-3.5 rounded-xl border border-slate-200 text-slate-800 leading-relaxed font-sans shadow-2xs">
                           {decrypted.clinicalNotes}
                         </p>
                       </div>
@@ -564,24 +553,24 @@ function DoctorPortalContent() {
                       {/* Prescriptions */}
                       {decrypted.prescriptions && decrypted.prescriptions.length > 0 && (
                         <div>
-                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Prescribed Medications</span>
-                          <div className="border border-slate-200 rounded-lg overflow-hidden">
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1.5">Prescribed Medications</span>
+                          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
                             <table className="w-full text-left text-xs">
                               <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                                 <tr>
-                                  <th className="px-4 py-2">Drug</th>
+                                  <th className="px-4 py-2">Medication</th>
                                   <th className="px-4 py-2">Dosage</th>
                                   <th className="px-4 py-2">Frequency</th>
                                   <th className="px-4 py-2">Duration</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100">
+                              <tbody className="divide-y divide-slate-100 bg-white">
                                 {decrypted.prescriptions.map((p: any, pIdx: number) => (
-                                  <tr key={pIdx} className="hover:bg-slate-50">
-                                    <td className="px-4 py-2 font-semibold text-blue-700">{p.drug}</td>
-                                    <td className="px-4 py-2 font-mono">{p.dosage}</td>
-                                    <td className="px-4 py-2">{p.frequency}</td>
-                                    <td className="px-4 py-2">{p.duration}</td>
+                                  <tr key={pIdx} className="hover:bg-slate-50/80">
+                                    <td className="px-4 py-2 font-bold text-blue-900">{p.drug}</td>
+                                    <td className="px-4 py-2 font-mono text-slate-700">{p.dosage}</td>
+                                    <td className="px-4 py-2 text-slate-600">{p.frequency}</td>
+                                    <td className="px-4 py-2 text-slate-500">{p.duration || 'As directed'}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -593,22 +582,22 @@ function DoctorPortalContent() {
                       {/* Lab Results Table */}
                       {decrypted.labResults && decrypted.labResults.length > 0 && (
                         <div>
-                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">Laboratory Diagnostics Panel</span>
-                          <div className="border border-slate-200 rounded-lg overflow-hidden font-mono">
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1.5">Laboratory Diagnostic Panel</span>
+                          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
                             <table className="w-full text-left text-xs">
                               <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                                 <tr>
-                                  <th className="px-4 py-2">Test</th>
+                                  <th className="px-4 py-2">Diagnostic Test</th>
                                   <th className="px-4 py-2">Result</th>
                                   <th className="px-4 py-2">Unit</th>
-                                  <th className="px-4 py-2">Reference</th>
+                                  <th className="px-4 py-2">Normal Reference</th>
                                   <th className="px-4 py-2">Flag</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100">
+                              <tbody className="divide-y divide-slate-100 bg-white">
                                 {decrypted.labResults.map((lab: any, lIdx: number) => (
-                                  <tr key={lIdx} className="hover:bg-slate-50">
-                                    <td className="px-4 py-2 font-semibold">{lab.test}</td>
+                                  <tr key={lIdx} className="hover:bg-slate-50/80">
+                                    <td className="px-4 py-2 font-semibold text-slate-900">{lab.test}</td>
                                     <td className="px-4 py-2 font-bold text-slate-900">{lab.result}</td>
                                     <td className="px-4 py-2 text-slate-500">{lab.unit}</td>
                                     <td className="px-4 py-2 text-slate-500">{lab.normalRange}</td>
@@ -628,12 +617,17 @@ function DoctorPortalContent() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  )}
 
-                  {!isVerifiedFree && report && (
-                    <div className="bg-rose-50 p-4 rounded-lg border border-rose-200 text-center font-mono text-xs text-rose-800 font-semibold">
-                      [ In-Memory Decryption Aborted: Ciphertext Purged Due to Integrity Failure ]
+                      {/* Collapsible Cryptographic Audit Trail (discreet, for technical inspectors only) */}
+                      <details className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 cursor-pointer select-none">
+                        <summary className="hover:text-slate-600 font-mono text-[10px]">
+                          🛡️ Technical Blockchain Seal (Audit Proof)
+                        </summary>
+                        <div className="bg-slate-50 p-2.5 rounded-lg mt-1 font-mono text-[10px] space-y-0.5 text-slate-600">
+                          <div className="truncate">Solidity Fingerprint: {record.fileHash}</div>
+                          <div className="truncate">Storage Appliance: {record.storageURI}</div>
+                        </div>
+                      </details>
                     </div>
                   )}
                 </div>

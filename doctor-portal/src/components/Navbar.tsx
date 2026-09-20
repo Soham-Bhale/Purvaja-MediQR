@@ -89,6 +89,158 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
     verified: !!VERIFIED_DOCTORS[activeDoctor.toLowerCase()],
   };
 
+  // -------------------------------------------------------------
+  // WINDOW 1: DEDICATED DOCTOR CLINICAL WORKSTATION HEADER
+  // -------------------------------------------------------------
+  if (pathname === '/doctor') {
+    return (
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            
+            {/* Hospital & EMR Branding */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-xs">
+                🩺
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900 text-sm tracking-tight">Clinical EMR Workstation</span>
+                  <span className="text-[10px] font-bold uppercase bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+                    Doctor Terminal
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500">{currentDoc.hospital}</p>
+              </div>
+            </div>
+
+            {/* Doctor Identity & Biometric Badge */}
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-xs font-bold text-slate-900">{currentDoc.name}</div>
+                <div className="text-[10px] text-slate-400">Attending Physician</div>
+              </div>
+              {isBioUnlocked ? (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>Biometric Verified</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  <span>Biometric Locked</span>
+                </span>
+              )}
+            </div>
+
+            {/* Right Quick Controls */}
+            <div className="flex items-center gap-2.5">
+              {/* Doctor switcher dropdown */}
+              <select
+                value={activeDoctor.toLowerCase()}
+                onChange={(e) => onDoctorChange(e.target.value)}
+                aria-label="Active Practitioner"
+                className="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 py-1.5 px-2.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-xs"
+              >
+                {DOCTOR_OPTIONS.map((doc) => (
+                  <option key={doc.address} value={doc.address.toLowerCase()}>
+                    {doc.verified ? '✓ ' : '✗ '}{doc.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Distinct button to open Government Installer in separate window */}
+              <Link
+                href="/installer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
+                title="Open Government Appliance Installer in new window"
+              >
+                <span>🏛️ Gov Installer Window ↗</span>
+              </Link>
+
+              <Link
+                href="/emergency"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition"
+              >
+                <span>🚑</span>
+                <span>Triage</span>
+              </Link>
+
+              <Link
+                href="/"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-medium transition"
+              >
+                Exit
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // WINDOW 2: DEDICATED GOVERNMENT APPLIANCE INSTALLER HEADER
+  // -------------------------------------------------------------
+  if (pathname === '/installer') {
+    return (
+      <header className="bg-slate-950 border-b border-slate-800 text-white sticky top-0 z-50 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            
+            {/* Government Emblem & Identity */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-bold text-lg shadow-xs">
+                🏛️
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white text-sm tracking-tight">National Health Authority (MOH)</span>
+                  <span className="text-[10px] font-bold uppercase bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-400/30">
+                    Field Deployment
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">Hospital Storage Appliance Installation Utility</p>
+              </div>
+            </div>
+
+            {/* Field Official Badge & Distinct button to launch Doctor Workstation */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block text-right">
+                <div className="text-xs font-bold text-amber-300">UID-GOV-DEL-9921</div>
+                <div className="text-[10px] text-emerald-400">● Field Commissioning Mode</div>
+              </div>
+
+              <Link
+                href="/doctor"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                title="Launch Doctor Clinical Workstation in separate window"
+              >
+                <span>🩺 Doctor Terminal Window ↗</span>
+              </Link>
+
+              <Link
+                href="/"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:bg-slate-800 text-xs font-medium transition"
+              >
+                Overview
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // DEFAULT CONSORTIUM / GENERAL OVERVIEW HEADER
+  // -------------------------------------------------------------
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
