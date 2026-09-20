@@ -125,6 +125,7 @@ export function createBiometricSession(doctorWallet: string, doctorName: string)
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(BIOMETRIC_SESSION_KEY, JSON.stringify(session));
+      window.dispatchEvent(new CustomEvent('mediqr_biometric_session_change', { detail: { active: true, session } }));
     } catch (err) {
       console.error('Error persisting biometric session:', err);
     }
@@ -136,6 +137,7 @@ export function clearBiometricSession(): void {
   if (typeof window !== 'undefined') {
     try {
       localStorage.removeItem(BIOMETRIC_SESSION_KEY);
+      window.dispatchEvent(new CustomEvent('mediqr_biometric_session_change', { detail: { active: false } }));
     } catch (err) {
       console.error('Error clearing biometric session:', err);
     }

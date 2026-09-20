@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { VERIFIED_DOCTORS, ROOT_ADMIN_ADDRESS } from '../lib/blockchain';
-import { hasActiveBiometricSession } from '../lib/biometrics';
+import { hasActiveBiometricSession, clearBiometricSession } from '../lib/biometrics';
 
 interface NavbarProps {
   activeDoctor: string;
@@ -45,9 +45,18 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   const [isBioUnlocked, setIsBioUnlocked] = useState<boolean>(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsBioUnlocked(hasActiveBiometricSession(activeDoctor));
+    function checkBio() {
+      if (typeof window !== 'undefined') {
+        setIsBioUnlocked(hasActiveBiometricSession(activeDoctor));
+      }
     }
+    checkBio();
+    window.addEventListener('mediqr_biometric_session_change', checkBio);
+    window.addEventListener('storage', checkBio);
+    return () => {
+      window.removeEventListener('mediqr_biometric_session_change', checkBio);
+      window.removeEventListener('storage', checkBio);
+    };
   }, [activeDoctor, pathname]);
 
   useEffect(() => {
@@ -114,22 +123,44 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               </div>
             </div>
 
-            {/* Doctor Identity & Biometric Badge */}
-            <div className="hidden sm:flex items-center gap-3">
-              <div className="text-right">
+            {/* Doctor Identity & Responsive Interactive Biometric Badge */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="text-right hidden md:block">
                 <div className="text-xs font-bold text-slate-900">{currentDoc.name}</div>
                 <div className="text-[10px] text-slate-400">Attending Physician</div>
               </div>
               {isBioUnlocked ? (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>Biometric Verified</span>
-                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearBiometricSession();
+                    setIsBioUnlocked(false);
+                  }}
+                  title="Biometrics verified. Click to lock terminal."
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 border border-emerald-300 px-2.5 py-1 rounded-full transition cursor-pointer shadow-xs active:scale-95 group"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 group-hover:bg-rose-500"></span>
+                  <span className="group-hover:hidden">🔓 Biometric Verified</span>
+                  <span className="hidden group-hover:inline">🔒 Click to Lock</span>
+                </button>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const scanner = document.getElementById('doctor-fingerprint-scanner');
+                    if (scanner) {
+                      scanner.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  title="Biometrics locked. Tap to scan fingerprint."
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-full transition cursor-pointer shadow-xs active:scale-95 group"
+                >
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                  <span>Biometric Locked</span>
-                </span>
+                  <span>🔒 Biometric Locked</span>
+                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded ml-0.5 group-hover:bg-amber-200">
+                    Scan 👆
+                  </span>
+                </button>
               )}
             </div>
 
@@ -207,7 +238,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               </div>
             </div>
 
-            {/* Field Official Badge & Distinct button to launch Doctor Workstation */}
+            {/* Field Official Badge & Distinct button to launch Doctor Workstation (No Overview link) */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
                 <div className="text-xs font-bold text-amber-300">UID-GOV-DEL-9921</div>
@@ -223,12 +254,62 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               >
                 <span>🩺 Doctor Terminal Window ↗</span>
               </Link>
+            </div>
+
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // WINDOW 3: DEDICATED EMERGENCY FIRST-RESPONDER TRIAGE HEADER
+  // -------------------------------------------------------------
+  if (pathname === '/emergency') {
+    return (
+      <header className="bg-slate-950 border-b border-rose-900/60 text-white sticky top-0 z-50 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            
+            {/* Paramedic / Triage Branding */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center text-white font-bold text-lg shadow-xs">
+                🚑
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white text-sm tracking-tight">Emergency Triage Terminal</span>
+                  <span className="text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded border border-rose-500/40">
+                    Paramedic Field Scanner
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">Rapid Roadside Optical Scan & Critical Vitals</p>
+              </div>
+            </div>
+
+            {/* Emergency Status & Workstation Link */}
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-300 bg-rose-950 border border-rose-800 px-3 py-1 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Offline Optical Decryptor Ready</span>
+              </span>
 
               <Link
-                href="/"
-                className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:bg-slate-800 text-xs font-medium transition"
+                href="/doctor"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                title="Open Doctor Clinical Workstation"
               >
-                Overview
+                <span>🩺 Doctor Terminal ↗</span>
+              </Link>
+
+              <Link
+                href="/installer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-semibold transition"
+                title="Open Government Appliance Installer"
+              >
+                <span>🏛️ Gov Installer ↗</span>
               </Link>
             </div>
 

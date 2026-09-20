@@ -1,12 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import TriageCard, { TriageData } from '../../components/TriageCard';
 
 const PRESETS = [
   {
-    name: 'Jane Doe (Critical Anaphylaxis - Penicillin)',
+    id: 'jane-doe',
+    label: 'Jane Doe (O- | Penicillin Anaphylaxis Alert)',
+    shortName: 'Jane Doe',
+    bloodType: 'O-',
+    alertBadge: 'Critical Allergy: Penicillin G',
     payload: JSON.stringify({
       v: '2.0',
       triage: {
@@ -27,7 +32,11 @@ const PRESETS = [
     }, null, 2)
   },
   {
-    name: 'Robert Fox (Cardiac Alert - Iodine / Contrast)',
+    id: 'robert-fox',
+    label: 'Robert Fox (AB+ | Contrast Dye & Cardiac Alert)',
+    shortName: 'Robert Fox',
+    bloodType: 'AB+',
+    alertBadge: 'Cardiac Alert & Contrast Allergy',
     payload: JSON.stringify({
       v: '2.0',
       triage: {
@@ -50,12 +59,16 @@ const PRESETS = [
 
 function EmergencyTriageContent() {
   const searchParams = useSearchParams();
+  
+  // Safe initial state from first preset so UI is never blank
+  const initialData = JSON.parse(PRESETS[0].payload);
   const [qrRawInput, setQrRawInput] = useState<string>(PRESETS[0].payload);
-  const [parsedTriage, setParsedTriage] = useState<TriageData | null>(null);
-  const [patientHash, setPatientHash] = useState<string | null>(null);
+  const [parsedTriage, setParsedTriage] = useState<TriageData>(initialData.triage);
+  const [patientHash, setPatientHash] = useState<string | null>(initialData.patientHash);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [activePresetIndex, setActivePresetIndex] = useState<number>(0);
   const [isLensScanned, setIsLensScanned] = useState<boolean>(false);
+  const [scanInputVal, setScanInputVal] = useState<string>('');
 
   function decodePayload(rawString: string): string {
     const trimmed = rawString.trim();
@@ -104,7 +117,6 @@ function EmergencyTriageContent() {
           return decodedBase64;
         }
       } catch {
-        // Might be plain JSON encoded URI
         try {
           const decodedUri = decodeURIComponent(trimmed);
           if (decodedUri.startsWith('{')) return decodedUri;
@@ -125,8 +137,6 @@ function EmergencyTriageContent() {
       const data = JSON.parse(decoded);
       if (!data.triage || !data.triage.bloodType) {
         setParseErrors(['Missing valid emergency triage payload. Ensure JSON contains triage.bloodType']);
-        setParsedTriage(null);
-        setPatientHash(null);
         return;
       }
       setParsedTriage(data.triage);
@@ -137,14 +147,11 @@ function EmergencyTriageContent() {
       }
     } catch (err: any) {
       setParseErrors([`Invalid QR payload format: ${err.message}`]);
-      setParsedTriage(null);
-      setPatientHash(null);
     }
   }
 
   // Auto-parse on load: supports both compact URL params (?b=...&n=...) and ?data= base64
   useEffect(() => {
-    // 1. Check for compact URL parameters: ?n=...&b=...&a=...&p=...&h=...
     const n = searchParams.get('n') || searchParams.get('name');
     const b = searchParams.get('b') || searchParams.get('blood');
     const a = searchParams.get('a') || searchParams.get('allergy') || '';
@@ -170,108 +177,154 @@ function EmergencyTriageContent() {
       return;
     }
 
-    // 2. Check for base64 / data parameter
     const dataParam = searchParams.get('data');
     if (dataParam) {
       handleParse(dataParam, 'url');
       return;
     }
-
-    // 3. Fallback to default preset
-    handleParse(PRESETS[0].payload, 'manual');
   }, [searchParams]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+      
+      {/* Top First-Responder Banner */}
+      <div className="bg-gradient-to-r from-rose-900 via-slate-900 to-rose-950 text-white rounded-2xl p-6 shadow-md border border-rose-800/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-rose-600 uppercase tracking-wider">
-            <span>🚑</span> First-Responder Triage Terminal
+          <div className="flex items-center gap-2 text-xs font-bold text-rose-400 uppercase tracking-wider">
+            <span>🚨</span> Rapid Paramedic Optical Triage
           </div>
-          <h1 className="text-xl font-bold text-slate-900 mt-1">
-            Emergency Medical QR Scanner
+          <h1 className="text-xl font-extrabold mt-1 tracking-tight">
+            First-Responder Emergency MediQR Terminal
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Offline unauthenticated optical scan parser showing critical allergies, blood group, and emergency contacts.
+          <p className="text-xs text-slate-300 mt-1">
+            Zero-latency offline optical scan parser. Displays critical blood group, life-threatening allergies, and immediate emergency contacts.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {isLensScanned && (
-            <span className="bg-blue-50 border border-blue-200 text-blue-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5 shadow-sm animate-pulse">
-              <span>📱</span> Google Lens / Camera Scan Link Active
+        <div className="flex flex-wrap items-center gap-2.5">
+          {isLensScanned ? (
+            <span className="bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-bold px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 shadow-sm animate-pulse">
+              <span>📱</span> Mobile Lens Scan Active
+            </span>
+          ) : (
+            <span className="bg-rose-500/20 border border-rose-500/40 text-rose-300 font-bold px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+              Emergency Mode Active
             </span>
           )}
-          <span className="bg-rose-50 border border-rose-200 text-rose-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span>
-            Emergency Mode Active
-          </span>
+
+          <Link
+            href="/doctor"
+            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5"
+          >
+            <span>🩺 Doctor Workstation ↗</span>
+          </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Input Controls */}
-        <div className="space-y-6 lg:col-span-1">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
-            <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
-              Sample Optical Scans
-            </h2>
-            <div className="space-y-2">
-              {PRESETS.map((preset, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setActivePresetIndex(idx);
-                    setIsLensScanned(false);
-                    handleParse(preset.payload, 'manual');
-                  }}
-                  className={`w-full text-left p-3 text-xs rounded-lg border transition ${
-                    activePresetIndex === idx && !isLensScanned
-                      ? 'border-blue-500 bg-blue-50/50 text-blue-900 font-semibold shadow-xs'
-                      : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                  }`}
-                >
-                  {preset.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h2 className="text-sm font-bold text-slate-900">
-                Optical QR Payload
-              </h2>
-              <span className="text-[10px] text-slate-400 font-mono">Supports URL & JSON</span>
-            </div>
-            <textarea
-              rows={8}
-              value={qrRawInput}
-              onChange={(e) => handleParse(e.target.value, 'manual')}
-              aria-label="Raw QR Optical Payload"
-              placeholder="Paste raw QR payload JSON or Google Lens scan URL here..."
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 font-mono text-xs text-slate-800 leading-tight focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-            {parseErrors.length > 0 && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-lg text-xs font-mono">
-                {parseErrors.join(', ')}
-              </div>
-            )}
+      {/* Quick Patient Switcher & Optical Scanner Bar */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <span>👤</span> Sample Patient Scans:
+          </span>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            {PRESETS.map((preset, idx) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => {
+                  setActivePresetIndex(idx);
+                  setIsLensScanned(false);
+                  handleParse(preset.payload, 'manual');
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border cursor-pointer ${
+                  activePresetIndex === idx && !isLensScanned
+                    ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-xs'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <span>{preset.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Right: Rendered Vitals Card */}
-        <div className="lg:col-span-2">
-          {parsedTriage ? (
-            <TriageCard triage={parsedTriage} patientHash={patientHash || undefined} />
-          ) : (
-            <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-400 font-mono text-xs shadow-sm">
-              No valid MediQR payload loaded.
+        {/* Optical / Google Lens URL Paste Input Bar */}
+        <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+          <div className="relative flex-1 w-full">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+              📷
+            </span>
+            <input
+              type="text"
+              value={scanInputVal}
+              onChange={(e) => setScanInputVal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && scanInputVal.trim()) {
+                  handleParse(scanInputVal.trim(), 'manual');
+                  setScanInputVal('');
+                }
+              }}
+              placeholder="Paste Google Lens URL, compact barcode string, or raw JSON scan payload..."
+              className="w-full pl-8 pr-3 py-2 text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 shadow-xs"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (scanInputVal.trim()) {
+                handleParse(scanInputVal.trim(), 'manual');
+                setScanInputVal('');
+              }
+            }}
+            className="w-full sm:w-auto px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg transition shadow-xs whitespace-nowrap"
+          >
+            ⚡ Parse Scan
+          </button>
+        </div>
+
+        {parseErrors.length > 0 && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-800 p-2.5 rounded-lg text-xs font-mono">
+            {parseErrors.join(', ')}
+          </div>
+        )}
+      </div>
+
+      {/* Primary Emergency Triage Card */}
+      <div>
+        <TriageCard triage={parsedTriage} patientHash={patientHash || undefined} />
+      </div>
+
+      {/* Collapsible Technical Optical Data */}
+      <details className="group bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-xs transition">
+        <summary className="px-4 py-3 text-xs font-semibold text-slate-600 flex items-center justify-between cursor-pointer hover:bg-slate-100 select-none">
+          <span className="flex items-center gap-2">
+            <span>🔬</span> Technical Optical Payload & Blockchain Hash Proof
+          </span>
+          <span className="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+        </summary>
+        <div className="p-4 border-t border-slate-200 bg-white space-y-3">
+          <p className="text-xs text-slate-500">
+            Below is the raw decrypted JSON string encoded into the physical MediQR physical card front segment.
+          </p>
+          <pre className="p-3 bg-slate-900 text-emerald-400 rounded-lg font-mono text-[11px] overflow-x-auto">
+            {qrRawInput}
+          </pre>
+          {patientHash && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+              <span className="font-mono text-blue-900 break-all">Patient Hash: {patientHash}</span>
+              <Link
+                href={`/doctor?patientHash=${encodeURIComponent(patientHash)}`}
+                className="text-blue-700 font-bold hover:underline whitespace-nowrap"
+              >
+                Open Full Doctor Record →
+              </Link>
             </div>
           )}
         </div>
-      </div>
+      </details>
+
     </div>
   );
 }

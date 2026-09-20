@@ -47,13 +47,22 @@ function DoctorPortalContent() {
     }
   }, []);
 
-  // Check biometric session on activeDoctor change
+  // Check biometric session on activeDoctor change and custom events
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const unlocked = hasActiveBiometricSession(activeDoctor);
-      setIsBiometricUnlocked(unlocked);
-      setBiometricCheckDone(true);
+    function updateBio() {
+      if (typeof window !== 'undefined') {
+        const unlocked = hasActiveBiometricSession(activeDoctor);
+        setIsBiometricUnlocked(unlocked);
+        setBiometricCheckDone(true);
+      }
     }
+    updateBio();
+    window.addEventListener('mediqr_biometric_session_change', updateBio);
+    window.addEventListener('storage', updateBio);
+    return () => {
+      window.removeEventListener('mediqr_biometric_session_change', updateBio);
+      window.removeEventListener('storage', updateBio);
+    };
   }, [activeDoctor]);
 
   // Sync with searchParams
@@ -279,7 +288,7 @@ function DoctorPortalContent() {
 
       {/* Biometric Fingerprint Gatekeeper */}
       {!isBiometricUnlocked && biometricCheckDone && (
-        <div className="bg-white rounded-2xl border-2 border-amber-300 p-6 md:p-8 shadow-sm space-y-6">
+        <div id="doctor-fingerprint-scanner" className="bg-white rounded-2xl border-2 border-amber-300 p-6 md:p-8 shadow-sm space-y-6 scroll-mt-24">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
