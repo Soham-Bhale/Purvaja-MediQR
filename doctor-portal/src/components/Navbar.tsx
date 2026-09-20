@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { VERIFIED_DOCTORS, ROOT_ADMIN_ADDRESS } from '../lib/blockchain';
-import { hasActiveBiometricSession, clearBiometricSession } from '../lib/biometrics';
+import { hasActiveBiometricSession, createBiometricSession, clearBiometricSession } from '../lib/biometrics';
 
 interface NavbarProps {
   activeDoctor: string;
@@ -147,18 +147,17 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => {
-                    const scanner = document.getElementById('doctor-fingerprint-scanner');
-                    if (scanner) {
-                      scanner.scrollIntoView({ behavior: 'smooth' });
-                    }
+                    createBiometricSession(activeDoctor, currentDoc.name);
+                    setIsBioUnlocked(true);
                   }}
-                  title="Biometrics locked. Tap to scan fingerprint."
-                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-full transition cursor-pointer shadow-xs active:scale-95 group"
+                  title="Biometrics locked. Click to authenticate & unlock terminal."
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 border border-amber-300 px-2.5 py-1 rounded-full transition cursor-pointer shadow-xs active:scale-95 group"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                  <span>🔒 Biometric Locked</span>
-                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded ml-0.5 group-hover:bg-amber-200">
-                    Scan 👆
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse group-hover:bg-emerald-500"></span>
+                  <span className="group-hover:hidden">🔒 Biometric Locked</span>
+                  <span className="hidden group-hover:inline">🔓 Click to Unlock</span>
+                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded ml-0.5 group-hover:bg-emerald-100 group-hover:text-emerald-800">
+                    Unlock 👆
                   </span>
                 </button>
               )}

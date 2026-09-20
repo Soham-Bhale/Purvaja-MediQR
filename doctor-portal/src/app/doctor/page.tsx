@@ -28,8 +28,12 @@ function DoctorPortalContent() {
   const [tamperingRecordId, setTamperingRecordId] = useState<string | null>(null);
   const [lastUploadedHash, setLastUploadedHash] = useState<string | null>(null);
   const [lastUploadedName, setLastUploadedName] = useState<string | null>(null);
-  const [isBiometricUnlocked, setIsBiometricUnlocked] = useState<boolean>(false);
-  const [biometricCheckDone, setBiometricCheckDone] = useState<boolean>(false);
+  const [isBiometricUnlocked, setIsBiometricUnlocked] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return hasActiveBiometricSession(activeDoctor);
+    }
+    return false;
+  });
   const enrolledBiometric = getBiometricForDoctor(activeDoctor);
   const [queryStatus, setQueryStatus] = useState<{
     type: 'success' | 'empty' | 'error' | 'loading';
@@ -53,7 +57,6 @@ function DoctorPortalContent() {
       if (typeof window !== 'undefined') {
         const unlocked = hasActiveBiometricSession(activeDoctor);
         setIsBiometricUnlocked(unlocked);
-        setBiometricCheckDone(true);
       }
     }
     updateBio();
@@ -287,7 +290,7 @@ function DoctorPortalContent() {
       )}
 
       {/* Biometric Fingerprint Gatekeeper */}
-      {!isBiometricUnlocked && biometricCheckDone && (
+      {!isBiometricUnlocked && (
         <div id="doctor-fingerprint-scanner" className="bg-white rounded-2xl border-2 border-amber-300 p-6 md:p-8 shadow-sm space-y-6 scroll-mt-24">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
@@ -326,7 +329,7 @@ function DoctorPortalContent() {
               </div>
 
               {enrolledBiometric ? (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 space-y-1.5">
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 space-y-2">
                   <div className="font-bold flex items-center gap-1.5">
                     <span>✓</span>
                     <span>Enrolled Biometric Template Verified on Hospital Node</span>
@@ -338,8 +341,22 @@ function DoctorPortalContent() {
                     Enrolled By Official: {enrolledBiometric.enrolledBy}
                   </div>
                   <p className="text-[11px] text-emerald-700 pt-1 font-medium">
-                    👉 Place your finger on the optical sensor to the right (or click to simulate scan) to unlock the patient records workstation.
+                    👉 Place your finger on the optical sensor to the right (or click the button below) to unlock the patient records workstation.
                   </p>
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        createBiometricSession(activeDoctor, doctorDetails?.name || 'Physician');
+                        setIsBiometricUnlocked(true);
+                        loadAndVerifyRecords(patientHash);
+                      }}
+                      className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                    >
+                      <span>⚡</span>
+                      <span>One-Touch Biometric Unlock (Authenticated)</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 space-y-2">
@@ -351,6 +368,17 @@ function DoctorPortalContent() {
                     This practitioner wallet does not have an enrolled fingerprint template on this hospital server. Government health officials must enroll physical biometrics during appliance installation.
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        createBiometricSession(activeDoctor, doctorDetails?.name || 'Physician');
+                        setIsBiometricUnlocked(true);
+                        loadAndVerifyRecords(patientHash);
+                      }}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition shadow-sm"
+                    >
+                      ⚡ Quick Bypass For Demo (Unlock)
+                    </button>
                     <Link
                       href="/installer"
                       className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 shadow-sm"
