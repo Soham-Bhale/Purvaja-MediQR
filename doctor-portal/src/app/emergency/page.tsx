@@ -59,10 +59,33 @@ function EmergencyTriageContent() {
 
   function decodePayload(rawString: string): string {
     const trimmed = rawString.trim();
-    // If input is a URL like http://.../emergency?data=...
+    // If input is a URL like http://.../emergency?data=... or http://.../emergency?b=O-&n=...
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       try {
         const url = new URL(trimmed);
+        const b = url.searchParams.get('b') || url.searchParams.get('blood');
+        if (b) {
+          const n = url.searchParams.get('n') || url.searchParams.get('name') || 'Emergency Patient';
+          const a = url.searchParams.get('a') || url.searchParams.get('allergy') || '';
+          const c = url.searchParams.get('c') || url.searchParams.get('condition') || '';
+          const p = url.searchParams.get('p') || url.searchParams.get('phone') || '';
+          const h = url.searchParams.get('h') || url.searchParams.get('hash') || '';
+
+          return JSON.stringify({
+            v: '2.0',
+            triage: {
+              fullName: n,
+              bloodType: b,
+              criticalAllergies: a ? a.split(',').map((s: string) => s.trim()).filter(Boolean) : ['None Reported'],
+              chronicConditions: c ? c.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+              emergencyContacts: p ? [{ name: 'Emergency Contact', relationship: 'Primary Contact', phone: p }] : [],
+              donorStatus: true,
+              resuscitationPreference: 'FULL_CODE',
+            },
+            patientHash: h,
+          }, null, 2);
+        }
+
         const dataParam = url.searchParams.get('data');
         if (dataParam) {
           return decodePayload(dataParam);
@@ -119,14 +142,43 @@ function EmergencyTriageContent() {
     }
   }
 
-  // Auto-parse on load if ?data= query parameter is present (Google Lens / Camera scan link)
+  // Auto-parse on load: supports both compact URL params (?b=...&n=...) and ?data= base64
   useEffect(() => {
+    // 1. Check for compact URL parameters: ?n=...&b=...&a=...&p=...&h=...
+    const n = searchParams.get('n') || searchParams.get('name');
+    const b = searchParams.get('b') || searchParams.get('blood');
+    const a = searchParams.get('a') || searchParams.get('allergy') || '';
+    const c = searchParams.get('c') || searchParams.get('condition') || '';
+    const p = searchParams.get('p') || searchParams.get('phone') || '';
+    const h = searchParams.get('h') || searchParams.get('hash') || '';
+
+    if (b) {
+      const triageObj: TriageData = {
+        fullName: n || 'Emergency Patient',
+        bloodType: b,
+        criticalAllergies: a ? a.split(',').map((s) => s.trim()).filter(Boolean) : ['None Reported'],
+        chronicConditions: c ? c.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        emergencyContacts: p ? [{ name: 'Emergency Contact', relationship: 'Primary Contact', phone: p }] : [],
+        donorStatus: true,
+        resuscitationPreference: 'FULL_CODE',
+      };
+      setParsedTriage(triageObj);
+      setPatientHash(h || null);
+      setQrRawInput(JSON.stringify({ v: '2.0', triage: triageObj, patientHash: h }, null, 2));
+      setIsLensScanned(true);
+      setParseErrors([]);
+      return;
+    }
+
+    // 2. Check for base64 / data parameter
     const dataParam = searchParams.get('data');
     if (dataParam) {
       handleParse(dataParam, 'url');
-    } else {
-      handleParse(PRESETS[0].payload, 'manual');
+      return;
     }
+
+    // 3. Fallback to default preset
+    handleParse(PRESETS[0].payload, 'manual');
   }, [searchParams]);
 
   return (

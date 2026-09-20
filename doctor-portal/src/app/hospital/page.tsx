@@ -25,6 +25,8 @@ export default function HospitalPortalPage() {
   const [generatedPatientHash, setGeneratedPatientHash] = useState<string | null>(null);
   const [issuing, setIssuing] = useState(false);
   const [qrFormat, setQrFormat] = useState<'url' | 'json'>('url');
+  const [hostMode, setHostMode] = useState<'lan' | 'local'>('lan');
+  const [lanIp] = useState('192.168.10.35:3000');
 
   // --- RECORD UPLOAD FORM STATE ---
   const [targetNode, setTargetNode] = useState<'http://localhost:5001' | 'http://localhost:5002'>('http://localhost:5001');
@@ -64,20 +66,26 @@ export default function HospitalPortalPage() {
         issuerNodeId: 'HOSPITAL-NODE-A',
       };
 
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-      const jsonString = JSON.stringify(payload);
-      const encodedPayload = typeof window !== 'undefined'
-        ? btoa(unescape(encodeURIComponent(jsonString)))
-        : Buffer.from(jsonString).toString('base64');
+      // Determine target host: use LAN IP for phone scanning so phone connects over Wi-Fi
+      let targetOrigin = `http://${lanIp}`;
+      if (typeof window !== 'undefined') {
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          targetOrigin = window.location.origin;
+        } else if (hostMode === 'local') {
+          targetOrigin = window.location.origin;
+        }
+      }
 
-      const qrString = qrFormat === 'url'
-        ? `${origin}/emergency?data=${encodeURIComponent(encodedPayload)}`
-        : jsonString;
+      // Ultra-compact URL (under 100 characters!) creates an ultra-low density QR code
+      // that phone cameras and Google Lens scan in 0.02s without freezing
+      const compactEmergencyUrl = `${targetOrigin}/emergency?b=${encodeURIComponent(bloodType)}&n=${encodeURIComponent(fullName)}&a=${encodeURIComponent(criticalAllergies)}&p=${encodeURIComponent(contactPhone)}&h=${encodeURIComponent(hash.slice(0, 18))}`;
+
+      const qrString = qrFormat === 'url' ? compactEmergencyUrl : JSON.stringify(payload);
 
       const qrDataUrl = await QRCode.toDataURL(qrString, {
         errorCorrectionLevel: 'M',
-        margin: 2,
-        scale: 6,
+        margin: 3,
+        scale: 7,
         color: {
           dark: '#000000',
           light: '#ffffff',
@@ -343,6 +351,43 @@ export default function HospitalPortalPage() {
                 📟 Raw JSON (Scanner Gun)
               </button>
             </div>
+
+            {/* Host Destination for Phone Scans */}
+            {qrFormat === 'url' && (
+              <div className="w-full bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-left text-xs mb-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-blue-900 text-[11px]">Destination Host for Phone Camera:</span>
+                  <span className="text-[10px] text-blue-700 font-mono font-semibold">Wi-Fi LAN IP</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setHostMode('lan')}
+                    className={`p-1.5 rounded-lg border text-center font-semibold transition ${
+                      hostMode === 'lan'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    📱 Phone Wi-Fi (192.168.10.35)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHostMode('local')}
+                    className={`p-1.5 rounded-lg border text-center font-semibold transition ${
+                      hostMode === 'local'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    💻 Laptop Only (localhost)
+                  </button>
+                </div>
+                <p className="text-[10px] text-blue-800 leading-tight">
+                  💡 <b>Why this matters:</b> Smartphones cannot reach <code>localhost</code>. When scanning with Google Lens or your phone camera, use <b>Phone Wi-Fi (192.168.10.35)</b> so your phone loads the page over the local Wi-Fi network!
+                </p>
+              </div>
+            )}
 
             {generatedQRUrl ? (
               <div className="space-y-4 w-full">

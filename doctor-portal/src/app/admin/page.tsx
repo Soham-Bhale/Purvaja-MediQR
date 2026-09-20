@@ -315,17 +315,16 @@ export default function ConsortiumAdminPage() {
           issuerNodeId: 'CONSORTIUM-ROOT-MIGRATION',
         };
 
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-        const jsonString = JSON.stringify(qrPayload);
-        const encodedPayload = typeof window !== 'undefined'
-          ? btoa(unescape(encodeURIComponent(jsonString)))
-          : Buffer.from(jsonString).toString('base64');
-        const qrContent = `${origin}/emergency?data=${encodeURIComponent(encodedPayload)}`;
+        let targetOrigin = 'http://192.168.10.35:3000';
+        if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          targetOrigin = window.location.origin;
+        }
+        const compactUrl = `${targetOrigin}/emergency?b=${encodeURIComponent(item.bloodType || 'O+')}&n=${encodeURIComponent(item.patientName)}&a=${encodeURIComponent(item.allergies || 'None')}&h=${encodeURIComponent(pHash.slice(0, 18))}`;
 
-        const qrDataUrl = await QRCode.toDataURL(qrContent, {
+        const qrDataUrl = await QRCode.toDataURL(compactUrl, {
           errorCorrectionLevel: 'M',
-          margin: 2,
-          scale: 5,
+          margin: 3,
+          scale: 6,
         });
 
         newMigratedCards.push({
