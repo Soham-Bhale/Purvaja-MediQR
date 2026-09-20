@@ -17,10 +17,11 @@ echo.
 echo =========================================================================
 echo  MediQR Services Launched Successfully!
 echo  - Doctor and Triage Portal: http://localhost:3000
-echo  - Emergency Triage View:    http://localhost:3000/emergency
+echo  - Government Installer:     http://localhost:3000/installer
 echo  - Doctor Portal:            http://localhost:3000/doctor
 echo  - Hospital Admin Hub:       http://localhost:3000/hospital
 echo  - Tamper Lab:               http://localhost:3000/simulator
+echo  - Emergency Triage View:    http://localhost:3000/emergency
 echo  - Hospital Node A API:      http://localhost:5001/health
 echo  - Hospital Node B API:      http://localhost:5002/health
 echo =========================================================================
