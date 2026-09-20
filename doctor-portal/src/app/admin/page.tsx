@@ -315,7 +315,14 @@ export default function ConsortiumAdminPage() {
           issuerNodeId: 'CONSORTIUM-ROOT-MIGRATION',
         };
 
-        const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+        const jsonString = JSON.stringify(qrPayload);
+        const encodedPayload = typeof window !== 'undefined'
+          ? btoa(unescape(encodeURIComponent(jsonString)))
+          : Buffer.from(jsonString).toString('base64');
+        const qrContent = `${origin}/emergency?data=${encodeURIComponent(encodedPayload)}`;
+
+        const qrDataUrl = await QRCode.toDataURL(qrContent, {
           errorCorrectionLevel: 'M',
           margin: 2,
           scale: 5,

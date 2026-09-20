@@ -24,6 +24,7 @@ export default function HospitalPortalPage() {
   const [generatedQRUrl, setGeneratedQRUrl] = useState<string | null>(null);
   const [generatedPatientHash, setGeneratedPatientHash] = useState<string | null>(null);
   const [issuing, setIssuing] = useState(false);
+  const [qrFormat, setQrFormat] = useState<'url' | 'json'>('url');
 
   // --- RECORD UPLOAD FORM STATE ---
   const [targetNode, setTargetNode] = useState<'http://localhost:5001' | 'http://localhost:5002'>('http://localhost:5001');
@@ -63,7 +64,17 @@ export default function HospitalPortalPage() {
         issuerNodeId: 'HOSPITAL-NODE-A',
       };
 
-      const qrDataUrl = await QRCode.toDataURL(JSON.stringify(payload), {
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const jsonString = JSON.stringify(payload);
+      const encodedPayload = typeof window !== 'undefined'
+        ? btoa(unescape(encodeURIComponent(jsonString)))
+        : Buffer.from(jsonString).toString('base64');
+
+      const qrString = qrFormat === 'url'
+        ? `${origin}/emergency?data=${encodeURIComponent(encodedPayload)}`
+        : jsonString;
+
+      const qrDataUrl = await QRCode.toDataURL(qrString, {
         errorCorrectionLevel: 'M',
         margin: 2,
         scale: 6,
@@ -307,11 +318,47 @@ export default function HospitalPortalPage() {
 
           {/* QR Display Panel */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col items-center justify-center text-center">
+            {/* QR Format Selector */}
+            <div className="flex items-center justify-center gap-1 p-1 bg-slate-100 rounded-lg text-xs mb-4 w-full">
+              <button
+                type="button"
+                onClick={() => setQrFormat('url')}
+                className={`flex-1 py-1 px-2 rounded-md text-[11px] font-semibold transition ${
+                  qrFormat === 'url'
+                    ? 'bg-white text-blue-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                📱 Smart Mobile URL (Google Lens Safe)
+              </button>
+              <button
+                type="button"
+                onClick={() => setQrFormat('json')}
+                className={`flex-1 py-1 px-2 rounded-md text-[11px] font-semibold transition ${
+                  qrFormat === 'json'
+                    ? 'bg-white text-slate-800 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                📟 Raw JSON (Scanner Gun)
+              </button>
+            </div>
+
             {generatedQRUrl ? (
               <div className="space-y-4 w-full">
                 <div className="inline-block p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
                   <img src={generatedQRUrl} alt="MediQR Card" className="w-48 h-48 mx-auto" />
                 </div>
+
+                {qrFormat === 'url' ? (
+                  <p className="text-[11px] text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded-lg py-1.5 px-2">
+                    ✓ Google Lens & Camera Safe: Tap "Open in browser" to view emergency card without freezing.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 font-medium bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2">
+                    📟 Hardware Barcode Scanner Mode: Raw JSON data stream.
+                  </p>
+                )}
 
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-left text-xs font-mono break-all">
                   <span className="text-[10px] uppercase font-semibold text-slate-400 block">Salted Patient Query Hash</span>

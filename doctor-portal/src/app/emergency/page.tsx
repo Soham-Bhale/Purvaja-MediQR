@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import TriageCard, { TriageData } from '../../components/TriageCard';
 
 const PRESETS = [
@@ -47,19 +48,60 @@ const PRESETS = [
   }
 ];
 
-export default function EmergencyTriagePage() {
+function EmergencyTriageContent() {
+  const searchParams = useSearchParams();
   const [qrRawInput, setQrRawInput] = useState<string>(PRESETS[0].payload);
   const [parsedTriage, setParsedTriage] = useState<TriageData | null>(null);
   const [patientHash, setPatientHash] = useState<string | null>(null);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [activePresetIndex, setActivePresetIndex] = useState<number>(0);
+  const [isLensScanned, setIsLensScanned] = useState<boolean>(false);
 
-  function handleParse(input: string) {
-    setQrRawInput(input);
+  function decodePayload(rawString: string): string {
+    const trimmed = rawString.trim();
+    // If input is a URL like http://.../emergency?data=...
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      try {
+        const url = new URL(trimmed);
+        const dataParam = url.searchParams.get('data');
+        if (dataParam) {
+          return decodePayload(dataParam);
+        }
+      } catch {
+        // Fallback to raw parsing
+      }
+    }
+
+    // Try decoding base64 if it's not starting with {
+    if (!trimmed.startsWith('{')) {
+      try {
+        const decodedUri = decodeURIComponent(trimmed);
+        const decodedBase64 = atob(decodedUri);
+        if (decodedBase64.startsWith('{')) {
+          return decodedBase64;
+        }
+      } catch {
+        // Might be plain JSON encoded URI
+        try {
+          const decodedUri = decodeURIComponent(trimmed);
+          if (decodedUri.startsWith('{')) return decodedUri;
+        } catch {
+          // Keep raw
+        }
+      }
+    }
+
+    return trimmed;
+  }
+
+  function handleParse(input: string, source: 'manual' | 'url' = 'manual') {
+    const decoded = decodePayload(input);
+    setQrRawInput(decoded);
+
     try {
-      const data = JSON.parse(input);
+      const data = JSON.parse(decoded);
       if (!data.triage || !data.triage.bloodType) {
-        setParseErrors(['Missing valid emergency triage payload']);
+        setParseErrors(['Missing valid emergency triage payload. Ensure JSON contains triage.bloodType']);
         setParsedTriage(null);
         setPatientHash(null);
         return;
@@ -67,16 +109,25 @@ export default function EmergencyTriagePage() {
       setParsedTriage(data.triage);
       setPatientHash(data.patientHash || null);
       setParseErrors([]);
+      if (source === 'url') {
+        setIsLensScanned(true);
+      }
     } catch (err: any) {
-      setParseErrors([`Invalid QR JSON payload: ${err.message}`]);
+      setParseErrors([`Invalid QR payload format: ${err.message}`]);
       setParsedTriage(null);
       setPatientHash(null);
     }
   }
 
+  // Auto-parse on load if ?data= query parameter is present (Google Lens / Camera scan link)
   useEffect(() => {
-    handleParse(PRESETS[0].payload);
-  }, []);
+    const dataParam = searchParams.get('data');
+    if (dataParam) {
+      handleParse(dataParam, 'url');
+    } else {
+      handleParse(PRESETS[0].payload, 'manual');
+    }
+  }, [searchParams]);
 
   return (
     <div className="space-y-6">
@@ -94,10 +145,17 @@ export default function EmergencyTriagePage() {
           </p>
         </div>
 
-        <span className="bg-rose-50 border border-rose-200 text-rose-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span>
-          Emergency Mode Active
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          {isLensScanned && (
+            <span className="bg-blue-50 border border-blue-200 text-blue-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5 shadow-sm animate-pulse">
+              <span>📱</span> Google Lens / Camera Scan Link Active
+            </span>
+          )}
+          <span className="bg-rose-50 border border-rose-200 text-rose-800 font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span>
+            Emergency Mode Active
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -113,10 +171,11 @@ export default function EmergencyTriagePage() {
                   key={idx}
                   onClick={() => {
                     setActivePresetIndex(idx);
-                    handleParse(preset.payload);
+                    setIsLensScanned(false);
+                    handleParse(preset.payload, 'manual');
                   }}
                   className={`w-full text-left p-3 text-xs rounded-lg border transition ${
-                    activePresetIndex === idx
+                    activePresetIndex === idx && !isLensScanned
                       ? 'border-blue-500 bg-blue-50/50 text-blue-900 font-semibold shadow-xs'
                       : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                   }`}
@@ -128,15 +187,18 @@ export default function EmergencyTriagePage() {
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-3">
-            <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-              Optical QR Payload (JSON)
-            </h2>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h2 className="text-sm font-bold text-slate-900">
+                Optical QR Payload
+              </h2>
+              <span className="text-[10px] text-slate-400 font-mono">Supports URL & JSON</span>
+            </div>
             <textarea
               rows={8}
               value={qrRawInput}
-              onChange={(e) => handleParse(e.target.value)}
+              onChange={(e) => handleParse(e.target.value, 'manual')}
               aria-label="Raw QR Optical Payload"
-              placeholder="Paste raw QR payload JSON here..."
+              placeholder="Paste raw QR payload JSON or Google Lens scan URL here..."
               className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 font-mono text-xs text-slate-800 leading-tight focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
             {parseErrors.length > 0 && (
@@ -159,5 +221,13 @@ export default function EmergencyTriagePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function EmergencyTriagePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400 font-mono text-xs">Loading Emergency Scanner...</div>}>
+      <EmergencyTriageContent />
+    </Suspense>
   );
 }

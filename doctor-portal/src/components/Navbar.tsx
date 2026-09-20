@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { VERIFIED_DOCTORS, ROOT_ADMIN_ADDRESS } from '../lib/blockchain';
+import { hasActiveBiometricSession } from '../lib/biometrics';
 
 interface NavbarProps {
   activeDoctor: string;
@@ -41,6 +42,13 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   const pathname = usePathname();
   const [nodeAStatus, setNodeAStatus] = useState<'UP' | 'DOWN' | 'CHECKING'>('CHECKING');
   const [nodeBStatus, setNodeBStatus] = useState<'UP' | 'DOWN' | 'CHECKING'>('CHECKING');
+  const [isBioUnlocked, setIsBioUnlocked] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsBioUnlocked(hasActiveBiometricSession(activeDoctor));
+    }
+  }, [activeDoctor, pathname]);
 
   useEffect(() => {
     async function checkHealth() {
@@ -65,6 +73,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   const navLinks = [
     { href: '/', label: 'Overview', icon: '📊' },
     { href: '/admin', label: 'Consortium Admin', icon: '🛡️' },
+    { href: '/installer', label: 'Gov Installer', icon: '🏛️' },
     { href: '/doctor', label: 'Doctor Verification', icon: '🩺' },
     { href: '/hospital', label: 'Hospital Hub', icon: '🏥' },
     { href: '/simulator', label: 'Tamper Lab', icon: '⚡' },
@@ -155,7 +164,12 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
             {/* Practitioner Identity Selector */}
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
               <div className="text-left pl-2 hidden sm:block">
-                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Identity Role</div>
+                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider flex items-center gap-1">
+                  <span>Identity Role</span>
+                  <span title={isBioUnlocked ? "Biometrics Active" : "Biometrics Locked"} className="text-[11px]">
+                    {isBioUnlocked ? "🔓" : "🔒"}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1">
                   <span className={`w-1.5 h-1.5 rounded-full ${currentDoc.verified ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                   <span className="text-xs font-semibold text-slate-800 truncate max-w-[120px]">{currentDoc.name}</span>

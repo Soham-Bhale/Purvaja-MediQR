@@ -1,11 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useDoctor } from '../../lib/doctor-context';
 import { getPatientRecordsFromLedger, BlockchainRecord } from '../../lib/blockchain';
 import { verifyAndDecryptRecord, VerificationReport } from '../../lib/crypto-client';
 import HashIntegrityBadge from '../../components/HashIntegrityBadge';
+import FingerprintScanner from '../../components/FingerprintScanner';
+import {
+  hasActiveBiometricSession,
+  createBiometricSession,
+  clearBiometricSession,
+  getBiometricForDoctor,
+} from '../../lib/biometrics';
 
 function DoctorPortalContent() {
   const searchParams = useSearchParams();
@@ -20,6 +28,9 @@ function DoctorPortalContent() {
   const [tamperingRecordId, setTamperingRecordId] = useState<string | null>(null);
   const [lastUploadedHash, setLastUploadedHash] = useState<string | null>(null);
   const [lastUploadedName, setLastUploadedName] = useState<string | null>(null);
+  const [isBiometricUnlocked, setIsBiometricUnlocked] = useState<boolean>(false);
+  const [biometricCheckDone, setBiometricCheckDone] = useState<boolean>(false);
+  const enrolledBiometric = getBiometricForDoctor(activeDoctor);
   const [queryStatus, setQueryStatus] = useState<{
     type: 'success' | 'empty' | 'error' | 'loading';
     message: string;
@@ -36,14 +47,25 @@ function DoctorPortalContent() {
     }
   }, []);
 
+  // Check biometric session on activeDoctor change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const unlocked = hasActiveBiometricSession(activeDoctor);
+      setIsBiometricUnlocked(unlocked);
+      setBiometricCheckDone(true);
+    }
+  }, [activeDoctor]);
+
   // Sync with searchParams
   useEffect(() => {
     const urlHash = searchParams.get('patientHash');
     if (urlHash) {
       setPatientHash(urlHash);
-      loadAndVerifyRecords(urlHash);
+      if (isBiometricUnlocked) {
+        loadAndVerifyRecords(urlHash);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, isBiometricUnlocked]);
 
   // Load records whenever patientHash or activeDoctor changes
   async function loadAndVerifyRecords(hashToQuery: string) {
@@ -196,7 +218,7 @@ function DoctorPortalContent() {
         </div>
 
         {/* Practitioner Status */}
-        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+        <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
           <div>
             <div className="text-[10px] text-slate-400 font-semibold uppercase">Active Practitioner</div>
             <div className="font-semibold text-xs text-slate-900">
@@ -209,6 +231,28 @@ function DoctorPortalContent() {
           }`}>
             {isVerified ? '✓ Verified' : '✗ Unregistered'}
           </span>
+          {isBiometricUnlocked ? (
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span>🔓</span> Biometrics Active
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  clearBiometricSession();
+                  setIsBiometricUnlocked(false);
+                }}
+                className="px-2 py-0.5 text-[11px] font-semibold bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition"
+                title="Lock clinical terminal"
+              >
+                🔒 Lock
+              </button>
+            </div>
+          ) : (
+            <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span>🔒</span> Biometrics Locked
+            </span>
+          )}
         </div>
       </div>
 
@@ -233,15 +277,120 @@ function DoctorPortalContent() {
         </div>
       )}
 
-      {/* Search Bar & Presets */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <div>
-          <label htmlFor="patientHashInput" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            Patient Query Token (HMAC-SHA256 Salted Hash)
-          </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              id="patientHashInput"
+      {/* Biometric Fingerprint Gatekeeper */}
+      {!isBiometricUnlocked && biometricCheckDone && (
+        <div className="bg-white rounded-2xl border-2 border-amber-300 p-6 md:p-8 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
+                <span>🔒</span> Security Protocol Active
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 mt-1">
+                Doctor Biometric Fingerprint Verification Required
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Under Ministry of Health guidelines, all clinical terminals require physical biometric fingerprint verification against the template enrolled during hospital node installation.
+              </p>
+            </div>
+            <span className="text-xs bg-amber-100 border border-amber-300 text-amber-900 font-bold px-3 py-1 rounded-full self-start">
+              Terminal Locked
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Physician Credentials & Enrolment Status */}
+            <div className="md:col-span-7 space-y-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
+                <div className="font-bold text-slate-800 flex items-center gap-2">
+                  <span>🩺</span>
+                  <span>Practitioner Attempting Access:</span>
+                </div>
+                <div className="text-slate-900 font-bold text-sm pl-6">
+                  {doctorDetails?.name || 'Dr. Practitioner'}
+                </div>
+                <div className="text-slate-500 text-xs pl-6">
+                  {doctorDetails?.hospital || 'Consortium Hospital Node'}
+                </div>
+                <div className="text-slate-400 font-mono text-[11px] pl-6 break-all">
+                  Wallet: {activeDoctor}
+                </div>
+              </div>
+
+              {enrolledBiometric ? (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 space-y-1.5">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>✓</span>
+                    <span>Enrolled Biometric Template Verified on Hospital Node</span>
+                  </div>
+                  <div className="text-[11px] font-mono text-emerald-800">
+                    Ridge Signature: <span className="font-bold">{enrolledBiometric.ridgePatternId}</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-700">
+                    Enrolled By Official: {enrolledBiometric.enrolledBy}
+                  </div>
+                  <p className="text-[11px] text-emerald-700 pt-1 font-medium">
+                    👉 Place your finger on the optical sensor to the right (or click to simulate scan) to unlock the patient records workstation.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 space-y-2">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>⚠️</span>
+                    <span>No Biometric Enrolled For This Doctor</span>
+                  </div>
+                  <p className="text-[11px] text-rose-800">
+                    This practitioner wallet does not have an enrolled fingerprint template on this hospital server. Government health officials must enroll physical biometrics during appliance installation.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Link
+                      href="/installer"
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 shadow-sm"
+                    >
+                      <span>🏛️ Launch Government Installer to Enroll</span>
+                      <span>→</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDoctor('0x70997970c51812dc3a010c7d01b50e0d17dc79c8')}
+                      className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg font-medium text-xs transition"
+                    >
+                      Switch to Dr. Ramesh Gupta (Enrolled)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Live Interactive Fingerprint Scanner Pad */}
+            <div className="md:col-span-5 flex justify-center">
+              <FingerprintScanner
+                mode="verify"
+                doctorName={doctorDetails?.name || 'Physician'}
+                doctorWallet={activeDoctor}
+                expectedBiometricHash={enrolledBiometric?.biometricTemplateHash}
+                onVerifySuccess={() => {
+                  createBiometricSession(activeDoctor, doctorDetails?.name || 'Physician');
+                  setIsBiometricUnlocked(true);
+                  loadAndVerifyRecords(patientHash);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clinical Workspace (Unlocked via Biometrics) */}
+      {isBiometricUnlocked && (
+        <>
+          {/* Search Bar & Presets */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div>
+              <label htmlFor="patientHashInput" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                Patient Query Token (HMAC-SHA256 Salted Hash)
+              </label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  id="patientHashInput"
               type="text"
               value={patientHash}
               onChange={(e) => setPatientHash(e.target.value.trim())}
@@ -492,6 +641,8 @@ function DoctorPortalContent() {
             );
           })}
         </div>
+      )}
+        </>
       )}
     </div>
   );
