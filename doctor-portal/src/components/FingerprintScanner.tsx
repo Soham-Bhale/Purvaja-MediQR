@@ -27,18 +27,32 @@ export default function FingerprintScanner({
   const [progress, setProgress] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>(
     mode === 'enroll'
-      ? 'Place doctor\'s index finger on optical sensor'
+      ? "Place doctor's index finger on optical sensor"
       : `Touch sensor to authenticate ${doctorName || 'Practitioner'}`
   );
   const scanTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const successTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Play subtle synthesis chimes using Web Audio API
+  // Automatically reset scanner state when target doctor or mode changes
+  useEffect(() => {
+    if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    setScanState('IDLE');
+    setProgress(0);
+    setStatusMessage(
+      mode === 'enroll'
+        ? "Place doctor's index finger on optical sensor"
+        : `Touch sensor to authenticate ${doctorName || 'Practitioner'}`
+    );
+  }, [doctorWallet, mode, expectedBiometricHash, doctorName]);
+
+  // Play subtle synthesis chimes using Web Audio API safely
   function playBeep(type: 'scan' | 'success' | 'error') {
     try {
       if (typeof window === 'undefined') return;
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
 
       if (type === 'scan') {
         const osc = ctx.createOscillator();
@@ -75,20 +89,29 @@ export default function FingerprintScanner({
         osc.start();
         osc.stop(ctx.currentTime + 0.3);
       }
+
+      // Close AudioContext after chime finishes to release browser audio resources
+      setTimeout(() => {
+        try {
+          if (ctx.state !== 'closed') ctx.close();
+        } catch {}
+      }, 500);
     } catch {
-      // Audio context might be restricted by browser autoplay policy
+      // Autoplay policy restrictions handled silently
     }
   }
 
   function startScan() {
     if (scanState === 'SCANNING') return;
+    if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+
     setScanState('SCANNING');
     setProgress(0);
     setStatusMessage('Capturing high-resolution epidermal ridges (500 DPI)...');
     playBeep('scan');
 
     let currentProgress = 0;
-    if (scanTimerRef.current) clearInterval(scanTimerRef.current);
 
     scanTimerRef.current = setInterval(() => {
       currentProgress += 10;
@@ -104,15 +127,18 @@ export default function FingerprintScanner({
             : 'Matching against Ministry of Health enrolled registry...'
         );
       } else if (currentProgress >= 100) {
-        if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+        if (scanTimerRef.current) {
+          clearInterval(scanTimerRef.current);
+          scanTimerRef.current = null;
+        }
         finishScan();
       }
-    }, 120);
+    }, 110);
   }
 
   function finishScan() {
     if (mode === 'enroll') {
-      // Generate realistic dummy biometric template hash and ridge pattern
+      // Generate realistic biometric template hash and ridge pattern
       const patterns = ['WHORL-CENTRAL-POCKET-TYPE-A', 'LOOP-ULNAR-TYPE-B', 'ARCH-TENTED-TYPE-C', 'WHORL-DOUBLE-LOOP'];
       const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
       const randomHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
@@ -127,7 +153,7 @@ export default function FingerprintScanner({
       // Mode: Verify
       if (!expectedBiometricHash) {
         setScanState('FAILED');
-        const reason = 'No biometric template enrolled for this practitioner wallet. Contact Government Field Officer.';
+        const reason = `No biometric template enrolled for wallet ${doctorWallet?.slice(0, 8) || 'this practitioner'}. Contact Government Field Officer.`;
         setStatusMessage(reason);
         playBeep('error');
         if (onVerifyFailed) onVerifyFailed(reason);
@@ -138,7 +164,7 @@ export default function FingerprintScanner({
       setStatusMessage(`Biometric match confirmed (99.98% Confidence): ${doctorName || 'Doctor'}`);
       playBeep('success');
       if (onVerifySuccess) {
-        setTimeout(() => {
+        successTimerRef.current = setTimeout(() => {
           onVerifySuccess();
         }, 600);
       }
@@ -148,6 +174,7 @@ export default function FingerprintScanner({
   useEffect(() => {
     return () => {
       if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
     };
   }, []);
 
@@ -165,10 +192,16 @@ export default function FingerprintScanner({
       {/* Interactive Biometric Sensor Touch Pad */}
       <div
         onClick={startScan}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            startScan();
+          }
+        }}
         role="button"
         tabIndex={0}
-        aria-label="Fingerprint Sensor"
-        className={`relative w-28 h-36 rounded-2xl border-2 flex items-center justify-center cursor-pointer select-none transition-all duration-300 overflow-hidden group ${
+        aria-label="Fingerprint Optical Sensor Pad"
+        className={`relative w-28 h-36 rounded-2xl border-2 flex items-center justify-center cursor-pointer select-none transition-all duration-300 overflow-hidden group focus:outline-none focus:ring-4 focus:ring-blue-400/50 ${
           scanState === 'SUCCESS'
             ? 'border-emerald-500 bg-emerald-950 text-emerald-400 shadow-emerald-200 shadow-lg'
             : scanState === 'FAILED'
@@ -179,7 +212,10 @@ export default function FingerprintScanner({
         }`}
       >
         {/* Glowing Background Radial */}
-        <div className="absolute inset-0 bg-radial-gradient opacity-30 pointer-events-none" />
+        <div
+          className="absolute inset-0 opacity-40 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.3) 0%, transparent 70%)' }}
+        />
 
         {/* Scanning Laser Beam Line */}
         {scanState === 'SCANNING' && (

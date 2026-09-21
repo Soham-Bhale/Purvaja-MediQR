@@ -34,7 +34,9 @@ function DoctorPortalContent() {
     }
     return false;
   });
-  const enrolledBiometric = getBiometricForDoctor(activeDoctor);
+  const [enrolledBiometric, setEnrolledBiometric] = useState<ReturnType<typeof getBiometricForDoctor>>(() =>
+    getBiometricForDoctor(activeDoctor)
+  );
   const [queryStatus, setQueryStatus] = useState<{
     type: 'success' | 'empty' | 'error' | 'loading';
     message: string;
@@ -51,19 +53,22 @@ function DoctorPortalContent() {
     }
   }, []);
 
-  // Check biometric session on activeDoctor change and custom events
+  // Check biometric session and enrolled template on activeDoctor change and custom events
   useEffect(() => {
     function updateBio() {
       if (typeof window !== 'undefined') {
         const unlocked = hasActiveBiometricSession(activeDoctor);
         setIsBiometricUnlocked(unlocked);
+        setEnrolledBiometric(getBiometricForDoctor(activeDoctor));
       }
     }
     updateBio();
     window.addEventListener('mediqr_biometric_session_change', updateBio);
+    window.addEventListener('mediqr_enrolled_biometrics_change', updateBio);
     window.addEventListener('storage', updateBio);
     return () => {
       window.removeEventListener('mediqr_biometric_session_change', updateBio);
+      window.removeEventListener('mediqr_enrolled_biometrics_change', updateBio);
       window.removeEventListener('storage', updateBio);
     };
   }, [activeDoctor]);
@@ -166,10 +171,10 @@ function DoctorPortalContent() {
   }
 
   useEffect(() => {
-    if (isVerified) {
+    if (isVerified && isBiometricUnlocked) {
       loadAndVerifyRecords(patientHash);
     }
-  }, [isVerified, activeDoctor]);
+  }, [isVerified, activeDoctor, isBiometricUnlocked]);
 
   // Tamper simulation toggle
   async function triggerTamper(storageURI: string) {
@@ -521,14 +526,26 @@ function DoctorPortalContent() {
                     </h2>
                   </div>
 
-                  {/* SMALL, CLEAN VERIFICATION PILL */}
-                  <div>
+                  {/* SMALL, CLEAN VERIFICATION PILL & SIMULATE BUTTON */}
+                  <div className="flex items-center gap-2">
                     {report ? (
                       isVerifiedFree ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          <span>✓ Blockchain Verified</span>
-                        </span>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => triggerTamper(record.storageURI)}
+                            disabled={tamperingRecordId === record.storageURI}
+                            title="Simulate bit-flip attack on hospital storage node to demonstrate instant tampering detection"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition shadow-2xs cursor-pointer disabled:opacity-50"
+                          >
+                            <span>⚡</span>
+                            <span>{tamperingRecordId === record.storageURI ? 'Corrupting...' : 'Simulate Bit-Flip'}</span>
+                          </button>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>✓ Blockchain Verified</span>
+                          </span>
+                        </>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 animate-pulse shadow-2xs">
                           <span className="w-2 h-2 rounded-full bg-rose-600"></span>
@@ -546,14 +563,30 @@ function DoctorPortalContent() {
                 <div className="p-5">
                   {/* Tampered Warning (If integrity check fails) */}
                   {!isVerifiedFree && report && (
-                    <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 text-xs text-rose-900 space-y-1">
-                      <div className="font-bold flex items-center gap-1.5 text-sm">
-                        <span>⚠️</span>
-                        <span>Clinical Decryption Blocked: Data Integrity Failure</span>
+                    <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 text-xs text-rose-900 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="font-bold flex items-center gap-1.5 text-sm">
+                            <span>⚠️</span>
+                            <span>Clinical Decryption Blocked: Data Integrity Failure</span>
+                          </div>
+                          <p className="text-[11px] text-rose-800 leading-relaxed mt-0.5">
+                            The off-chain medical file stored on the hospital server does not match the immutable cryptographic fingerprint registered on the blockchain ledger. In-memory decryption was blocked to prevent clinical misdiagnosis.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => triggerRestore(record.storageURI)}
+                          disabled={tamperingRecordId === record.storageURI}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white font-bold text-xs rounded-lg shadow-sm transition whitespace-nowrap self-start sm:self-auto cursor-pointer"
+                        >
+                          {tamperingRecordId === record.storageURI ? 'Restoring...' : '✓ Restore Pristine File'}
+                        </button>
                       </div>
-                      <p className="text-[11px] text-rose-800 leading-relaxed">
-                        The off-chain medical file stored on the hospital server does not match the immutable cryptographic fingerprint registered on the blockchain ledger. In-memory decryption was blocked to prevent clinical misdiagnosis.
-                      </p>
+                      <div className="bg-white/90 p-2.5 rounded-lg font-mono text-[10px] space-y-1 text-slate-700 border border-rose-200">
+                        <div className="truncate"><span className="font-semibold text-slate-500">Immutable Target Hash:</span> {record.fileHash}</div>
+                        <div className="truncate"><span className="font-semibold text-rose-600">Corrupted File Hash:</span> {report.computedLocalHash}</div>
+                      </div>
                     </div>
                   )}
 

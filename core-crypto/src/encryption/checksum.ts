@@ -5,11 +5,27 @@ import { EncryptedPackage } from '../types';
  * Deterministically serializes an EncryptedPackage to JSON with sorted keys.
  * Ensures that hash generation is strictly invariant regardless of property ordering.
  */
+const PACKAGE_CANONICAL_KEYS: (keyof EncryptedPackage)[] = [
+  'algorithm',
+  'authTag',
+  'ciphertext',
+  'encryptedAt',
+  'hospitalNodeId',
+  'iv',
+  'patientHash',
+  'recordId',
+];
+
+/**
+ * Deterministically serializes an EncryptedPackage to JSON with sorted keys.
+ * Ensures that hash generation is strictly invariant regardless of property ordering.
+ */
 export function canonicalizeEncryptedPackage(pkg: EncryptedPackage): string {
   const ordered: Record<string, any> = {};
-  const keys = Object.keys(pkg).sort();
-  for (const key of keys) {
-    ordered[key] = (pkg as any)[key];
+  for (const key of PACKAGE_CANONICAL_KEYS) {
+    if (key in pkg) {
+      ordered[key] = (pkg as any)[key];
+    }
   }
   return JSON.stringify(ordered);
 }

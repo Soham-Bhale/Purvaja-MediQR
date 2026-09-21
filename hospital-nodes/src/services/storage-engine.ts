@@ -13,10 +13,23 @@ export interface EncryptedPackage {
   encryptedAt: number;
 }
 
+const PACKAGE_CANONICAL_KEYS: (keyof EncryptedPackage)[] = [
+  'algorithm',
+  'authTag',
+  'ciphertext',
+  'encryptedAt',
+  'hospitalNodeId',
+  'iv',
+  'patientHash',
+  'recordId',
+];
+
 export function canonicalize(pkg: EncryptedPackage): string {
   const ordered: Record<string, any> = {};
-  for (const key of Object.keys(pkg).sort()) {
-    ordered[key] = (pkg as any)[key];
+  for (const key of PACKAGE_CANONICAL_KEYS) {
+    if (key in pkg) {
+      ordered[key] = (pkg as any)[key];
+    }
   }
   return JSON.stringify(ordered);
 }

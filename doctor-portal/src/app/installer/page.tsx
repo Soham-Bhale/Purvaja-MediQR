@@ -11,6 +11,8 @@ import {
 import {
   getStoredHospitals,
   ConsortiumHospital,
+  ConsortiumDoctor,
+  registerDoctorOnChain,
   ROOT_ADMIN_ADDRESS,
   DEFAULT_CONTRACT_ADDRESS,
 } from '../../lib/blockchain';
@@ -72,8 +74,21 @@ export default function GovernmentInstallerPage() {
     };
 
     saveEnrolledBiometric(newBiometric);
+
+    // Also credential physician in consortium doctor registry under the active hospital node
+    const newDoctor: ConsortiumDoctor = {
+      doctorWallet: newDocWallet.toLowerCase(),
+      name: newDocName,
+      licenseNumber: newDocLicense,
+      department: newDocDept,
+      hospitalAdmin: adminWallet.toLowerCase(),
+      isVerified: true,
+      registeredAt: Date.now(),
+    };
+    registerDoctorOnChain(newDoctor, adminWallet);
+
     setEnrolledDoctors(getEnrolledBiometrics());
-    setEnrollmentSuccessMsg(`Biometric profile for ${newDocName} enrolled and sealed onto hospital appliance!`);
+    setEnrollmentSuccessMsg(`Biometric profile for ${newDocName} enrolled, credentialed on ledger, and sealed onto appliance!`);
 
     // Reset form
     setNewDocName('');

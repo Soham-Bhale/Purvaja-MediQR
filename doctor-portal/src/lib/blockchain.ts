@@ -32,7 +32,7 @@ export interface ConsortiumDoctor {
 export const ROOT_ADMIN_ADDRESS = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
 export const DEFAULT_CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 export const HARDHAT_RPC_URL = 'http://127.0.0.1:8545';
-export const LEDGER_STORAGE_KEY = 'mediqr_federation_ledger_v4';
+export const LEDGER_STORAGE_KEY = 'mediqr_federation_ledger_v5';
 export const HOSPITALS_STORAGE_KEY = 'mediqr_consortium_hospitals_v1';
 export const DOCTORS_STORAGE_KEY = 'mediqr_consortium_doctors_v1';
 
@@ -126,7 +126,23 @@ export function getStoredLedger(): Record<string, BlockchainRecord[]> {
   if (typeof window === 'undefined') return inMemoryLedger;
   try {
     const raw = localStorage.getItem(LEDGER_STORAGE_KEY);
-    if (raw) return { ...INITIAL_FEDERATION_LEDGER, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed: Record<string, BlockchainRecord[]> = JSON.parse(raw);
+      // Merge with initial federation ledger so baseline seeded records always have correct file hashes
+      const merged: Record<string, BlockchainRecord[]> = { ...parsed };
+      for (const [key, initialRecs] of Object.entries(INITIAL_FEDERATION_LEDGER)) {
+        if (!merged[key]) {
+          merged[key] = initialRecs;
+        } else {
+          // Synchronize baseline hashes for seeded records
+          merged[key] = merged[key].map((rec) => {
+            const match = initialRecs.find((init) => init.storageURI === rec.storageURI);
+            return match ? { ...rec, fileHash: match.fileHash } : rec;
+          });
+        }
+      }
+      return merged;
+    }
   } catch (err) {
     console.error('Error reading persistent ledger:', err);
   }
@@ -138,6 +154,7 @@ export function persistLedger(ledger: Record<string, BlockchainRecord[]>): void 
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(LEDGER_STORAGE_KEY, JSON.stringify(ledger));
+      window.dispatchEvent(new CustomEvent('mediqr_ledger_change', { detail: { ledger } }));
     } catch (err) {
       console.error('Error persisting ledger:', err);
     }
@@ -148,7 +165,13 @@ export function getStoredHospitals(): ConsortiumHospital[] {
   if (typeof window === 'undefined') return inMemoryHospitals;
   try {
     const raw = localStorage.getItem(HOSPITALS_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: ConsortiumHospital[] = JSON.parse(raw);
+      const map = new Map<string, ConsortiumHospital>();
+      INITIAL_HOSPITALS.forEach((h) => map.set(h.adminWallet.toLowerCase(), h));
+      parsed.forEach((h) => map.set(h.adminWallet.toLowerCase(), h));
+      return Array.from(map.values());
+    }
   } catch (err) {
     console.error('Error reading stored hospitals:', err);
   }
@@ -160,6 +183,7 @@ export function persistHospitals(hospitals: ConsortiumHospital[]): void {
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(HOSPITALS_STORAGE_KEY, JSON.stringify(hospitals));
+      window.dispatchEvent(new CustomEvent('mediqr_consortium_hospitals_change', { detail: { hospitals } }));
     } catch (err) {
       console.error('Error persisting hospitals:', err);
     }
@@ -170,7 +194,24 @@ export function getStoredDoctors(): ConsortiumDoctor[] {
   if (typeof window === 'undefined') return inMemoryDoctors;
   try {
     const raw = localStorage.getItem(DOCTORS_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: ConsortiumDoctor[] = JSON.parse(raw);
+      const mergedMap = new Map<string, ConsortiumDoctor>();
+      INITIAL_DOCTORS.forEach((d) => mergedMap.set(d.doctorWallet.toLowerCase(), d));
+      parsed.forEach((d) => mergedMap.set(d.doctorWallet.toLowerCase(), d));
+      const combined = Array.from(mergedMap.values());
+
+      // Update VERIFIED_DOCTORS lookup for all verified practitioners
+      combined.forEach((doc) => {
+        if (doc.isVerified) {
+          VERIFIED_DOCTORS[doc.doctorWallet.toLowerCase()] = {
+            name: doc.name,
+            hospital: doc.department || 'Hospital Facility',
+          };
+        }
+      });
+      return combined;
+    }
   } catch (err) {
     console.error('Error reading stored doctors:', err);
   }
@@ -179,9 +220,20 @@ export function getStoredDoctors(): ConsortiumDoctor[] {
 
 export function persistDoctors(doctors: ConsortiumDoctor[]): void {
   inMemoryDoctors = doctors;
+  // Keep VERIFIED_DOCTORS map synchronized
+  doctors.forEach((doc) => {
+    if (doc.isVerified) {
+      VERIFIED_DOCTORS[doc.doctorWallet.toLowerCase()] = {
+        name: doc.name,
+        hospital: doc.department || 'Hospital Facility',
+      };
+    }
+  });
+
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(DOCTORS_STORAGE_KEY, JSON.stringify(doctors));
+      window.dispatchEvent(new CustomEvent('mediqr_consortium_doctors_change', { detail: { doctors } }));
     } catch (err) {
       console.error('Error persisting doctors:', err);
     }

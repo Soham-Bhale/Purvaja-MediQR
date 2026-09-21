@@ -13,6 +13,9 @@ start "MediQR Doctor Portal (Port 3000)" cmd /k "cd /d "%~dp0\doctor-portal" && 
 
 timeout /t 3 /nobreak >nul
 
+echo [3/3] Opening MediQR Portal in default browser...
+start http://localhost:3000
+
 echo.
 echo =========================================================================
 echo  MediQR Services Launched Successfully!

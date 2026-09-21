@@ -89,6 +89,7 @@ export function saveEnrolledBiometric(biometric: EnrolledBiometric): void {
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(BIOMETRICS_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('mediqr_enrolled_biometrics_change', { detail: { biometric, all: updated } }));
     } catch (err) {
       console.error('Error persisting biometric record:', err);
     }

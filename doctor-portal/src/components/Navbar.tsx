@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { VERIFIED_DOCTORS, ROOT_ADMIN_ADDRESS } from '../lib/blockchain';
+import { VERIFIED_DOCTORS, ROOT_ADMIN_ADDRESS, getStoredDoctors } from '../lib/blockchain';
 import { hasActiveBiometricSession, createBiometricSession, clearBiometricSession } from '../lib/biometrics';
 
 interface NavbarProps {
@@ -11,7 +11,7 @@ interface NavbarProps {
   onDoctorChange: (address: string) => void;
 }
 
-const DOCTOR_OPTIONS = [
+const INITIAL_DOCTOR_OPTIONS = [
   {
     address: ROOT_ADMIN_ADDRESS,
     name: 'Consortium Root Admin (MOH)',
@@ -43,6 +43,37 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   const [nodeAStatus, setNodeAStatus] = useState<'UP' | 'DOWN' | 'CHECKING'>('CHECKING');
   const [nodeBStatus, setNodeBStatus] = useState<'UP' | 'DOWN' | 'CHECKING'>('CHECKING');
   const [isBioUnlocked, setIsBioUnlocked] = useState<boolean>(false);
+  const [doctorOptions, setDoctorOptions] = useState(INITIAL_DOCTOR_OPTIONS);
+
+  useEffect(() => {
+    function refreshDoctorOptions() {
+      const stored = getStoredDoctors();
+      const optionsMap = new Map<string, { address: string; name: string; hospital: string; verified: boolean }>();
+
+      INITIAL_DOCTOR_OPTIONS.forEach((doc) => optionsMap.set(doc.address.toLowerCase(), doc));
+
+      stored.forEach((doc) => {
+        optionsMap.set(doc.doctorWallet.toLowerCase(), {
+          address: doc.doctorWallet,
+          name: doc.name,
+          hospital: doc.department || 'Hospital Network',
+          verified: doc.isVerified,
+        });
+      });
+
+      setDoctorOptions(Array.from(optionsMap.values()));
+    }
+
+    refreshDoctorOptions();
+    window.addEventListener('mediqr_consortium_doctors_change', refreshDoctorOptions);
+    window.addEventListener('mediqr_enrolled_biometrics_change', refreshDoctorOptions);
+    window.addEventListener('storage', refreshDoctorOptions);
+    return () => {
+      window.removeEventListener('mediqr_consortium_doctors_change', refreshDoctorOptions);
+      window.removeEventListener('mediqr_enrolled_biometrics_change', refreshDoctorOptions);
+      window.removeEventListener('storage', refreshDoctorOptions);
+    };
+  }, []);
 
   useEffect(() => {
     function checkBio() {
@@ -89,7 +120,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
     { href: '/emergency', label: 'Triage Scanner', icon: '🚑' },
   ];
 
-  const currentDoc = DOCTOR_OPTIONS.find(
+  const currentDoc = doctorOptions.find(
     (d) => d.address.toLowerCase() === activeDoctor.toLowerCase()
   ) || {
     address: activeDoctor,
@@ -172,7 +203,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                 aria-label="Active Practitioner"
                 className="bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 py-1.5 px-2.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-xs"
               >
-                {DOCTOR_OPTIONS.map((doc) => (
+                {doctorOptions.map((doc) => (
                   <option key={doc.address} value={doc.address.toLowerCase()}>
                     {doc.verified ? '✓ ' : '✗ '}{doc.name}
                   </option>
@@ -413,7 +444,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                 aria-label="Active Practitioner"
                 className="bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-700 py-1 px-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm"
               >
-                {DOCTOR_OPTIONS.map((doc) => (
+                {doctorOptions.map((doc) => (
                   <option key={doc.address} value={doc.address.toLowerCase()}>
                     {doc.verified ? '✓ ' : '✗ '}{doc.name} ({doc.hospital})
                   </option>

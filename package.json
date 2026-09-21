@@ -4,10 +4,14 @@
   "private": true,
   "description": "MediQR - Enterprise Tamper-Proof Healthcare Archive & Ledger",
   "scripts": {
-    "build:crypto": "npm run build --prefix core-crypto",
+    "test": "npm run test:all",
+    "test:all": "npm run test:crypto && npm run test:contracts",
     "test:crypto": "npm test --prefix core-crypto",
-    "compile:contracts": "npm run compile --prefix contracts",
     "test:contracts": "npm test --prefix contracts",
+    "build:all": "npm run build:crypto && npm run build:nodes",
+    "build:crypto": "npm run build --prefix core-crypto",
+    "build:nodes": "npm run build --prefix hospital-nodes",
+    "compile:contracts": "npm run compile --prefix contracts",
     "deploy:contracts": "npm run deploy:local --prefix contracts",
     "start:nodes": "npm run start --prefix hospital-nodes",
     "dev:portal": "npm run dev --prefix doctor-portal"
