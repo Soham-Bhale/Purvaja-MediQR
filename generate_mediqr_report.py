@@ -1146,8 +1146,13 @@ Output: Anchored Transaction Hash TxHash, Stored Payload URI
         set_run_font(r_ref, "Times New Roman", 10.5)
 
     output_path = r"c:\Users\soham\Desktop\Work\projects\complete\purvaja-mediqr\MediQR_Final_Project_Report.docx"
-    doc.save(output_path)
-    print(f"Document successfully created with original table format, citations & real images at: {output_path}")
+    try:
+        doc.save(output_path)
+        print(f"Document successfully created with original table format, citations & all 18 real images at: {output_path}")
+    except PermissionError:
+        alt_path = r"c:\Users\soham\Desktop\Work\projects\complete\purvaja-mediqr\MediQR_Final_Project_Report_Updated.docx"
+        doc.save(alt_path)
+        print(f"Original file is currently open in Word. Saved updated report with all 18 images to: {alt_path}")
 
 if __name__ == "__main__":
     create_report()
