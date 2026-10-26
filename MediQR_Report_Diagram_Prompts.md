@@ -1,407 +1,262 @@
-# 🎨 MediQR Project Report: Comprehensive Diagram Generation Prompts
+# 🎨 MediQR Project Report: Diagram Generation Prompts (Remaining Figures)
 
-This document provides ready-to-use prompts for generating all figures in the **MediQR Engineering Project Report**. You can use these in **ChatGPT (GPT-4o / DALL-E 3)**, **Eraser.io**, **Draw.io**, **PlantUML**, or directly render the provided **Mermaid.js** code blocks in Markdown viewers.
+This guide provides direct, copy-paste prompts for generating all the remaining diagrams for your project report. You can use these in **ChatGPT (GPT-4o / DALL-E 3)**, **Eraser.io**, **Draw.io**, or **Midjourney**.
+
+> **💡 How It Works:**
+> Whenever you generate an image, save it into your `images/` folder with the filename indicated below. Then simply run `python generate_mediqr_report.py`, and the script will automatically embed the high-resolution image directly into your Word report!
 
 ---
 
-## 📌 Figure 1.1: High-Level View of the MediQR Ecosystem
+### ✅ ALREADY GENERATED & EMBEDDED IN YOUR REPORT:
+1. `Figure 1.1 High-Level System Architecture.png` *(Embedded on Page 1)*
+2. `Figure 4.1 System Architecture (3-Tier Decoupled Pipeline).png` *(Embedded on Page 12)*
+3. `Figure 4.6 UML Use Case Diagram.png` *(Embedded on Page 16)*
+4. `Figure 4.7 UML Sequence Diagram (Cross-Hospital Verification).png` *(Embedded on Page 17)*
+5. `Figure 8.1 Benchmarking Visual Charts.png` *(Embedded on Page 29)*
 
-### 🤖 AI Image / Diagram Generation Prompt (ChatGPT / Eraser.io / Midjourney):
+---
+
+### 📥 REMAINING FIGURES TO GENERATE:
+
+---
+
+#### 1. Figure 3.1: Incremental process model applied to this project
+* **Filename to save in `images/`:** `Figure 3.1 Incremental process model.png`
+* **Prompt for ChatGPT / DALL-E / Eraser.io:**
 ```text
-Create a clean, professional, high-resolution software architecture diagram for an enterprise healthcare blockchain project called "MediQR".
-Layout is split horizontally:
-At the top, a physical "MediQR Smart Card" divided into two sections:
-1. Left: "Public Front: Emergency Triage" with an optical QR code icon, pointing downwards to an ambulance paramedic holding a smartphone displaying: "Blood Group: O-", "Allergy: Penicillin G", "Emergency Call Mom". Label: "Offline Instant Access (<1.5s, No Login)".
-2. Right: "Protected Back: Medical Vault" with an encrypted QR icon, pointing downwards to an "Attending Physician" at a hospital terminal with a biometric fingerprint icon and blue key: "AES-256-GCM Decryption", "Full Clinical Dossier".
-At the bottom, an immutable "Consortium Blockchain Ledger" (Ethereum EVM smart contract MedicalRecordLedger.sol) showing digital wax seals with 32-byte SHA-256 fingerprints: "0xf305...3d72" and "Hierarchical Doctor RBAC". An arrow connects the physician's verified hash to the blockchain with a green checkmark: "✓ Hash Matched (Tamper-Proof Provenance)".
-Color palette: Professional medical navy blue, emerald green, crisp white background, modern flat vector design, clean tech diagram style.
-```
-
-### 💻 Mermaid Code:
-```mermaid
-flowchart TD
-    subgraph Card["🪪 PATIENT MEDIQR DUAL-SEGMENT CARD"]
-        subgraph Front["PUBLIC FRONT: Emergency Triage"]
-            QR1["📷 Compact Optical QR (<95 chars)"]
-        end
-        subgraph Back["PROTECTED BACK: Medical Vault"]
-            QR2["🔐 Encrypted Vault QR (HMAC + URI)"]
-        end
-    end
-
-    QR1 -->|"Camera Scan (Zero-Auth, Offline)"| Paramedic["🚑 First Responder / EMT\n• Blood: O-\n• Critical Allergy: Penicillin G\n• Tap-to-Dial Contact\n[<1.5s Latency]"]
-    
-    QR2 -->|"Hospital Node REST Query"| Doctor["🩺 Attending Physician\n• Biometric Fingerprint Auth\n• Client AES-256-GCM Decrypt\n• Full Consultation & Lab Dossier"]
-    
-    Doctor <-->|"Compare 32-Byte SHA-256 Digest"| Ledger[("⛓️ Consortium Blockchain\nMedicalRecordLedger.sol\n• Immutable Document Fingerprints\n• Hierarchical Doctor RBAC\n• Zero On-Chain PHI")]
-
-    classDef card fill:#f0f4f8,stroke:#1a365d,stroke-width:2px;
-    classDef emergency fill:#fff5f5,stroke:#e53e3e,stroke-width:2px;
-    classDef clinical fill:#ebf8ff,stroke:#3182ce,stroke-width:2px;
-    classDef chain fill:#f0fff4,stroke:#38a169,stroke-width:2px;
-    class Card card;
-    class Front,Paramedic emergency;
-    class Back,Doctor clinical;
-    class Ledger chain;
+A clean horizontal software engineering process flow diagram illustrating the "Incremental SDLC Process Model" for an enterprise blockchain system.
+Show 6 sequential rectangular phases arranged horizontally from left to right, linked with crisp rightward arrows:
+- Box 1: "Increment 1: Core Cryptography & NIST Vectors (HMAC-SHA256, AES-256-GCM, SHA-256)"
+- Box 2: "Increment 2: Smart Contract Ledger (MedicalRecordLedger.sol, Hierarchical RBAC, Hardhat 14/14)"
+- Box 3: "Increment 3: Off-Chain Storage Appliances (Docker Containers, Express REST, Tamper Sim API)"
+- Box 4: "Increment 4: Compact QR Engine (Anti-Moiré URL Compression, Google Lens Safe)"
+- Box 5: "Increment 5: Workstations & Biometrics (Doctor Terminal, Biometric Gatekeeper, Gov Installer)"
+- Box 6: "Increment 6: Auditing & Benchmarking (Legacy Ingestion, Tamper Testing, 100% Assertion Suite)"
+Design style: Modern corporate technology schematic, clean white background, dark border outlines, subtle blue and teal accents, sharp academic presentation.
 ```
 
 ---
 
-## 📌 Figure 3.1: Incremental Process Model Applied to This Project
-
-### 🤖 AI Prompt:
+#### 2. Figure 4.2: Context-level data flow diagram (Level 0)
+* **Filename to save in `images/`:** `Figure 4.2 Context-level DFD Level 0.png`
+* **Prompt for ChatGPT / DALL-E / Draw.io:**
 ```text
-A professional horizontal sequential pipeline diagram representing the Incremental Software Development Life Cycle (SDLC) for a blockchain healthcare project.
-Six sequential rectangular boxes linked with thick forward arrows:
-1. "Increment 1: Core Cryptography & NIST Vectors (HMAC-SHA256, AES-256-GCM, SHA-256)"
-2. "Increment 2: Smart Contract Ledger (MedicalRecordLedger.sol, Hierarchical RBAC, Hardhat 14/14)"
-3. "Increment 3: Off-Chain Storage Appliances (Docker Containers, Express REST, Tamper Simulation API)"
-4. "Increment 4: Compact Optical QR Engine (Anti-Moiré Compression, Google Lens <20ms Parsing)"
-5. "Increment 5: Clinical Workstations & Decoupling (Doctor Terminal, Biometric Gatekeeper, Gov Installer)"
-6. "Increment 6: Integration & Auditing (Bulk Legacy Ingestion, Automated Security & Tamper Proofing)"
-Clean corporate tech style, white background, subtle gradients of blue and teal.
-```
-
-### 💻 Mermaid Code:
-```mermaid
-flowchart LR
-    Inc1["Increment 1<br/><b>Core Cryptography</b><br/>• HMAC-SHA256<br/>• AES-256-GCM<br/>• NIST Vectors"] -->
-    Inc2["Increment 2<br/><b>Smart Contract</b><br/>• Solidity Ledger<br/>• Hierarchical RBAC<br/>• Hardhat 14/14"] -->
-    Inc3["Increment 3<br/><b>Storage Appliance</b><br/>• Docker Nodes<br/>• Express REST<br/>• Tamper Sim API"] -->
-    Inc4["Increment 4<br/><b>Compact QR Engine</b><br/>• Anti-Moiré Compression<br/>• Google Lens Safe<br/>• <95 Char URL"] -->
-    Inc5["Increment 5<br/><b>EMR Workstations</b><br/>• Doctor Portal<br/>• Biometric Sensor<br/>• Gov Installer"] -->
-    Inc6["Increment 6<br/><b>Auditing & Release</b><br/>• Legacy Ingestion<br/>• Tamper Detection<br/>• Benchmarking"]
+A formal Context-Level Data Flow Diagram (Level 0 DFD) for a blockchain healthcare record system called "MediQR".
+In the center, a large circle labeled: "0.0 MediQR Healthcare Ledger System".
+Around the circle, four external entity rectangles with clear labeled data flow arrows:
+1. Top Entity: "First Responder / Paramedic"
+   - Arrow to circle: "Scans Emergency Optical QR"
+   - Arrow from circle: "Immediate Blood Group & Critical Allergy Vitals"
+2. Left Entity: "Attending Physician"
+   - Arrow to circle: "Biometric Fingerprint Auth & EMR Consultation Diagnosis"
+   - Arrow from circle: "Verified Patient Clinical Dossier"
+3. Bottom Entity: "Consortium Blockchain Network (EVM Smart Contract)"
+   - Double-ended arrow: "Anchors 32-Byte SHA-256 Record Hashes & Reads Immutable Provenance"
+4. Right Entity: "Hospital Admin & Government Official"
+   - Arrow to circle: "Node Commissioning, Hardware UUID Binding & Doctor Biometric Enrollment"
+Clean formal DFD style, standard software engineering symbols, white background, black outlines, legible professional typography.
 ```
 
 ---
 
-## 📌 Figure 4.1: System Architecture (Client, Storage Appliance, On-Chain Contract)
-
-### 🤖 AI Prompt:
+#### 3. Figure 4.3: Data flow diagram, Level 1
+* **Filename to save in `images/`:** `Figure 4.3 DFD Level 1.png`
+* **Prompt for ChatGPT / DALL-E / Eraser.io:**
 ```text
-A detailed three-tier enterprise software architecture diagram for "MediQR":
-1. Top Tier (Client Workstation Layer in Browser):
-   - "Emergency Paramedic Triage UI (/emergency)"
-   - "Doctor Clinical EMR Workstation (/doctor) with Biometric Sensor"
-   - "Government Appliance Installer (/installer)"
-   - "W3C Web Cryptography API Engine (AES-256-GCM + HMAC-SHA256)"
-2. Middle Tier (Decentralized Hospital Storage Appliances):
-   - Two Docker containers: "Hospital Node A (Apollo - Port 5001)" and "Hospital Node B (Fortis - Port 5002)"
-   - Inside each container: "Express REST Engine", "Encrypted JSON File Vault", "Tamper Injection Simulator"
-3. Bottom Tier (Consortium Blockchain Network):
-   - "EVM Smart Contract: MedicalRecordLedger.sol"
-   - Features: "32-byte SHA-256 Document Hashes", "Hierarchical RBAC", "Non-repudiable Access Logs", "Zero-Gas QBFT Consensus"
-Connect layers with labeled directional arrows: HTTPS Encrypted REST between Client and Hospital Nodes; Signed JSON-RPC between Client and Blockchain.
-Clean flat architectural vector illustration, blue and cyan accents, white background.
-```
-
-### 💻 Mermaid Code:
-```mermaid
-flowchart TB
-    subgraph Client["CLIENT WORKSTATION LAYER (Web Browser)"]
-        UI_Paramedic["🚑 Paramedic Triage UI\n(/emergency)"]
-        UI_Doctor["🩺 Clinical EMR Workstation\n(/doctor)"]
-        UI_Gov["🏛️ Gov Commissioning Console\n(/installer)"]
-        CryptoCore["🔐 Web Crypto API Engine\n• AES-256-GCM Client Decrypt\n• HMAC-SHA256 Patient Token\n• SHA-256 Hash Matching"]
-        UI_Doctor --> CryptoCore
-        UI_Gov --> CryptoCore
-    end
-
-    subgraph Storage["DECENTRALIZED STORAGE APPLIANCES (On-Premise Docker)"]
-        subgraph NodeA["Hospital A Appliance (Port 5001)"]
-            API_A["Express REST Server"]
-            Vault_A["Encrypted JSON Vault\nREC-APOLLO-001.enc.json"]
-            Sim_A["Tamper Simulator API"]
-            API_A --- Vault_A
-            API_A --- Sim_A
-        end
-        subgraph NodeB["Hospital B Appliance (Port 5002)"]
-            API_B["Express REST Server"]
-            Vault_B["Encrypted JSON Vault\nREC-FORTIS-002.enc.json"]
-            API_B --- Vault_B
-        end
-    end
-
-    subgraph Blockchain["CONSORTIUM BLOCKCHAIN NETWORK (EVM / Hardhat / QBFT)"]
-        Contract["📜 MedicalRecordLedger.sol\n• records[patientHash] -> BlockchainRecord[]\n• fileHash: bytes32 (SHA-256 Fingerprint)\n• hospitals & doctors RBAC mapping\n• RecordAdded & RecordAccessed Events"]
-    end
-
-    UI_Paramedic -.->|"Offline Optical Scan (<1.5s)"| UI_Paramedic
-    CryptoCore <==>|"HTTPS REST (Encrypted Ciphertext)"| Storage
-    CryptoCore <==>|"Signed JSON-RPC 2.0 (eth_call / eth_sendTransaction)"| Blockchain
+A formal Level 1 Data Flow Diagram (Level 1 DFD) showing 5 interconnected processes (numbered circles) and 3 data stores (open horizontal parallel lines):
+Processes:
+- (1.0) "Emergency Triage Optical Scan & Parse"
+- (2.0) "Doctor Biometric Authentication Gatekeeper"
+- (3.0) "Client-Side In-Memory AES-256-GCM Encryption"
+- (4.0) "On-Chain SHA-256 Fingerprint Anchoring"
+- (5.0) "Integrity Verification & Ledger Hash Matching"
+Data Stores:
+- [D1: Optical Cache (Front QR Parameters)]
+- [D2: Hospital Appliance Encrypted Vault (.enc.json)]
+- [D3: EVM Consortium Smart Contract (MedicalRecordLedger)]
+Show directed arrows connecting Actors (Paramedic, Attending Doctor) through these processes and data stores.
+Clean academic engineering schematic, white background, high contrast, crisp lines.
 ```
 
 ---
 
-## 📌 Figure 4.2, 4.3, 4.4: Data Flow Diagrams (Level 0, Level 1, Level 2)
-
-### 💻 Mermaid Code for Level 0 DFD (Context Diagram):
-```mermaid
-flowchart TD
-    Paramedic["Paramedic / EMT"] -->|"1. Scans Emergency Optical QR"| MediQR(("0.0\nMediQR Healthcare\nLedger System"))
-    MediQR -->|"2. Returns Immediate Blood & Allergy Vitals"| Paramedic
-    
-    Doctor["Attending Doctor"] -->|"3. Enters Biometrics & Queries Patient Hash"| MediQR
-    MediQR -->|"4. Returns Verified Clinical History"| Doctor
-    Doctor -->|"5. Commits AES-GCM Encrypted Record"| MediQR
-    
-    HospitalAdmin["Hospital Admin & Gov Official"] -->|"6. Commissions Node & Enrolls Doctor Biometric"| MediQR
-    
-    MediQR <-->|"7. Anchors SHA-256 Hashes & Reads Proofs"| Blockchain[("Consortium Blockchain\n(EVM Ledger)")]
-```
-
-### 💻 Mermaid Code for Level 1 DFD:
-```mermaid
-flowchart TD
-    P[Paramedic] -->|"Optical QR Scan"| P1(("1.0 Emergency\nTriage Parser"))
-    P1 -->|"Decode URL Query"| D1[("D1: Optical Cache")]
-    P1 -->|"Display Vitals"| P
-
-    Doc[Attending Doctor] -->|"Touch Fingerprint Pad"| P2(("2.0 Biometric\nGatekeeper"))
-    P2 -->|"Session Token"| Doc
-    Doc -->|"Input Medical Diagnosis"| P3(("3.0 Encrypt &\nAnchor Record"))
-    P3 -->|"Store Ciphertext JSON"| D2[("D2: Hospital Appliance Vault")]
-    P3 -->|"Anchor 32-byte SHA-256"| D3[("D3: EVM Ledger Contract")]
-
-    Doc -->|"Query Patient Hash"| P4(("4.0 Query & Cryptographic\nVerify Record"))
-    D3 -->|"Fetch Recorded File Hash"| P4
-    D2 -->|"Fetch Stored Ciphertext"| P4
-    P4 -->|"Compare Hashes & Decrypt"| Doc
-```
-
----
-
-## 📌 Figure 4.5: On-Chain Data Model (Entity-Relationship)
-
-### 💻 Mermaid Code:
-```mermaid
-erDiagram
-    ConsortiumHospital ||--o{ ConsortiumDoctor : credentials
-    ConsortiumDoctor ||--o{ MedicalRecordEntry : commits
-    PatientQueryToken ||--o{ MedicalRecordEntry : indexes
-    ConsortiumHospital ||--o{ AccessAuditLog : operates
-    ConsortiumDoctor ||--o{ AccessAuditLog : emits
-
-    ConsortiumHospital {
-        address adminWallet PK
-        string name
-        string endpoint
-        string licenseId
-        bool isActive
-        uint256 registeredAt
-    }
-
-    ConsortiumDoctor {
-        address doctorWallet PK
-        string name
-        string licenseNumber
-        string department
-        address hospitalAdmin FK
-        bool isVerified
-        uint256 registeredAt
-    }
-
-    PatientQueryToken {
-        bytes32 patientHash PK "HMAC-SHA256 Token"
-    }
-
-    MedicalRecordEntry {
-        uint256 recordId PK
-        bytes32 fileHash "SHA-256 Document Fingerprint"
-        string storageURI "Off-chain Appliance REST Endpoint"
-        address practitionerAddress FK
-        uint256 timestamp
-        string recordType "CONSULTATION / LAB / SURGERY"
-        bool isLocked
-    }
-
-    AccessAuditLog {
-        uint256 logId PK
-        bytes32 patientHash FK
-        address accessorDoctor FK
-        uint256 accessedAt
-        string action "QUERY / VERIFY"
-    }
-```
-
----
-
-## 📌 Figure 4.6: UML Use Case Diagram
-
-### 💻 Mermaid Code:
-```mermaid
-flowchart LR
-    subgraph ParamedicActor["🚑 Paramedic"]
-        P_User((Paramedic))
-    end
-
-    subgraph DoctorActor["🩺 Doctor"]
-        D_User((Attending Physician))
-    end
-
-    subgraph AdminActor["🏛️ Admin"]
-        A_User((Hospital & Gov Admin))
-    end
-
-    subgraph System["MediQR Enterprise Healthcare Ledger"]
-        UC1(["UC-01: Scan Roadside Emergency QR"])
-        UC2(["UC-02: Instant One-Touch Emergency Dial"])
-        UC3(["UC-03: Authenticate via Biometric Fingerprint"])
-        UC4(["UC-04: Encrypt & Commit Clinical Dossier"])
-        UC5(["UC-05: Query Patient History & Verify SHA-256"])
-        UC6(["UC-06: Simulate Tamper Attack & Verify Alert"])
-        UC7(["UC-07: Credential & Revoke Hospital Doctors"])
-        UC8(["UC-08: Commission Node & Hardware UUID Seal"])
-        UC9(["UC-09: Batch Ingest Historical Legacy EHRs"])
-        UC10(["UC-10: Onboard & Suspend Hospital Nodes"])
-    end
-
-    P_User --> UC1
-    P_User --> UC2
-
-    D_User --> UC3
-    D_User --> UC4
-    D_User --> UC5
-    D_User --> UC6
-
-    A_User --> UC7
-    A_User --> UC8
-    A_User --> UC9
-    A_User --> UC10
-```
-
----
-
-## 📌 Figure 4.7: UML Sequence Diagram (Cross-Hospital Verification Flow)
-
-### 💻 Mermaid Code:
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Doctor as 🩺 Attending Physician
-    participant Workstation as 💻 Clinical Workstation
-    participant HospitalA as 🏥 Local Node A (Apollo)
-    participant Ledger as ⛓️ MedicalRecordLedger.sol
-    participant HospitalB as 🏥 Remote Node B (Fortis)
-
-    Doctor->>Workstation: Touch Biometric Sensor (500 DPI Minutiae)
-    Workstation-->>Doctor: 🔓 Session Unlocked (Token Active)
-
-    Doctor->>Workstation: Enter Patient Query Token (HMAC-SHA256)
-    Workstation->>Ledger: eth_call getRecords(patientHash)
-    Ledger-->>Workstation: Return Record Pointers [fileHash: 0xf305..., storageURI: "http://node-b:5002/..."]
-
-    Workstation->>HospitalB: GET /api/records/REC-FORTIS-002
-    HospitalB-->>Workstation: Return Encrypted Package { ciphertext, iv, authTag }
-
-    Workstation->>Workstation: Compute SHA-256(Retrieved File Bytes)
-    
-    alt Hashes Match Exactly
-        Workstation->>Workstation: Verify fileHash == 0xf305... (MATCH!)
-        Workstation->>Workstation: In-Memory AES-256-GCM Decrypt
-        Workstation-->>Doctor: ✓ Display Verified Clinical Record (Green Badge)
-        Workstation->>Ledger: Emit RecordAccessed(patientHash, doctorWallet)
-    else Hash Mismatch (Tampering Detected)
-        Workstation->>Workstation: Hash Mismatch (0xbad1 != 0xf305...)
-        Workstation-->>Doctor: ⚠️ CRITICAL ALERT: Tampered Record Blocked (Red Alert)
-    end
-```
-
----
-
-## 📌 Figure 4.10: UML Deployment Diagram
-
-### 💻 Mermaid Code:
-```mermaid
-flowchart TB
-    subgraph MobileDevice["📱 Mobile Paramedic Terminal"]
-        Browser["HTML5 Camera & Web Browser\n(Google Lens / Chromium Engine)"]
-    end
-
-    subgraph HospitalNodeA["🏥 Apollo Speciality Hospital (Node A)"]
-        subgraph DockerHostA["Docker Container Engine"]
-            NodeAppA["Node.js Express Server (Port 5001)\n• REST Storage Engine\n• Tamper Injection Simulator"]
-            StorageVolA[("Local Volume Mount\n/storage/hospital-a/*.enc.json")]
-            NodeAppA --- StorageVolA
-        end
-        DoctorPC_A["💻 Doctor Clinical PC\n(Web Crypto API + Optical Scanner)"]
-        DoctorPC_A <-->|"LAN HTTP Port 5001"| NodeAppA
-    end
-
-    subgraph HospitalNodeB["🏥 Fortis Healthcare Network (Node B)"]
-        subgraph DockerHostB["Docker Container Engine"]
-            NodeAppB["Node.js Express Server (Port 5002)\n• REST Storage Engine"]
-            StorageVolB[("Local Volume Mount\n/storage/hospital-b/*.enc.json")]
-            NodeAppB --- StorageVolB
-        end
-    end
-
-    subgraph ConsortiumEVM["⛓️ Quorum / EVM Consortium Blockchain"]
-        ValA["Validator Peer A\n(Apollo Node)"]
-        ValB["Validator Peer B\n(Fortis Node)"]
-        ValGov["Validator Peer C\n(NHA / MOH Root)"]
-        ValA <-->|"QBFT P2P Consensus Port 8545"| ValB
-        ValB <-->|"QBFT P2P Consensus Port 8545"| ValGov
-    end
-
-    MobileDevice -->|"Public Internet HTTPS"| DoctorPC_A
-    DoctorPC_A <-->|"JSON-RPC (eth_call / sendTx)"| ValA
-    NodeAppA <-->|"Inter-Hospital Firewall mTLS"| NodeAppB
-```
-
----
-
-## 📌 Figure 4.11: State Machine Diagram (Record Lifecycle & Tamper Rejection)
-
-### 💻 Mermaid Code:
-```mermaid
-stateDiagram-v2
-    [*] --> DraftClinicalRecord : Doctor writes notes & Rx
-    
-    DraftClinicalRecord --> ClientEncrypted : Web Crypto AES-256-GCM
-    note right of ClientEncrypted : 96-bit random IV & 128-bit AuthTag generated
-    
-    ClientEncrypted --> OffChainStored : POST to Hospital Storage Appliance
-    note right of OffChainStored : Stored behind hospital firewall as .enc.json
-    
-    OffChainStored --> OnChainAnchored : eth_sendTransaction addRecord()
-    note right of OnChainAnchored : SHA-256 Document Hash anchored on Solidity ledger
-    
-    OnChainAnchored --> QueryInitiated : Doctor / ER requests patient history
-    
-    QueryInitiated --> IntegrityCheck : Fetch file & compute local SHA-256
-    
-    state IntegrityCheck <<choice>>
-    IntegrityCheck --> DecryptedVerified : Local SHA-256 == Ledger Hash
-    IntegrityCheck --> TamperBlocked : Local SHA-256 != Ledger Hash
-    
-    DecryptedVerified --> [*] : Render Clean Clinical Dossier
-    TamperBlocked --> [*] : Sound Red UI Alarm & Block Memory Decrypt
-```
-
----
-
-## 📌 Figure 8.1: Benchmarking Charts
-
-### 🤖 AI Prompt (For DALL-E / Midjourney / Canva):
+#### 4. Figure 4.4: Data flow diagram, Level 2 (expansion of the Push process)
+* **Filename to save in `images/`:** `Figure 4.4 DFD Level 2.png`
+* **Prompt for ChatGPT / DALL-E / Draw.io:**
 ```text
-A clean corporate benchmark chart comparing three healthcare architectures:
-Chart 1 (Bar Chart): "Emergency Triage Retrieval Latency (Seconds)"
-- Centralized EHR (Epic/FHIR): 900 seconds (15 minutes) [Grey bar]
-- Academic On-Chain Blockchain: 45 seconds [Orange bar]
-- MediQR Enterprise: 1.5 seconds [Emerald Green bar]
-Chart 2 (Bar Chart): "Tamper Detection Rate (%)"
-- Centralized EHR: 0% (Silent database rewrite) [Red bar]
-- MediQR Enterprise: 100% (Guaranteed cryptographic block) [Emerald Green bar]
-Chart 3 (Bar Chart): "Transaction Gas Cost per Medical Record ($ USD)"
-- Public Ethereum L1: $24.50 [Red bar]
-- MediQR QBFT Consortium: $0.00 (Zero-Gas Medical Infrastructure) [Emerald Green bar]
-Modern scientific presentation, clean typography, white background.
+A detailed Level 2 Data Flow Diagram (Level 2 DFD) expanding the "Record Push & Encryption Process":
+Show the sequential internal sub-processes (circles) connected in a clear pipeline:
+1. (3.1) "Generate 96-bit Cryptographic Random IV"
+2. (3.2) "Execute Client-Side AES-256-GCM Encryption over Clinical Payload"
+3. (3.3) "Generate 128-bit Authentication Tag & Package Ciphertext"
+4. (3.4) "Compute 32-byte SHA-256 Hash of Complete Stored Package"
+5. (3.5) "Store Encrypted Payload to Local Hospital Storage Appliance (Node A)"
+6. (3.6) "Dispatch Signed JSON-RPC eth_sendTransaction to Anchor File Hash on Smart Contract"
+Data store outputs: [D2: Appliance Filesystem Vault] and [D3: On-Chain Ledger State].
+Clear, elegant software engineering DFD diagram, white background, black lines.
 ```
 
 ---
 
-## 💡 How to Insert These Into Word (`MediQR_Final_Project_Report.docx`):
-1. **Option A (Mermaid Live Editor)**: Copy any of the Mermaid code blocks above, paste into [mermaid.live](https://mermaid.live), click **Download PNG / SVG**, and insert directly into the Word document at the corresponding figure placeholder.
-2. **Option B (Eraser.io / Draw.io)**: Paste the AI prompts or Mermaid code into Eraser.io or Draw.io to generate presentation-grade diagrams with custom hospital and blockchain icons.
-3. **Option C (Direct Screenshot Capture)**: Run `npm run dev:portal` and capture live screenshots of `http://localhost:3000/emergency`, `http://localhost:3000/doctor`, and `http://localhost:3000/installer` to place into Figures 8.2, 8.3, and 8.4!
+#### 5. Figure 4.5: On-chain data model (Entity-Relationship Diagram)
+* **Filename to save in `images/`:** `Figure 4.5 On-chain data model.png`
+* **Prompt for ChatGPT / DALL-E / Eraser.io:**
+```text
+A professional Entity-Relationship (ER) Diagram representing the on-chain and off-chain data model of an EVM healthcare ledger.
+Show 5 entity tables with primary keys (PK), foreign keys (FK), and attributes:
+1. "ConsortiumHospital"
+   - adminWallet (PK, address)
+   - name (string), endpoint (string), licenseId (string), isActive (bool), registeredAt (uint256)
+2. "ConsortiumDoctor"
+   - doctorWallet (PK, address)
+   - name (string), licenseNumber (string), department (string), hospitalAdmin (FK, address), isVerified (bool)
+   - Relationship: Hospital 1 to Many Doctor (credentials)
+3. "PatientQueryToken"
+   - patientHash (PK, bytes32 HMAC-SHA256 token)
+4. "MedicalRecordEntry"
+   - recordId (PK, uint256), fileHash (bytes32 SHA-256 digest), storageURI (string), practitionerAddress (FK, address), timestamp (uint256), recordType (string), isLocked (bool)
+   - Relationship: PatientQueryToken 1 to Many MedicalRecordEntry
+   - Relationship: Doctor 1 to Many MedicalRecordEntry (commits)
+5. "AccessAuditLog"
+   - logId (PK, uint256), patientHash (FK, bytes32), accessorDoctor (FK, address), accessedAt (uint256)
+Modern crows-foot ER diagram notation, crisp borders, blue headers, white background.
+```
+
+---
+
+#### 6. Figure 4.8: Class / module diagram
+* **Filename to save in `images/`:** `Figure 4.8 Class module diagram.png`
+* **Prompt for ChatGPT / DALL-E / Draw.io:**
+```text
+A formal UML Class / Module Diagram for an enterprise healthcare cryptography and blockchain engine:
+Show 5 class boxes with private attributes (-) and public methods (+):
+1. "CryptoEngineService"
+   - masterSalt: string
+   + hashPatientId(id: string, salt: string): bytes32
+   + encryptRecord(payload: RecordPayload, key: CryptoKey): EncryptedPackage
+   + decryptRecord(cipher: string, iv: string, tag: string): RecordPayload
+   + computeFileHash(buffer: ArrayBuffer): bytes32
+2. "BlockchainLedgerService"
+   - contractAddress: address, rpcProvider: JsonRpcProvider
+   + getPatientRecords(patientHash: bytes32): RecordPointer[]
+   + addRecord(fileHash: bytes32, uri: string, recordType: string): TxReceipt
+   + onboardHospital(admin: address, name: string): TxReceipt
+   + registerDoctor(doctor: address, name: string): TxReceipt
+3. "DoctorWorkstationController"
+   - activeDoctor: address, isBiometricUnlocked: boolean
+   + handleBiometricAuthentication(): void
+   + verifyAndDecryptRecord(uri: string, expectedHash: bytes32): VerificationReport
+4. "EmergencyTriageParser"
+   + parseCompactUrl(queryString: string): TriageVitals
+   + decodeOfflinePayload(raw: string): TriageData
+Show dependency and association arrows between modules. Clean UML notation, white background.
+```
+
+---
+
+#### 7. Figure 4.9: Component diagram
+* **Filename to save in `images/`:** `Figure 4.9 Component diagram.png`
+* **Prompt for ChatGPT / DALL-E / Eraser.io:**
+```text
+A formal UML Component Diagram for "MediQR":
+Enclosing subsystem: "Next.js Web Runtime" containing:
+- Component 1: "<<component>> Emergency Triage Module (/emergency)"
+- Component 2: "<<component>> Doctor Clinical Workstation (/doctor)"
+- Component 3: "<<component>> Government Commissioning Utility (/installer)"
+- Component 4: "<<component>> Core Cryptography Engine (Web Crypto API, AES-256-GCM, HMAC)"
+External components connected via interfaces (lollipop / socket connectors):
+- Component 5: "<<component>> Hospital Storage Appliance (Docker REST Port 5001)" connected via REST HTTPS
+- Component 6: "<<component>> Consortium Blockchain Validator (Hardhat / QBFT EVM Node)" connected via JSON-RPC 2.0
+Clean structural component diagram, standard UML 2.0 component box icons, white background.
+```
+
+---
+
+#### 8. Figure 4.10: Deployment diagram
+* **Filename to save in `images/`:** `Figure 4.10 Deployment diagram.png`
+* **Prompt for ChatGPT / DALL-E / Eraser.io:**
+```text
+A formal UML 3D-box Deployment Diagram showing distributed nodes and physical hardware execution:
+1. Node: "<<device>> Paramedic Mobile Smartphone (Android / iOS)"
+   - Artifact: "Mobile Web Browser (Google Lens / Chrome OCR)"
+2. Node: "<<device>> Hospital A On-Premise Server (Dell PowerEdge R740)"
+   - Environment: "<<executionEnvironment>> Docker Engine"
+   - Artifact: "hospital-node-a:5001 Express Container"
+   - Storage Volume: "<<storage>> /storage/hospital-a/*.enc.json"
+3. Node: "<<device>> Hospital B On-Premise Server"
+   - Environment: "<<executionEnvironment>> Docker Engine"
+   - Artifact: "hospital-node-b:5002 Express Container"
+4. Node: "<<device>> Consortium Blockchain EVM Peer Network"
+   - Node 1: "Apollo Validator Peer (Port 8545)"
+   - Node 2: "Fortis Validator Peer (Port 8545)"
+   - Node 3: "Ministry of Health (MOH) Root Validator"
+   - Connected via P2P QBFT Consensus.
+Show network protocols: HTTPS (Port 443), Local REST (Port 5001), JSON-RPC (Port 8545).
+```
+
+---
+
+#### 9. Figure 4.11: State diagram: pull-request / record lifecycle
+* **Filename to save in `images/`:** `Figure 4.11 State diagram pull-request lifecycle.png`
+* **Prompt for ChatGPT / DALL-E / Draw.io:**
+```text
+A formal UML State Machine Diagram showing the lifecycle of a medical record:
+States (rounded rectangles):
+- [Initial State: (*)]
+- [1. Draft Consultation] -> Trigger: Doctor writes diagnosis & prescription
+- [2. Client-Side AES-256-GCM Encrypted] -> Trigger: Browser Web Crypto API generates IV & AuthTag
+- [3. Stored On Appliance] -> Trigger: POST ciphertext to Hospital Storage Node
+- [4. Anchored On Ledger] -> Trigger: eth_sendTransaction records 32-byte SHA-256 hash on smart contract
+- [5. Integrity Verification] -> Trigger: Attending Doctor queries record
+Decision branch:
+- State [6A: Verified & In-Memory Decrypted] (Green) if Local SHA-256 == Ledger Hash -> Render Patient Chart
+- State [6B: Critical Tamper Alert Blocked] (Red) if Local SHA-256 != Ledger Hash -> Sound Red UI Alarm
+- [Final State: (*)]
+Clean UML state transitions with arrows, guard conditions in brackets [ ], white background.
+```
+
+---
+
+#### 10. Figure 5.1: Project timeline (Gantt chart)
+* **Filename to save in `images/`:** `Figure 5.1 Project timeline Gantt chart.png`
+* **Prompt for ChatGPT / DALL-E / Canva:**
+```text
+A professional horizontal Gantt Chart for a 12-week software engineering project (Week 1 to Week 12).
+Horizontal bars across 8 project tasks:
+1. "T1: Domain Analysis & Statutory SRS" (Weeks 1 - 2) [Blue bar]
+2. "T2: Core Cryptography & NIST Vectors" (Weeks 2 - 4) [Blue bar]
+3. "T3: Smart Contract & Hardhat Tests" (Weeks 4 - 6) [Teal bar]
+4. "T4: Docker Storage Node Appliance" (Weeks 6 - 7) [Teal bar]
+5. "T5: Dual-Segment QR Engine & Paramedic Scanner" (Weeks 7 - 8) [Green bar]
+6. "T6: Clinical Workstation & Biometrics" (Weeks 8 - 10) [Green bar]
+7. "T7: Gov Installer & Legacy Migration" (Weeks 10 - 11) [Orange bar]
+8. "T8: Auditing, Benchmarks & Final Documentation" (Weeks 11 - 12) [Purple bar]
+Clear weekly grid lines from W1 to W12, clean professional corporate layout, white background.
+```
+
+---
+
+#### 11. Figures 8.2, 8.3, 8.4: Terminal Output & User Workflow Screenshots
+* **Option A (Instant Screenshots from your running app):**
+  - Run `npm run dev:portal` in `doctor-portal/`.
+  - Capture a screenshot of `http://localhost:3000/emergency` -> Save as `Figure 8.2 Terminal output repository creation commit push.png`.
+  - Capture a screenshot of `http://localhost:3000/doctor` (with the green "✓ Blockchain Verified" badge) -> Save as `Figure 8.3 Terminal output blocked self-approval PR merge.png`.
+  - Capture a screenshot of `http://localhost:3000/installer` (with the Government Official Commissioning Console) -> Save as `Figure 8.4 Terminal output rebase conflict detection resolution.png`.
+* **Option B (AI Mockup Prompt):**
+```text
+High-fidelity UI mockups for an enterprise medical web application:
+- Screenshot 1: "Roadside Emergency Triage Terminal" showing red alert banner, high-visibility "Blood Group: O-", "Penicillin G Anaphylaxis Warning", and green "Dial Emergency Contact" button.
+- Screenshot 2: "Doctor Clinical Workstation" showing physician profile, green pill badge "✓ Blockchain Verified (SHA-256 Matched)", prescription list, and diagnostic lab panel.
+- Screenshot 3: "Government Health Authority Commissioning Utility" in dark mode with Ministry of Health emblem, Hardware UUID binding card, and optical fingerprint scanner pad showing glowing blue laser sweep.
+Modern web UI style, clean typography, crisp borders.
+```
+
+---
+
+## ⚡ What to do once you generate an image:
+1. Save the image into the `c:\Users\soham\Desktop\Work\projects\complete\purvaja-mediqr\images\` folder.
+2. In your terminal, run:
+   ```powershell
+   python generate_mediqr_report.py
+   ```
+3. That's it! The script will automatically replace the placeholder box with your generated high-resolution diagram, properly centered and scaled!

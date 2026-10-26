@@ -1,9 +1,8 @@
 """
-MediQR Comprehensive Project Report Generator
-Converts the BATU University Project Report Template into a detailed, exhaustive
-engineering report tailored to the MediQR Enterprise Blockchain Healthcare Archive.
+MediQR Comprehensive Project Report Generator (Updated with Original University Table Grid & Real Image Embedding)
 """
 
+import os
 import docx
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -14,11 +13,11 @@ from docx.oxml.ns import qn, nsdecls
 def create_report():
     doc = docx.Document()
 
-    # Configure Margins (Standard Academic Format)
+    # Configure Margins (Standard Academic Format: 1.25" Left for binding, 1" Top, Right, Bottom)
     for section in doc.sections:
         section.top_margin = Inches(1.0)
         section.bottom_margin = Inches(1.0)
-        section.left_margin = Inches(1.25)  # Extra margin for binding
+        section.left_margin = Inches(1.25)
         section.right_margin = Inches(1.0)
         
         # Configure Header & Footer
@@ -29,7 +28,7 @@ def create_report():
         f_run.font.name = "Times New Roman"
         f_run.font.size = Pt(9)
         f_run.font.italic = True
-        f_run.font.color.rgb = RGBColor(100, 100, 100)
+        f_run.font.color.rgb = RGBColor(80, 80, 80)
 
     # Style Helpers
     def set_run_font(run, name="Times New Roman", size_pt=12, bold=False, italic=False, color=None):
@@ -39,6 +38,8 @@ def create_report():
         run.italic = italic
         if color:
             run.font.color.rgb = color
+        else:
+            run.font.color.rgb = RGBColor(0, 0, 0)
 
     def add_p(text="", align=WD_ALIGN_PARAGRAPH.LEFT, space_before=0, space_after=6, line_spacing=1.15):
         p = doc.add_paragraph()
@@ -51,7 +52,7 @@ def create_report():
             set_run_font(r, "Times New Roman", 12)
         return p
 
-    def add_h1(title, space_before=12, space_after=12):
+    def add_h1(title, space_before=18, space_after=14):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.space_before = Pt(space_before)
@@ -60,7 +61,7 @@ def create_report():
         set_run_font(r, "Times New Roman", 16, bold=True)
         return p
 
-    def add_h2(title, space_before=12, space_after=6):
+    def add_h2(title, space_before=14, space_after=6):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p.paragraph_format.space_before = Pt(space_before)
@@ -69,7 +70,7 @@ def create_report():
         set_run_font(r, "Times New Roman", 13, bold=True)
         return p
 
-    def add_h3(title, space_before=8, space_after=4):
+    def add_h3(title, space_before=10, space_after=4):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p.paragraph_format.space_before = Pt(space_before)
@@ -98,36 +99,70 @@ def create_report():
         tcMar = parse_xml(f'<w:tcMar {nsdecls("w")}><w:top w:w="{top}" w:type="dxa"/><w:bottom w:w="{bottom}" w:type="dxa"/><w:left w:w="{left}" w:type="dxa"/><w:right w:w="{right}" w:type="dxa"/></w:tcMar>')
         tcPr.append(tcMar)
 
-    def add_styled_table(headers, rows_data, col_widths=None):
+    def set_table_borders(table):
+        tblPr = table._tbl.tblPr
+        tblBorders = parse_xml(f'''
+            <w:tblBorders {nsdecls("w")}>
+                <w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                <w:bottom w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                <w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+                <w:insideV w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+            </w:tblBorders>
+        ''')
+        tblPr.append(tblBorders)
+
+    def add_styled_table(headers, rows_data, col_widths=None, is_toc=False):
         table = doc.add_table(rows=len(rows_data) + 1, cols=len(headers))
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        table.autofit = False
+        table.style = 'Table Grid'
+        set_table_borders(table)
 
-        # Header Row
+        # Header Row (Shaded Gray #D9D9D9, Bold Black Text)
         hdr_cells = table.rows[0].cells
         for i, h in enumerate(headers):
             hdr_cells[i].text = h
-            set_cell_background(hdr_cells[i], "2A4B7C")
-            set_cell_margins(hdr_cells[i], 120, 120, 150, 150)
+            set_cell_background(hdr_cells[i], "D9D9D9")
+            set_cell_margins(hdr_cells[i], 100, 100, 150, 150)
             p = hdr_cells[i].paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.space_before = Pt(2)
+            p.paragraph_format.space_after = Pt(2)
             for r in p.runs:
-                set_run_font(r, "Times New Roman", 10.5, bold=True, color=RGBColor(255, 255, 255))
+                set_run_font(r, "Times New Roman", 11, bold=True, color=RGBColor(0, 0, 0))
 
-        # Data Rows
+        # Data Rows (White background, thin black borders, clean Times New Roman font)
         for r_idx, row in enumerate(rows_data):
             row_cells = table.rows[r_idx + 1].cells
-            bg_color = "F7F9FB" if r_idx % 2 == 1 else "FFFFFF"
+            is_chapter_row = False
+            if is_toc and row[0].strip() != "":
+                is_chapter_row = True  # Chapter row like "01", "02" or main title
+
             for c_idx, val in enumerate(row):
                 row_cells[c_idx].text = str(val)
-                set_cell_background(row_cells[c_idx], bg_color)
+                set_cell_background(row_cells[c_idx], "FFFFFF")
                 set_cell_margins(row_cells[c_idx], 80, 80, 120, 120)
                 p = row_cells[c_idx].paragraphs[0]
                 p.paragraph_format.line_spacing = 1.15
-                align = WD_ALIGN_PARAGRAPH.LEFT if c_idx != 0 else WD_ALIGN_PARAGRAPH.CENTER
-                p.alignment = align
+                p.paragraph_format.space_before = Pt(2)
+                p.paragraph_format.space_after = Pt(2)
+                
+                # Column alignment
+                if c_idx == 0:
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                elif c_idx == len(row) - 1 and (len(val) <= 4 or val.isdigit() or val in ["i", "ii", "iii", "iv", "v", "vi"]):
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                else:
+                    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
                 for r in p.runs:
-                    set_run_font(r, "Times New Roman", 10)
+                    if is_chapter_row:
+                        set_run_font(r, "Times New Roman", 10.5, bold=True, color=RGBColor(0, 0, 0))
+                    elif is_toc and row[0].strip() == "" and not str(val).startswith("    ") and c_idx == 1 and val in ["List of Abbreviations", "List of Figures", "List of Tables", "References", "Appendix A: Feasibility & Complexity Assessment", "Appendix B: Paper Publication / Presentation", "Appendix C: Plagiarism Report"]:
+                        set_run_font(r, "Times New Roman", 10.5, bold=True, color=RGBColor(0, 0, 0))
+                    else:
+                        set_run_font(r, "Times New Roman", 10, bold=False, color=RGBColor(0, 0, 0))
 
         # Apply Column Widths
         if col_widths:
@@ -135,36 +170,61 @@ def create_report():
                 for idx, width in enumerate(col_widths):
                     row.cells[idx].width = Inches(width)
 
-        doc.add_paragraph().paragraph_format.space_after = Pt(8)
+        doc.add_paragraph().paragraph_format.space_after = Pt(6)
         return table
 
-    def add_figure_placeholder(fig_num, fig_title, description, ascii_diag=""):
-        p_box = doc.add_paragraph()
-        p_box.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_box.paragraph_format.space_before = Pt(8)
-        p_box.paragraph_format.space_after = Pt(4)
-        
-        # Bordered container simulation
-        tbl = doc.add_table(rows=1, cols=1)
-        tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
-        cell = tbl.rows[0].cells[0]
-        cell.width = Inches(6.0)
-        set_cell_background(cell, "F4F6F9")
-        set_cell_margins(cell, 140, 140, 180, 180)
-        
-        cp = cell.paragraphs[0]
-        cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        r1 = cp.add_run(f"[ FIGURE {fig_num} VISUAL DIAGRAM PLACEHOLDER ]\n")
-        set_run_font(r1, "Courier New", 10, bold=True, color=RGBColor(42, 75, 124))
-        
-        if ascii_diag:
-            r_diag = cp.add_run(ascii_diag + "\n")
-            set_run_font(r_diag, "Courier New", 8.5, color=RGBColor(50, 50, 50))
-            
-        r2 = cp.add_run(f"System Schematic: {description}")
-        set_run_font(r2, "Times New Roman", 9.5, italic=True, color=RGBColor(80, 80, 80))
+    # Image Matching & Insertion Helper
+    img_dir = "images"
+    existing_images = []
+    if os.path.exists(img_dir):
+        existing_images = [f for f in os.listdir(img_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
 
-        # Caption
+    def find_image(fig_num):
+        for f in existing_images:
+            prefix1 = f"Figure {fig_num}"
+            prefix2 = f"Fig {fig_num}"
+            prefix3 = f"Fig. {fig_num}"
+            prefix4 = f"Figure_{fig_num}"
+            if f.startswith(prefix1) or f.startswith(prefix2) or f.startswith(prefix3) or f.startswith(prefix4):
+                return os.path.join(img_dir, f)
+        return None
+
+    def add_figure_or_image(fig_num, fig_title, description):
+        img_path = find_image(fig_num)
+        
+        if img_path and os.path.exists(img_path):
+            # Insert the real generated image!
+            p_img = doc.add_paragraph()
+            p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_img.paragraph_format.space_before = Pt(8)
+            p_img.paragraph_format.space_after = Pt(4)
+            r_img = p_img.add_run()
+            r_img.add_picture(img_path, width=Inches(5.6))
+        else:
+            # Clean bordered placeholder WITHOUT ASCII art
+            tbl = doc.add_table(rows=1, cols=1)
+            tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+            set_table_borders(tbl)
+            cell = tbl.rows[0].cells[0]
+            cell.width = Inches(5.8)
+            set_cell_background(cell, "F7F9FB")
+            set_cell_margins(cell, 140, 140, 180, 180)
+            
+            cp = cell.paragraphs[0]
+            cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            cp.paragraph_format.space_before = Pt(6)
+            cp.paragraph_format.space_after = Pt(6)
+            
+            r1 = cp.add_run(f"[ FIGURE {fig_num} DIAGRAM PLACEHOLDER ]\n")
+            set_run_font(r1, "Times New Roman", 10.5, bold=True, color=RGBColor(40, 70, 110))
+            
+            r2 = cp.add_run(f"System Schematic: {description}\n")
+            set_run_font(r2, "Times New Roman", 9.5, italic=True, color=RGBColor(90, 90, 90))
+
+            r3 = cp.add_run(f"(Save image as 'images/Figure {fig_num} {fig_title}.png' to embed automatically)")
+            set_run_font(r3, "Times New Roman", 8.5, italic=True, color=RGBColor(120, 120, 120))
+
+        # Figure Caption (Always below figure)
         p_cap = doc.add_paragraph()
         p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_cap.paragraph_format.space_before = Pt(4)
@@ -178,13 +238,16 @@ def create_report():
         tbl = doc.add_table(rows=1, cols=1)
         tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
         cell = tbl.rows[0].cells[0]
-        cell.width = Inches(6.2)
-        set_cell_background(cell, "1E2430")
-        set_cell_margins(cell, 120, 120, 150, 150)
+        cell.width = Inches(6.0)
+        set_cell_background(cell, "F2F4F7")
+        set_cell_margins(cell, 100, 100, 140, 140)
+        set_table_borders(tbl)
         p = cell.paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p.paragraph_format.space_before = Pt(2)
+        p.paragraph_format.space_after = Pt(2)
         r = p.add_run(code_text)
-        set_run_font(r, "Consolas", 9, color=RGBColor(210, 235, 255))
+        set_run_font(r, "Consolas", 9, color=RGBColor(20, 20, 20))
         doc.add_paragraph().paragraph_format.space_after = Pt(6)
 
     # =========================================================================
@@ -277,7 +340,7 @@ def create_report():
     doc.add_page_break()
 
     # =========================================================================
-    # PAGES 5-6: TABLE OF CONTENTS
+    # PAGES 5-6: TABLE OF CONTENTS (Exact original formatting: Gray header, Grid borders, Indented sub-items)
     # =========================================================================
     add_h1("TABLE OF CONTENTS", space_before=24, space_after=18)
 
@@ -286,56 +349,56 @@ def create_report():
         ["", "List of Figures", "ii"],
         ["", "List of Tables", "iii"],
         ["01", "Introduction", "1"],
-        ["", "1.1 Overview", "1"],
-        ["", "1.2 Motivation", "2"],
-        ["", "1.3 Problem Definition and Objectives", "2"],
-        ["", "1.4 Project Scope & Limitations", "3"],
-        ["", "1.5 Methodologies of Problem Solving", "4"],
+        ["", "    1.1  Overview", "1"],
+        ["", "    1.2  Motivation", "2"],
+        ["", "    1.3  Problem Definition and Objectives", "2"],
+        ["", "    1.4  Project Scope & Limitations", "3"],
+        ["", "    1.5  Methodologies of Problem Solving", "3"],
         ["02", "Literature Survey", "5"],
-        ["", "2.1 Centralized Electronic Health Record Systems (Epic, Cerner)", "5"],
-        ["", "2.2 Standard Barcode and Unencrypted Medical QR Cards", "5"],
-        ["", "2.3 Blockchain Timestamping and Smart Contracts in Healthcare", "6"],
-        ["", "2.4 Decentralized & Hybrid Storage Architectures (Off-Chain vs. On-Chain)", "6"],
-        ["", "2.5 Comparative Analysis & Gap Identification", "7"],
+        ["", "    2.1  Centralized Electronic Health Record Systems (Epic, Cerner)", "5"],
+        ["", "    2.2  Standard Barcode and Unencrypted Medical QR Cards", "5"],
+        ["", "    2.3  Blockchain Timestamping and Smart Contracts in Healthcare", "6"],
+        ["", "    2.4  Decentralized & Hybrid Storage Architectures", "6"],
+        ["", "    2.5  Comparative Analysis & Gap Identification", "7"],
         ["03", "Software Requirements Specification", "8"],
-        ["", "3.1 Assumptions and Dependencies", "8"],
-        ["", "3.2 Functional Requirements", "8"],
-        ["", "3.3 External Interface Requirements", "9"],
-        ["", "3.4 Nonfunctional Requirements", "10"],
-        ["", "3.5 System Requirements (Hardware, Software, Platform)", "11"],
-        ["", "3.6 Analysis Model: SDLC Incremental Model Applied", "11"],
+        ["", "    3.1  Assumptions and Dependencies", "8"],
+        ["", "    3.2  Functional Requirements", "8"],
+        ["", "    3.3  External Interface Requirements", "9"],
+        ["", "    3.4  Nonfunctional Requirements", "10"],
+        ["", "    3.5  System Requirements (Hardware, Software, Platform)", "11"],
+        ["", "    3.6  Analysis Model: SDLC Incremental Model Applied", "11"],
         ["04", "System Design", "12"],
-        ["", "4.1 System Architecture", "12"],
-        ["", "4.2 Mathematical Model", "13"],
-        ["", "4.3 Data Flow Diagrams (Level 0, Level 1, Level 2)", "14"],
-        ["", "4.4 Entity Relationship / On-Chain & Off-Chain Data Model", "15"],
-        ["", "4.5 UML Diagrams (Use Case, Sequence, Class, Component, Deploy, State)", "16"],
+        ["", "    4.1  System Architecture", "12"],
+        ["", "    4.2  Mathematical Model", "13"],
+        ["", "    4.3  Data Flow Diagrams (Level 0, Level 1, Level 2)", "14"],
+        ["", "    4.4  Entity Relationship / On-Chain & Off-Chain Data Model", "15"],
+        ["", "    4.5  UML Diagrams (Use Case, Sequence, Class, Component, Deploy, State)", "16"],
         ["05", "Project Plan", "20"],
-        ["", "5.1 Project Estimate (Reconciled Estimates, Resources)", "20"],
-        ["", "5.2 Risk Management", "20"],
-        ["", "5.3 Project Schedule (WBS, Task Network, Gantt Chart)", "21"],
-        ["", "5.4 Team Organization", "22"],
+        ["", "    5.1  Project Estimate (Reconciled Estimates, Resources)", "20"],
+        ["", "    5.2  Risk Management", "20"],
+        ["", "    5.3  Project Schedule (WBS, Task Network, Gantt Chart)", "21"],
+        ["", "    5.4  Team Organization", "22"],
         ["06", "Project Implementation", "23"],
-        ["", "6.1 Overview of Project Modules", "23"],
-        ["", "6.2 Tools and Technologies Used", "23"],
-        ["", "6.3 Algorithm Details (HMAC-SHA256, AES-256-GCM, Compact QR Engine)", "24"],
+        ["", "    6.1  Overview of Project Modules", "23"],
+        ["", "    6.2  Tools and Technologies Used", "23"],
+        ["", "    6.3  Algorithm Details (HMAC-SHA256, AES-256-GCM, Compact QR Engine)", "24"],
         ["07", "Software Testing", "26"],
-        ["", "7.1 Type of Testing", "26"],
-        ["", "7.2 Test Cases & Test Results", "27"],
+        ["", "    7.1  Type of Testing", "26"],
+        ["", "    7.2  Test Cases & Test Results", "26"],
         ["08", "Result Analysis", "29"],
-        ["", "8.1 Outcomes and Benchmark Comparisons", "29"],
-        ["", "8.2 Screen Shots and User Workflows", "30"],
+        ["", "    8.1  Outcomes and Benchmark Comparisons", "29"],
+        ["", "    8.2  Screen Shots and User Workflows", "30"],
         ["09", "Conclusion", "32"],
-        ["", "9.1 Conclusions", "32"],
-        ["", "9.2 Future Work", "32"],
-        ["", "9.3 Applications", "33"],
+        ["", "    9.1  Conclusions", "32"],
+        ["", "    9.2  Future Work", "32"],
+        ["", "    9.3  Applications", "33"],
         ["", "Appendix A: Feasibility & Complexity Assessment", "34"],
         ["", "Appendix B: Paper Publication / Presentation", "36"],
         ["", "Appendix C: Plagiarism Report", "37"],
         ["", "References", "38"],
     ]
 
-    add_styled_table(["Sr. No.", "Title of Chapter", "Page No."], toc_data, col_widths=[0.8, 4.4, 0.8])
+    add_styled_table(["Sr. No.", "Title of Chapter", "Page No."], toc_data, col_widths=[0.8, 4.6, 0.8], is_toc=True)
 
     doc.add_page_break()
 
@@ -381,7 +444,7 @@ def create_report():
         ["UUID", "Universally Unique Identifier"]
     ]
 
-    add_styled_table(["Abbreviation", "Expansion"], abbr_data, col_widths=[1.8, 4.2])
+    add_styled_table(["ABBREVIATION", "EXPANSION"], abbr_data, col_widths=[1.8, 4.4])
 
     doc.add_page_break()
 
@@ -391,27 +454,27 @@ def create_report():
     add_h1("LIST OF FIGURES", space_before=24, space_after=18)
 
     fig_data = [
-        ["1.1", "High-level architectural overview of the MediQR dual-segment ecosystem", "1"],
-        ["3.1", "Incremental software engineering process model applied to MediQR", "11"],
-        ["4.1", "System architecture: Client crypto layer, storage node appliance, and ledger", "12"],
-        ["4.2", "Context-level data flow diagram (Level 0 DFD)", "14"],
-        ["4.3", "Level 1 Data Flow Diagram: Emergency triage, EMR creation, and verification", "14"],
-        ["4.4", "Level 2 Data Flow Diagram: Expansion of client encryption and hash anchoring", "14"],
-        ["4.5", "On-chain ledger and off-chain storage entity-relationship data model", "15"],
-        ["4.6", "UML Use Case Diagram: Emergency Paramedic, Doctor, Hospital, Root Admin", "16"],
-        ["4.7", "UML Sequence Diagram: Cross-hospital record query and cryptographic verification", "17"],
-        ["4.8", "Class and structural module diagram of the MediQR TypeScript engine", "18"],
-        ["4.9", "Component diagram showing frontend portal, core-crypto, and RPC interfaces", "18"],
-        ["4.10", "Deployment diagram: Dockerized hospital appliances and EVM validator nodes", "19"],
-        ["4.11", "State machine diagram: Clinical record lifecycle and tamper detection transitions", "19"],
-        ["5.1", "Project execution timeline and WBS milestones (Gantt chart)", "22"],
-        ["8.1", "Benchmark evaluation: Decryption latency, QR scan speed, and memory usage", "29"],
-        ["8.2", "Terminal output & interface: First-responder roadside emergency triage terminal", "30"],
-        ["8.3", "Terminal output & interface: Doctor clinical workstation with verified cryptographic status", "30"],
-        ["8.4", "Terminal output & interface: Government appliance commissioning and biometric sealing", "31"]
+        ["1.1", "High-level view of the MediQR system", "1"],
+        ["3.1", "Incremental process model applied to this project", "11"],
+        ["4.1", "System architecture: CLI client and on-chain contract", "12"],
+        ["4.2", "Context-level data flow diagram (Level 0)", "14"],
+        ["4.3", "Data flow diagram, Level 1", "14"],
+        ["4.4", "Data flow diagram, Level 2 (expansion of the Push process)", "14"],
+        ["4.5", "On-chain data model", "15"],
+        ["4.6", "Use case diagram", "16"],
+        ["4.7", "Sequence diagram: push flow", "17"],
+        ["4.8", "Class / module diagram", "18"],
+        ["4.9", "Component diagram", "18"],
+        ["4.10", "Deployment diagram", "19"],
+        ["4.11", "State diagram: pull-request lifecycle", "19"],
+        ["5.1", "Project timeline (Gantt chart)", "22"],
+        ["8.1", "CLI build/runtime benchmark: C vs. V vs. Python", "29"],
+        ["8.2", "Terminal output: repository creation, commit, and push", "30"],
+        ["8.3", "Terminal output: blocked self-approval and PR merge", "30"],
+        ["8.4", "Terminal output: rebase conflict detection and resolution", "31"]
     ]
 
-    add_styled_table(["Figure", "Illustration Description", "Page No."], fig_data, col_widths=[0.8, 4.4, 0.8])
+    add_styled_table(["Figure", "Illustration", "Page No."], fig_data, col_widths=[0.8, 4.6, 0.8])
 
     doc.add_page_break()
 
@@ -421,19 +484,18 @@ def create_report():
     add_h1("LIST OF TABLES", space_before=24, space_after=18)
 
     tbl_data = [
-        ["2.1", "Comparative analysis of MediQR with existing healthcare and blockchain systems", "7"],
-        ["3.1", "Summary of functional requirements across clinical, emergency, and admin roles", "8"],
-        ["3.2", "Hardware, software, and networking operational requirements", "11"],
-        ["5.1", "Project risk register, probability analysis, and mitigation matrix", "20"],
-        ["5.2", "Project task set, dependency breakdown, and effort estimation", "21"],
-        ["6.1", "On-chain transaction gas cost reference vs. off-chain storage trade-off", "25"],
-        ["7.1", "Unit test suite execution summary across cryptography and QR libraries", "26"],
-        ["7.2", "Comprehensive integration and security test cases and verification results", "27"],
-        ["8.1", "Performance benchmark results: MediQR execution metrics vs. traditional systems", "29"],
-        ["A.1", "Algorithmic time and space complexity of MediQR core operations", "34"]
+        ["2.1", "Comparing DVCS with existing version-control approaches", "6"],
+        ["3.1", "Summary of functional requirements", "8"],
+        ["3.2", "Hardware and software requirements", "11"],
+        ["5.1", "Project task set and effort estimate", "20"],
+        ["5.2", "Risk register", "21"],
+        ["6.1", "On-chain gas cost reference", "25"],
+        ["7.1", "Unit test suite summary", "26"],
+        ["7.2", "Integration test cases and results", "27"],
+        ["8.1", "Benchmark results: C vs. V vs. Python", "29"]
     ]
 
-    add_styled_table(["Table", "Illustration Description", "Page No."], tbl_data, col_widths=[0.8, 4.4, 0.8])
+    add_styled_table(["Table", "Illustration", "Page No."], tbl_data, col_widths=[0.8, 4.6, 0.8])
 
     doc.add_page_break()
 
@@ -452,33 +514,8 @@ def create_report():
     add_p("To overcome these systemic bottlenecks without compromising patient confidentiality, this project presents MediQR: an enterprise-grade, decentralized healthcare archive and dual-segment optical triage ledger. MediQR bridges the gap between emergency first response and longitudinal record provenance through a hybrid decentralized architecture. By isolating lightweight emergency triage data from deeply encrypted longitudinal clinical archives, MediQR provides sub-2-second offline optical access to first responders while ensuring that comprehensive medical dossiers remain mathematically protected by client-side AES-256-GCM encryption, authenticated by immutable on-chain SHA-256 fingerprints anchored to an EVM-compatible consortium blockchain.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("1.1", "High-level view of the MediQR system", 
-                           "Dual-segment interaction showing offline emergency paramedic access on roadside vs. authenticated biometric doctor access on hospital node",
-                           """
-  +-------------------------------------------------------------------------+
-  |                           PATIENT MEDIQR CARD                           |
-  |  [PUBLIC FRONT: Emergency QR]             [PROTECTED BACK: Vault QR]    |
-  +-----------------------+---------------------------------+---------------+
-                          |                                 |
-              (Optical Camera Scan)             (Hospital Node + Web3 Key)
-                          v                                 v
-             +-------------------------+       +-------------------------+
-             | FIRST RESPONDER / EMT   |       | ATTENDING PHYSICIAN     |
-             | • Blood Group: O-       |       | • Biometric Sensor Auth |
-             | • Allergy: Penicillin G |       | • Query HMAC Token      |
-             | • Emergency Dial Contact|       | • AES-256-GCM Decrypt   |
-             | [Offline Instant Access]|       | [Full Clinical Dossier] |
-             +-------------------------+       +------------+------------+
-                                                            |
-                                               (Compare SHA-256 Digest)
-                                                            v
-                                            +-------------------------------+
-                                            | CONSORTIUM BLOCKCHAIN LEDGER  |
-                                            | (MedicalRecordLedger.sol)     |
-                                            | • Immutable SHA-256 Fingerprint|
-                                            | • Hierarchical Doctor RBAC    |
-                                            +-------------------------------+
-                           """)
+    add_figure_or_image("1.1", "High-level view of the MediQR system", 
+                        "Dual-segment interaction showing offline emergency paramedic access on roadside vs. authenticated biometric doctor access on hospital node")
 
     add_h2("1.2 MOTIVATION")
     add_p("The motivation behind MediQR does not stem from a misplaced belief that distributed blockchains should host all healthcare data. Placing multi-megabyte clinical histories, high-resolution radiological DICOM scans, or identifiable patient demographic records directly on a public blockchain ledger is fundamentally flawed: on-chain storage on public blockchains is economically prohibitive (costing upwards of $20,000 to store a single gigabyte of data via EVM SSTORE instructions), and permanently recording private health information violates international statutory frameworks including the European Union's General Data Protection Regulation (GDPR Article 17, 'Right to be Forgotten'), the United States' Health Insurance Portability and Accountability Act (HIPAA), and India's Digital Personal Data Protection (DPDP) Act of 2023.",
@@ -548,7 +585,7 @@ def create_report():
     add_p("Critical Vulnerabilities: While academic blockchain healthcare models successfully prove the utility of smart contracts for immutable logging, prior works suffer from major deployment bottlenecks: (1) Excessive Gas Costs: Attempting to store access logs or patient state transitions on public Ethereum networks incurs volatile gas fees ($5 to $50 per transaction), which is completely unacceptable for routine clinical encounters; (2) Privacy Leaks via Metadata Analysis: Even if file contents are kept off-chain, storing plaintext Ethereum wallet addresses or transaction frequencies on public ledgers allows adversaries to correlate patient identities with disease progression using network traffic analysis; and (3) Lack of Roadside Emergency Utility: Prior blockchain models exclusively focus on desktop hospital portals, providing zero functional capability for disconnected paramedic teams operating at roadside accident sites.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_h2("2.4 DECENTRALIZED & HYBRID STORAGE ARCHITECTURES (OFF-CHAIN VS. ON-CHAIN)")
+    add_h2("2.4 DECENTRALIZED & HYBRID STORAGE ARCHITECTURES")
     add_p("To circumvent blockchain storage cost barriers, hybrid architectures emerged wherein clinical files are offloaded to distributed storage networks such as the InterPlanetary File System (IPFS) or Swarm, with content identifiers (CIDs) anchored onto smart contracts. Under this paradigm, files are addressed by their cryptographic multihashes rather than geographical IP addresses.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
@@ -556,21 +593,21 @@ def create_report():
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("2.5 COMPARATIVE ANALYSIS & GAP IDENTIFICATION")
-    add_p("The comprehensive comparative matrix in Table 2.1 highlights the critical security, operational, and regulatory gaps present in contemporary systems and demonstrates how MediQR resolves each limitation.",
-          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+    add_p("Table 2.1: Comparing DVCS with existing version-control approaches", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    comp_headers = ["Evaluation Metric", "Centralized EHRs\n(Epic, Cerner)", "Standard QR Cards\n(Unencrypted)", "Academic Blockchain\n(MedRec, OmniPHR)", "MediQR Enterprise\n(This Project)"]
+    comp_headers = ["Property", "Centralized hosting (GitHub/GitLab)", "Signed commits (GPG/SSH)", "Blockchain timestamping", "IPFS-style storage", "This project (DVCS)"]
     comp_rows = [
-        ["Roadside Emergency Access", "Fail (Requires login, OTPs, or bilateral trust)", "Pass (Instant visual scan, unauthenticated)", "Fail (Requires Web3 wallet & online portal)", "Pass (<1.5s Offline Dual-Segment Scan)"],
-        ["Confidential PHI Protection", "Moderate (Protected by server ACLs, staff leak risk)", "Fail (Zero encryption; full public exposure)", "Moderate (Off-chain pointers, metadata leak)", "Superior (Client AES-256-GCM + Biometric)"],
-        ["Tamper-Proof Ledger", "Fail (Root DBA can rewrite SQL database)", "Fail (No cryptographic verification)", "Pass (On-chain immutability)", "Superior (Solidity SHA-256 Fingerprint)"],
-        ["Cross-Hospital Interoperability", "Poor (Proprietary silos, FHIR gateway delays)", "High (Physical card portability)", "Moderate (Smart contract permission lookup)", "Universal (HMAC Salted Token Resolution)"],
-        ["Storage Cost Efficiency", "High (Standard relational SQL storage)", "High (Minimal static web hosting)", "Poor (High gas on public chains)", "Optimal (Zero-Gas QBFT + Docker Nodes)"],
-        ["Regulatory Compliance\n(HIPAA & DPDP Act)", "Compliant (Subject to insider breach risks)", "Non-Compliant (Severe visual snooping breach)", "Non-Compliant (Public ledger metadata trail)", "100% Compliant (Zero on-chain PHI)"],
-        ["Tamper Attack Detection", "None (Manual forensic audit logs)", "None (Static visual display)", "Cryptographic hash mismatch", "Real-Time (Instant UI Alert & Block)"]
+        ["Tamper-evident commit history", "Yes (hash chain)", "Yes (hash chain)", "Only the anchored hash", "No (storage only)", "Yes (hash chain, plus on-chain)"],
+        ["History controlled by a single operator", "Yes", "Yes (host still decides)", "N/A", "N/A", "No (contract state)"],
+        ["Enforced, on-chain access control", "No (server ACL)", "No", "No", "No", "Yes (role-based, in contract)"],
+        ["Pull-request review as a system rule", "Server feature, not enforced in data", "No", "No", "No", "Yes (self-approval blocked on-chain)"],
+        ["Censorship / takedown resistance", "Low", "Low", "High (for the hash only)", "Medium", "High (for metadata and content)"],
+        ["Native branch / merge workflow", "Yes", "Yes (via Git)", "No", "No", "Yes"],
+        ["Confidentiality mechanism", "Server-side private repo", "N/A", "N/A", "N/A (public by default)", "Client-side AES-256-GCM"]
     ]
 
-    add_styled_table(comp_headers, comp_rows, col_widths=[1.5, 1.5, 1.5, 1.5, 1.8])
+    add_styled_table(comp_headers, comp_rows, col_widths=[1.3, 1.2, 1.1, 1.1, 1.1, 1.2])
 
     doc.add_page_break()
 
@@ -580,108 +617,83 @@ def create_report():
     add_h1("CHAPTER 3\nSOFTWARE REQUIREMENTS SPECIFICATION", space_before=18, space_after=18)
 
     add_h2("3.1 ASSUMPTIONS AND DEPENDENCIES")
-    add_p("Assumptions: (1) Emergency medical personnel operate mobile smartphones or vehicle dispatch terminals equipped with standard optical cameras and modern HTML5-compliant web browsers; (2) Participating healthcare facilities possess on-premise compute infrastructure capable of executing lightweight Docker containers connected to an internal hospital network; (3) Verified attending physicians operate client workstations running contemporary web browsers (Chrome, Edge, Firefox) supporting the W3C Web Cryptography API; and (4) The consortium authority maintains an EVM-compatible consensus environment running Quorum Byzantine Fault Tolerance (QBFT) or equivalent zero-gas permissioned consensus.",
-          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-
-    add_p("Dependencies: The system depends on Node.js (v18+) runtime environments, the Ethers.js (v6) library for JSON-RPC smart contract communication, the Next.js (v14+) App Router framework for responsive UI delivery, TailwindCSS for clinical styling, and Hardhat for EVM smart contract compilation, testing, and deployment.",
+    add_p("The system assumes access to an Ethereum-compatible JSON-RPC endpoint, whether a local development chain such as Hardhat or Anvil, or in principle a public testnet or mainnet, though the signing model described below currently targets a node with unlocked accounts rather than a production chain. It assumes contemporary Node.js runtimes, Docker engine for isolated appliance storage, and standard Web Crypto API support in client web browsers. It depends on zero proprietary closed-source libraries; all hashing, encryption, and contract bindings are strictly verified from open, auditable implementations.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("3.2 FUNCTIONAL REQUIREMENTS")
-    add_p("The functional capabilities of MediQR are partitioned into distinct operational tiers catering to four specific stakeholder roles: Emergency Paramedics, Attending Physicians, Hospital Node Administrators, and Consortium Root Authorities. Table 3.1 details the functional requirement specifications.",
-          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+    add_p("Table 3.1: Summary of functional requirements", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    fr_headers = ["Req ID", "System Feature", "Operational Description & Verification Criteria"]
+    fr_headers = ["ID", "Feature", "Description"]
     fr_rows = [
-        ["FR-01", "Dual-Segment QR Card Generation", "The system shall generate a dual-sided physical or digital MediQR card encoding: (1) An ultra-compact emergency URL (?b=...&n=...) under 95 characters for front roadside scan; and (2) An encrypted storage URI pointer with salted HMAC query hash for back clinical scan."],
-        ["FR-02", "Offline Roadside Paramedic Triage", "The emergency triage interface shall parse compact optical URL parameters completely client-side in <2 seconds, rendering blood type, life-threatening drug allergies, and tap-to-call emergency contacts without requiring passwords or logins."],
-        ["FR-03", "Client-Side In-Memory Encryption", "The clinical portal shall encrypt all medical record payloads (consultation notes, lab panels, prescriptions) using AES-256-GCM client-side before dispatching the payload to off-chain hospital storage appliances."],
-        ["FR-04", "On-Chain Cryptographic Anchoring", "The smart contract (MedicalRecordLedger.sol) shall record a deterministic 32-byte SHA-256 document fingerprint, storage URI, attending practitioner wallet address, and timestamp upon record creation."],
-        ["FR-05", "Automated Tamper Verification", "Upon querying a medical record, the client workstation shall re-compute the SHA-256 hash of the retrieved off-chain file and verify it against the on-chain ledger fingerprint before authorizing in-memory AES decryption."],
-        ["FR-06", "Hardware Biometric Gatekeeper", "The clinical workstation shall lock all record decryption capabilities behind an interactive biometric fingerprint authentication protocol, matching against templates enrolled during appliance installation."],
-        ["FR-07", "Hierarchical Consortium RBAC", "The smart contract shall restrict hospital onboarding to the Root Admin, doctor registration to verified Hospital Admins, and record creation to verified Attending Physicians. Suspended hospitals shall cascade access revocation to all affiliated staff."],
-        ["FR-08", "Highest Authority Historical Ingestion", "The system shall provide a bulk data migration pipeline for the Consortium Root Admin to ingest legacy EHR databases, encrypt historical records, and anchor them onto the blockchain in batch transactions."]
+        ["3.2.1", "Repository lifecycle", "Create a repository on-chain under a deterministic id; connect to an existing repository as a non-owner; flip a repository's public/private flag; transfer ownership."],
+        ["3.2.2", "Local working-directory operations", "Initialize a local .dvcs/ store; stage files honoring .dvcsignore patterns; commit staged files as a full tree snapshot; show status, log, diff, and file content without a transaction."],
+        ["3.2.3", "Branching and history rewriting (local)", "Create, list, and delete local branches; checkout a branch into the working directory; roll a branch pointer back to an earlier commit; rebase a branch onto another with a real three-way merge and explicit conflict resolution flags."],
+        ["3.2.4", "Syncing with the chain", "Push local-only commits and their file content on-chain as independently confirmed transactions; pull commit metadata and content for a branch into the local cache; resume a previously interrupted push without resending already-confirmed data."],
+        ["3.2.5", "Identity and access control", "Register and resolve a human-readable handle bound to the caller's own address; grant or revoke one of four roles (None, Reader, Contributor, Maintainer) to a collaborator by address or handle; list current collaborators."],
+        ["3.2.6", "Pull-request review workflow", "Open a PR between two existing on-chain branches; approve a PR (blocked on-chain for the PR's own author); merge a PR once the configured minimum approval count is met, with a local fast-forward pre-check; close a PR without merging; set the minimum approval count."],
+        ["3.2.7", "Confidentiality", "Initialize AES-256-GCM encryption for a repository with a passphrase; publish the (non-secret) salt on-chain so a collaborator auto-discovers it; refuse to push unencrypted content to a repository marked private; fail loudly on a wrong passphrase rather than returning corrupted data."],
+        ["3.2.8", "Auditing", "Maintain a local, append-only changelog of every on-chain action this CLI instance has taken, with transaction hashes, independent of the chain's own event log."]
     ]
 
     add_styled_table(fr_headers, fr_rows, col_widths=[0.8, 1.8, 4.4])
 
     add_h2("3.3 EXTERNAL INTERFACE REQUIREMENTS")
     add_h3("3.3.1 User Interface")
-    add_p("The user interface is engineered as an enterprise web portal featuring responsive, high-contrast visual workspaces tailored to specific operational contexts: (1) First-Responder Emergency Triage (/emergency): High-contrast crimson theme, optimized for sunlight legibility, displaying large-font blood group indicators, red alert allergy tags, and one-touch phone dialers; (2) Clinical EMR Workstation (/doctor): Minimalist clinical layout with streamlined status badges (✓ Blockchain Verified vs. ⚠️ Record Tampered), tabbed diagnostic and prescription views, and collapsible technical audit proofs; and (3) Government Appliance Installer (/installer): High-contrast dark engineering console with step-by-step commissioning wizards.",
+    add_p("The only user interface is the command line: dvcs <command> [args], with dvcs help and dvcs help <command> providing built-in reference text for every command at run time. There is no GUI; output is plain text designed to be both human-readable in a terminal and scriptable (consistent, grep-friendly formatting for transaction hashes, commit hashes, and status lines). Alongside this, a responsive web dashboard (/doctor and /emergency) provides visual clinical and first-responder triage views.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h3("3.3.2 Hardware Interfaces")
-    add_p("The clinical terminal interfaces with USB optical fingerprint scanners compliant with ISO/IEC 19794-2 minutiae template formats. Mobile paramedic terminals interface directly with built-in CMOS smartphone camera modules supporting autofocus and optical macro scanning.",
+    add_p("None beyond a standard developer workstation able to run the compiled binary and a local or remote Ethereum node. No special hardware is required.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h3("3.3.3 Software Interfaces")
-    add_p("The frontend application interfaces with EVM blockchain nodes via JSON-RPC 2.0 endpoints (over HTTP/WebSockets). Communication with localized hospital off-chain storage appliances is conducted over RESTful JSON APIs supporting standard CORS security policies.",
+    add_p("The CLI communicates with any Ethereum-compatible node over JSON-RPC 2.0 (eth_call, eth_sendTransaction, eth_getLogs, eth_getTransactionReceipt, eth_accounts), implemented against Hardhat's local node during development and testing. It has no dependency on a specific node implementation beyond standard JSON-RPC method support.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h3("3.3.4 Communication Interfaces")
-    add_p("All network transmissions between clinical client browsers, hospital storage appliances, and blockchain RPC nodes utilize Transport Layer Security (TLS 1.3 / HTTPS). Direct hospital-to-hospital data syncing operates behind enterprise firewalls utilizing authenticated mutual TLS (mTLS).",
+    add_p("All chain communication is plain HTTP JSON-RPC. The RPC client retries transient transport failures with exponential backoff (up to three attempts) before surfacing an error, since a rapid sequence of requests against a local dev node was observed to occasionally drop a connection during development.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("3.4 NONFUNCTIONAL REQUIREMENTS")
     add_h3("3.4.1 Performance Requirements")
-    add_p("Roadside emergency triage optical parsing must render critical vitals in less than 2.0 seconds on standard 4G mobile connections. Client-side AES-256-GCM encryption and decryption of clinical dossiers up to 5 MB must execute in under 150 milliseconds in modern browser runtimes. On-chain state read calls (eth_call) must resolve in under 300 milliseconds.",
+    add_p("The CLI itself, being a natively compiled binary, starts and runs local operations (status, log, diff, commit) with negligible overhead; the dominant cost in any workflow is blockchain transaction confirmation time, which is outside the application's control. On-chain content storage is required to stay well under typical SSTORE costs by using event logs instead (roughly 16 gas per byte versus roughly 20,000 gas per 32-byte word for contract storage), which is treated as a hard design constraint.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_h3("3.4.2 Safety & Fault Tolerance Requirements")
-    add_p("If an off-chain hospital storage appliance experiences network downtime, the system must fail securely, alerting the clinician that the storage node is unreachable without displaying corrupted partial data. In the event of a cryptographic fingerprint mismatch, the client workstation must immediately abort decryption, enter a locked alert state, and display a prominent red tamper warning.",
+    add_h3("3.4.2 Safety Requirements")
+    add_p("No operation should be able to corrupt already-confirmed on-chain state. Every commit and every blob chunk is pushed as its own independent transaction rather than batched, specifically so that an interruption partway through a push (dropped network, killed process) cannot leave the chain in an inconsistent state; re-running push detects what already landed and skips it.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h3("3.4.3 Security Requirements")
-    add_p("All cryptographic operations must utilize established NIST-approved algorithms (AES-256-GCM with 96-bit unique IVs and 128-bit authentication tags; HMAC-SHA256 with 256-bit institutional salts). Zero plaintext Protected Health Information (PHI) shall ever be stored in local browser caches, web server logs, or blockchain transaction calldata. Master keys must never be exposed outside the browser's secure cryptographic execution context.",
+    add_p("Role checks (Contributor/Maintainer) must be enforced inside the contract itself, not only by the CLI, since a user could otherwise call the contract directly and bypass any client-side check. The self-approval rule for pull requests must hold for every account including the repository owner. Private-repository content must never be pushed unencrypted under any code path. A wrong decryption passphrase must fail via AES-GCM's own authentication check (a loud, detectable failure), never silently return corrupted plaintext.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h3("3.4.4 Software Quality Attributes")
-    add_p("The software architecture emphasizes high modularity, testability, and portability. The TypeScript codebase enforces strict type safety without implicit 'any' declarations. The core cryptographic engine is fully decoupled from UI components, permitting standalone execution across Node.js CLI tools and web interfaces.",
+    add_p("Testability: every pure-logic component (hashing, ABI encoding, merge resolution, chunking) needed to be unit-testable without a live chain. Auditability: every on-chain action needed to leave both a chain-side event and a local changelog entry. Honesty of claims: a feature that could not actually be verified end-to-end was treated as unverified rather than documented as working.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("3.5 SYSTEM REQUIREMENTS")
-    add_p("Table 3.2 specifies the minimum and recommended operational environment parameters.", space_after=4)
+    add_p("Table 3.2: Hardware and software requirements", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    sys_headers = ["Component", "Minimum Operational Requirement", "Recommended Deployment Specification"]
-    sys_rows = [
-        ["Processor (CPU)", "Dual-Core x86_64 or ARM64 (1.8 GHz)", "Quad-Core Intel i5/AMD Ryzen 5 (2.4 GHz+)"],
-        ["System Memory (RAM)", "4 GB Available RAM", "8 GB to 16 GB DDR4/DDR5 RAM"],
-        ["Storage Space", "1 GB Free Disk Space for Client Nodes", "20 GB SSD for Hospital Appliance Storage"],
-        ["Operating System", "Windows 10/11, Ubuntu 20.04+, macOS 12+", "Ubuntu Linux 22.04 LTS (Server Appliances)"],
-        ["Web Browser", "Chromium 90+, Firefox 88+, Safari 14+", "Latest Google Chrome / Brave Browser"],
-        ["Runtime Environment", "Node.js v18.17.0+ with npm v9+", "Node.js v20 LTS with Docker Engine 24.0+"],
-        ["Blockchain Node", "Hardhat Local EVM Node (Dev/Testing)", "Hyperledger Besu / EVM QBFT Consortium Peer"]
+    hw_headers = ["Component", "Minimum", "Used during this project"]
+    hw_rows = [
+        ["CPU", "Any x86-64 or ARM64", "Standard development workstation"],
+        ["RAM", "2 GB free", "Sufficient for compilation and a local Hardhat node"],
+        ["Disk", "~200 MB (toolchain + build artifacts)", "Negligible beyond toolchain install"],
+        ["OS", "Linux, macOS, or Windows via WSL2 / Docker", "Linux / Windows 11"],
+        ["Node.js", "v18+", "For Hardhat and solcjs"],
+        ["Compiler", "Latest stable", "Built with native toolchain"]
     ]
 
-    add_styled_table(sys_headers, sys_rows, col_widths=[1.6, 2.7, 2.7])
+    add_styled_table(hw_headers, hw_rows, col_widths=[1.5, 2.5, 2.8])
 
-    add_h2("3.6 ANALYSIS MODEL: SDLC INCREMENTAL MODEL APPLIED")
-    add_p("Because this project bridges cutting-edge cryptography with high-stakes healthcare requirements, an Incremental Software Development Life Cycle (SDLC) model was selected. An incremental methodology mitigated foundational risks early: low-level cryptographic functions (HMAC tokenization, AES-GCM buffer encryption) were constructed and mathematically verified in Increment 1, ensuring that higher-level application components were built upon rock-solid cryptographic guarantees. Figure 3.1 depicts the applied incremental progression.",
+    add_h2("3.6 ANALYSIS MODEL: SDLC MODEL APPLIED")
+    add_p("An incremental model fit this project better than a strict waterfall sequence would have, because the riskiest parts (a from-scratch Keccak-256 implementation, an ABI codec with no reference library to lean on) needed to be proven correct early, in isolation, before anything else could be trusted to sit on top of them. Each increment added one complete, independently testable capability; nothing moved to the next increment until its own unit tests, and the growing integration suite, were green.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("3.1", "Incremental process model applied to this project",
-                           "Iterative software engineering workflow from cryptographic primitives to production deployment",
-                           """
-  +---------------------------------------------------------------------------------------------------+
-  |                                 INCREMENTAL SDLC ARCHITECTURE                                     |
-  +---------------------------------------------------------------------------------------------------+
-  | [Increment 1] Core Cryptography & Hashing Engine (HMAC-SHA256, AES-256-GCM, NIST Vector Test)     |
-  |      |                                                                                            |
-  |      v                                                                                            |
-  | [Increment 2] Smart Contract & Ledger State Machine (Solidity, Hierarchical RBAC, Hardhat Suites) |
-  |      |                                                                                            |
-  |      v                                                                                            |
-  | [Increment 3] Off-Chain Storage Appliances & Dockerization (Express REST, Tamper Simulation API)  |
-  |      |                                                                                            |
-  |      v                                                                                            |
-  | [Increment 4] Optical QR Optimization (Compact URL Encoding, Anti-Moiré, Lens Fast Parse)         |
-  |      |                                                                                            |
-  |      v                                                                                            |
-  | [Increment 5] Clinical & Installer Workstations (Biometric Fingerprint Gatekeeper, Window Split)  |
-  |      |                                                                                            |
-  |      v                                                                                            |
-  | [Increment 6] Integration, Legacy Ingestion & Security Auditing (100% Passing End-to-End Suite)   |
-  +---------------------------------------------------------------------------------------------------+
-                           """)
+    add_figure_or_image("3.1", "Incremental process model applied to this project",
+                        "Sequential pipeline showing Increment 1 (Core Crypto) through Increment 6 (Testing & Demo Tooling)")
 
     doc.add_page_break()
 
@@ -691,291 +703,110 @@ def create_report():
     add_h1("CHAPTER 4\nSYSTEM DESIGN", space_before=18, space_after=18)
 
     add_h2("4.1 SYSTEM ARCHITECTURE")
-    add_p("MediQR is architected around a strict two-tier decoupled topology that separates consensus-critical validation from intensive clinical storage. Figure 4.1 illustrates the structural division between client-side execution, decentralized hospital storage appliances, and the immutable blockchain ledger.",
+    add_p("The system splits cleanly into two tiers, and that split is itself the central design decision described further in Chapter 6: consensus-critical state lives on-chain, in the contract; everyday, fast, purely-local operations live in the client. Nothing in between needs to be trusted by the other side, because the only channel connecting them is JSON-RPC calls the client makes to a node, and every write that matters becomes a transaction anyone can independently verify afterward.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_p("1. Client-Side Cryptographic Execution Layer: All sensitive cryptographic operations (key derivation, AES-256-GCM encryption, HMAC hashing, and document fingerprinting) execute strictly inside the practitioner's browser memory via the W3C Web Crypto API. Plaintext medical data never traverses the network unencrypted.",
-          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+    add_figure_or_image("4.1", "System architecture: CLI client and on-chain contract",
+                        "System architecture showing Client Command Dispatcher, Crypto Modules, Storage Node, and On-Chain Solidity Contract")
 
-    add_p("2. Off-Chain Decentralized Storage Appliance: Each participating hospital maintains a containerized storage appliance running behind internal firewalls. The appliance receives client-encrypted JSON payloads and stores them in isolated filesystem volumes. It provides secure RESTful retrieval endpoints and an integrated tamper-injection simulator for compliance testing.",
+    add_p("On the client side, main is the single command dispatcher; every sub-command is a case in its dispatch table. It delegates to repo for local state (config, refs, the staging index), objects for the content-addressed blob store and Merkle tree root computation, blobs for chunking and syncing file content, merge3 for three-way merges, and rpc for all chain communication, which in turn leans on abi (call encoding/result decoding) and keccak (the hash function the EVM itself uses). crypto_local and changelog sit beside these as, respectively, the encryption layer and the local audit trail.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-
-    add_p("3. Consortium Blockchain Ledger: An Ethereum-compatible EVM smart contract (MedicalRecordLedger.sol) acts as the immutable state machine and single source of truth for: (a) Certified hospital institution registries; (b) Accredited doctor identity credentials; (c) Deterministic 32-byte SHA-256 document fingerprints; and (d) Immutable access audit logs.",
-          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-
-    add_figure_placeholder("4.1", "System architecture: CLI client and on-chain contract",
-                           "Three-tier architecture showing Client Cryptographic Layer, Off-Chain Hospital Appliances, and EVM Ledger",
-                           """
-  +-------------------------------------------------------------------------------------------+
-  |                               CLIENT WORKSTATION LAYER (BROWSER)                          |
-  |  +--------------------+   +-----------------------+   +--------------------------------+  |
-  |  | Emergency Triage UI|   | Doctor Clinical EMR   |   | Web Crypto API Engine          |  |
-  |  | (Compact Optical)  |   | (Biometric Workstation|   | (AES-256-GCM + HMAC-SHA256)    |  |
-  |  +---------+----------+   +-----------+-----------+   +---------------+----------------+  |
-  +------------|--------------------------|-------------------------------|-------------------+
-               |                          | (HTTPS REST Encrypted Payload)| (Signed JSON-RPC)
-               |                          v                               v
-               |               +----------------------+       +-------------------------+
-               |               | HOSPITAL APPLIANCE   |       | CONSORTIUM BLOCKCHAIN   |
-               |               | (Docker Container)   |       | (MedicalRecordLedger)   |
-               |               | • Off-Chain Storage  |       | • SHA-256 Document Hash |
-               |               | • AES Ciphertext JSON|       | • Hierarchical RBAC     |
-               |               | • Tamper Sim API     |       | • Cascading Suspensions |
-               |               +----------------------+       +-------------------------+
-               v
-  +-------------------------+
-  | ROADSIDE EMERGENCY EMT  |
-  | • Zero-Latency Triage   |
-  | • Offline Blood & Vitals|
-  +-------------------------+
-                           """)
 
     add_h2("4.2 MATHEMATICAL MODEL")
-    add_p("The integrity, authenticity, and pseudonymous privacy of the MediQR architecture are governed by formal mathematical constructions.",
+    add_p("A commit's identity is fully determined by its content, not by an external counter or timestamp, which is what makes it possible for two independent clients to agree on a commit hash without coordinating:",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_h3("1. Pseudonymous Patient Query Identifier (HMAC-SHA256):")
-    add_p("To query patient records across multiple hospitals without exposing identifiable national ID numbers (such as Aadhaar or SSN) on the public ledger, the query key is generated using Hash-based Message Authentication Code (HMAC) parameterized by a secret consortium salt:",
+    add_code_block("""commitHash = keccak256(
+    abi.encode(repoId, parent1, parent2, treeRoot, author, timestamp, message)
+)""")
+
+    add_p("treeRoot is the root of a Merkle tree built over every tracked file's path and content hash at that commit, computed locally in objects. Because the tree is built the same deterministic way on every client, two commits with identical tracked content always produce identical tree roots, and verifying that a collaborator's local tree matches what the chain recorded is a matter of comparing two 32-byte values rather than re-transferring and re-diffing every file.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_code_block("""patientHash = HMAC-SHA256(ConsortiumMasterSalt, PatientNationalID)
-where:
-  ConsortiumMasterSalt in {0, 1}^256 (Protected by Consortium Key Ceremony)
-  PatientNationalID    = Normalized canonical string (e.g., 'IND-AADHAAR-8839-2041')
-  patientHash          in {0, 1}^256 (Represented as 0x-prefixed 64-char hex string)""")
+    add_p("A repository's id is similarly derived rather than assigned:", align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_h3("2. Authenticated Symmetric Record Encryption (AES-256-GCM):")
-    add_p("Every clinical dossier is encrypted using Advanced Encryption Standard in Galois/Counter Mode (AES-GCM), ensuring both confidentiality and cryptographic integrity verification via a 128-bit authentication tag:",
+    add_code_block("""repoId = keccak256(abi.encode(ownerAddress, repositoryName))""")
+
+    add_p("which is why repo-connect needs no lookup step: any client can compute the exact id a given owner address and repository name will have, locally, before ever calling the contract, and the contract exposes the identical function (computeRepoId) so the two computations are checked against each other rather than assumed to agree.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_code_block("""(Ciphertext, AuthTag) = AES-256-GCM_Encrypt(Key_sym, IV, PlaintextRecord, AAD)
-where:
-  Key_sym         in {0, 1}^256 (Derived from Master Encryption Key via PBKDF2)
-  IV              in {0, 1}^96  (Cryptographically random initialization vector)
-  AuthTag         in {0, 1}^128 (Galois field MAC tag over Ciphertext and AAD)
-  AAD             = Additional Authenticated Data (StorageURI || Timestamp)""")
-
-    add_h3("3. Document Fingerprint & On-Chain Integrity Seal:")
-    add_p("The immutable anchor stored in MedicalRecordLedger.sol is the SHA-256 digest of the stored encrypted document file:",
+    add_p("The on-chain storage cost model is the other piece of arithmetic that shaped the design directly. Writing 32 bytes to contract storage via SSTORE costs on the order of 20,000 gas (cold write); emitting the same 32 bytes inside an event costs roughly 16 gas per byte, about two orders of magnitude cheaper. For a blob of size B split into N chunks of at most MAX_CHUNK_BYTES (24 KiB) each, the approximate total cost of pushing it as events is:",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_code_block("""fileHash = SHA-256(RawFileBytes(Ciphertext || AuthTag || IV))
-Integrity Verification Assertion:
-  Assert(SHA-256(RetrievedFileBytes) == Ledger.records[patientHash][i].fileHash)""")
+    add_code_block("""cost(B) = N * (tx_base_cost + 16 * avg_chunk_bytes)
+where N = ceil(B / MAX_CHUNK_BYTES)""")
 
-    add_h3("4. On-Chain Gas Cost Modeling:")
-    add_p("Storing large payloads on EVM blockchains costs 20,000 gas per 32-byte word (via SSTORE). By offloading encrypted files to hospital appliances and committing only 32-byte hashes, MediQR reduces gas consumption by orders of magnitude:",
+    add_p("This is the arithmetic reason file content is pushed as BlobChunk events instead of contract storage by default, with the CID-based off-chain mode available as an alternative for large binary assets where even that cost is unattractive.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-
-    add_code_block("""Cost_OnChain(B bytes) = 21,000 (Base) + (B / 32) * 20,000 gas   [Prohibitive: ~6.25M gas for 10 KB]
-Cost_MediQR           = 21,000 (Base) + SSTORE(fileHash) + SSTORE(metadata)
-                      approx 68,500 gas (Constant O(1) regardless of record size)""")
 
     add_h2("4.3 DATA FLOW DIAGRAMS")
-    add_p("The operational flow of information across MediQR is illustrated through three tiered Data Flow Diagrams.", space_after=4)
+    add_p("The context-level diagram below treats the whole CLI-plus-contract pair as one system boundary, since from a developer's point of view it is one tool regardless of where each command's data ends up.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("4.2", "Context-level data flow diagram (Level 0 DFD)",
-                           "Level 0 Context Diagram showing External Entities interacting with the central MediQR System",
-                           """
-                    +---------------------------+
-                    | First Responder / EMT     |
-                    +-------------+-------------+
-                                  | (Scans Emergency Optical QR)
-                                  v
-  +----------------+     +------------------+     +-------------------+
-  | Hospital Admin |---->|                  |<----| Attending Doctor  |
-  | & Gov Official |     |   0.0 MEDIQR     |     | (Biometric Auth & |
-  | (Appliance     |     |   HEALTHCARE     |     | EMR Encryption)   |
-  | Commissioning) |     |   LEDGER SYSTEM  |     +-------------------+
-  +----------------+     +--------+---------+
-                                  |
-                                  v (Anchors 32-Byte Hashes & Queries State)
-                    +-------------+-------------+
-                    | Consortium Blockchain     |
-                    +---------------------------+
-                           """)
+    add_figure_or_image("4.2", "Context-level data flow diagram (Level 0)",
+                        "Level 0 Context DFD showing Repository Owner, System, Collaborator, and Blockchain Network")
 
-    add_figure_placeholder("4.3", "Data flow diagram, Level 1",
-                           "Level 1 DFD delineating 5 main processes: (1) Emergency Scan, (2) Record Encryption, (3) Hash Anchoring, (4) Verification, (5) Governance",
-                           """
-  [Paramedic] ---> (1.0 Scan QR) ---> [D1: Compact URL Cache] ---> (Display Roadside Vitals)
-  
-  [Doctor]    ---> (2.0 Biometric Auth) ---> (3.0 Encrypt Record) ---> [D2: Hospital Appliance]
-                                                                                |
-  [Doctor]    <--- (4.0 Verify & Decrypt) <--- [D3: EVM Ledger]   <--- (Anchor Hash)
-                           """)
+    add_p("Level 1 opens that boundary into the five process groups a developer actually interacts with, and the two data stores (local cache, on-chain ledger) that sit between them.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("4.4", "Data flow diagram, Level 2 (expansion of the Push process)",
-                           "Level 2 DFD detailing client-side encryption, hash computation, appliance storage, and on-chain transaction dispatch",
-                           """
-  (3.1 Generate IV) ---> (3.2 AES-256-GCM Encrypt) ---> (3.3 Compute SHA-256 Digest)
-                                |                                      |
-                                v                                      v
-                  [D2: Store Payload on Appliance]           (3.4 Dispatch eth_sendTx)
-                                                                       |
-                                                                       v
-                                                             [D3: Ledger State]
-                           """)
+    add_figure_or_image("4.3", "Data flow diagram, Level 1",
+                        "Level 1 DFD showing Stage & Commit, Push, Review & Merge, Identity Management, and Pull operations")
+
+    add_p("Level 2 expands the Push process specifically, since it is the one with the most internal steps and the one whose resilience properties matter most.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_figure_or_image("4.4", "Data flow diagram, Level 2 (expansion of the Push process)",
+                        "Level 2 DFD showing Commit Hash Calculation, Chunking, Encryption, and On-Chain Transaction Submission")
 
     add_h2("4.4 ENTITY RELATIONSHIP / DATA MODEL DIAGRAM")
-    add_p("Although Ethereum smart contracts lack relational SQL schemas, MediQR's on-chain storage layout enforces strict entity relationships between consortium hospitals, accredited medical practitioners, patient query hashes, and anchored clinical records. Figure 4.5 models these entities.",
+    add_p("The contract has no relational database underneath it, so there is no schema in the SQL sense, but its storage layout still forms a clear entity graph: a repository owns commits, branches, tags, and members; branches point at commits; pull requests reference a source and target branch; commits reference their file content indirectly through BlobChunk events keyed by a blob id. The diagram below presents this on-chain data model in the same entity/attribute/relationship style as a conventional ER diagram.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("4.5", "On-chain data model",
-                           "Entity-relationship model linking Consortium Root, Hospitals, Doctors, Patient Hashes, Records, and Audit Logs",
-                           """
-  +---------------------------+          +---------------------------+
-  |    ConsortiumHospital     | 1      * |     ConsortiumDoctor      |
-  +---------------------------+----------+---------------------------+
-  | adminWallet: address (PK) |          | doctorWallet: address (PK)|
-  | name: string              |          | name: string              |
-  | endpoint: string          |          | licenseNumber: string     |
-  | licenseId: string         |          | hospitalAdmin: address(FK)|
-  | isActive: bool            |          | isVerified: bool          |
-  +---------------------------+          +-------------+-------------+
-                                                       | 1
-                                                       | creates
-                                                       | *
-  +---------------------------+          +-------------+-------------+
-  |        PatientHash        | 1      * |     MedicalRecordEntry    |
-  +---------------------------+----------+---------------------------+
-  | queryHash: bytes32 (PK)   |          | recordId: uint256 (PK)    |
-  | (HMAC-SHA256 Token)       |          | fileHash: bytes32         |
-  |                           |          | storageURI: string        |
-  |                           |          | doctor: address (FK)      |
-  |                           |          | timestamp: uint256        |
-  |                           |          | recordType: string        |
-  +---------------------------+          +---------------------------+
-                           """)
+    add_figure_or_image("4.5", "On-chain data model",
+                        "Entity Relationship model linking Repository, Branch, Commit, BlobChunk, PullRequest, Member, and Identity")
 
     add_h2("4.5 UML DIAGRAMS")
-    add_p("To comprehensively document the object-oriented structure, user workflows, component interactions, and deployment states, six standardized Unified Modeling Language (UML) diagrams were constructed.",
+    add_h3("Use Case Diagram")
+    add_p("Three roles cover every interaction the contract recognizes: an owner (who can do anything, including manage roles and visibility), a contributor (who can push and open PRs but not approve or administer), and a maintainer (who reviews, merges, and manages collaborators). A reader role also exists for repository visibility but has no write-side use cases and is omitted from the diagram for clarity.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("4.6", "Use case diagram",
-                           "UML Use Case showing actor interactions across Paramedic, Doctor, Hospital Admin, and Consortium Authority",
-                           """
-     [Emergency Paramedic] ----> (UC-01: Scan Roadside Emergency QR)
-                           ----> (UC-02: Tap-to-Dial Emergency Contact)
+    add_figure_or_image("4.6", "Use case diagram",
+                        "UML Use Case Diagram showing Contributor, Repository Owner, and Maintainer / Reviewer interactions")
 
-     [Attending Doctor]    ----> (UC-03: Authenticate via Biometric Fingerprint)
-                           ----> (UC-04: Encrypt & Commit New Clinical Record)
-                           ----> (UC-05: Query Patient Dossier & Verify Ledger Hash)
-                           ----> (UC-06: Simulate Tamper Attack Verification)
+    add_h3("Sequence Diagram")
+    add_p("The push flow is the clearest example of the on-chain/off-chain split in motion: the expensive-looking 'compute tree root, chunk the blob' work happens entirely client-side before a single transaction is sent, and what finally reaches the chain is three separable transaction types (commit, N blob chunks, branch update), each independently confirmed rather than bundled into one.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-     [Hospital Admin]      ----> (UC-07: Accredit & Revoke Hospital Doctors)
-                           ----> (UC-08: Deploy & Monitor Local Storage Appliance)
+    add_figure_or_image("4.7", "Sequence diagram: push flow",
+                        "UML Sequence Diagram showing step-by-step interaction between Developer, CLI, RPC Client, EVM Node, and Contract")
 
-     [Consortium Root]     ----> (UC-09: Onboard & Suspend Hospital Nodes)
-                           ----> (UC-10: Execute Bulk Legacy Data Migration)
-                           """)
+    add_h3("Class / Module Diagram")
+    add_p("The CLI is organized as focused plain modules and structs. The diagram below reads each box as a module and its public functions, which is the closest honest equivalent to a class diagram for a codebase structured this way.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("4.7", "Sequence diagram: push flow",
-                           "UML Sequence Diagram detailing step-by-step cross-hospital record retrieval and cryptographic verification",
-                           """
-  Doctor Browser         Hospital A Node       Blockchain Ledger       Hospital B Node
-        |                       |                      |                      |
-        |--- 1. Query Records ->|                      |                      |
-        |    (patientHash)      |                      |                      |
-        |                       |--- 2. eth_call ----->|                      |
-        |                       |<-- 3. File Hashes ---|                      |
-        |<-- 4. Record Pointers |                      |                      |
-        |                                                                     |
-        |--- 5. GET Encrypted Payload (StorageURI) -------------------------->|
-        |<-- 6. Return (Ciphertext, IV, AuthTag) <----------------------------|
-        |                                                                     |
-        |--- 7. Compute Local SHA-256 Hash -----------------------------------+
-        |--- 8. Match Local Hash == Ledger Hash? -----------------------------+
-        |    [YES: Match Confirmed]                                           |
-        |--- 9. Decrypt AES-256-GCM in Browser Memory ------------------------+
-        |<-- 10. Render Verified Patient Clinical Dossier --------------------+
-                           """)
+    add_figure_or_image("4.8", "Class / module diagram",
+                        "Class and structural module diagram of CLI dispatcher, Repo, ObjectStore, BlobSync, Merge3, and Crypto")
 
-    add_figure_placeholder("4.8", "Class / module diagram",
-                           "UML Class Diagram illustrating TypeScript cryptographic classes, smart contract interfaces, and data models",
-                           """
-  +--------------------------------+       +---------------------------------+
-  |      CryptoEngineService       |       |       BlockchainLedgerService   |
-  +--------------------------------+       +---------------------------------+
-  | + hashPatientId(id, salt)      |       | + getPatientRecords(patientHash)|
-  | + encryptRecord(data, key)     |       | + addRecord(hash, uri, type)    |
-  | + decryptRecord(cipher, iv, tag|       | + onboardHospital(admin, name)  |
-  | + computeFileHash(buffer)      |       | + registerDoctor(wallet, name)  |
-  +---------------+----------------+       +----------------+----------------+
-                  |                                         |
-                  v                                         v
-  +--------------------------------------------------------------------------+
-  |                           DoctorPortalController                         |
-  |  - activeDoctor: string       - isBiometricUnlocked: bool                |
-  |  - patientHash: string        - verificationReports: Map<string, Report> |
-  |  + handleBiometricAuth()      + loadAndVerifyRecords()                   |
-  +--------------------------------------------------------------------------+
-                           """)
+    add_h3("Component Diagram")
+    add_p("The component architecture details the clean boundaries between Command Dispatcher, Merge Engine, Local Repo Store, RPC Client, ABI Codec, Crypto Module, and Smart Contract.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("4.9", "Component diagram",
-                           "UML Component Diagram showing frontend UI modules, core crypto engine, and blockchain JSON-RPC communication",
-                           """
-  +--------------------------------------------------------------------------+
-  |                           FRONTEND NEXT.JS RUNTIME                       |
-  |  [Emergency Triage Module]  [Doctor Clinical Module]  [Installer Module] |
-  |            |                           |                       |         |
-  |            +-------------+-------------+                       |         |
-  |                          v                                     |         |
-  |             [Core Cryptography Library] <----------------------+         |
-  |             (AES-256-GCM / HMAC-SHA256)                                  |
-  +--------------------------+-----------------------------------------------+
-                             |
-                   +---------+---------+
-                   v                   v
-      [Hospital Storage Node]   [Ethers.js RPC Provider]
-      (REST API Port 5001)             |
-                                       v
-                             [Hardhat / EVM Node]
-                             (MedicalRecordLedger.sol)
-                           """)
+    add_figure_or_image("4.9", "Component diagram",
+                        "Component diagram showing frontend dispatch, RPC client, crypto codec, and smart contract bindings")
 
-    add_figure_placeholder("4.10", "Deployment diagram",
-                           "UML Deployment Diagram showing Dockerized hospital nodes, mobile paramedic clients, and EVM network",
-                           """
-  +---------------------------+       +--------------------------------------+
-  | Mobile Paramedic Device   |       | Hospital A Local Server Appliance    |
-  | (Android / iOS Browser)   |       | (Docker Engine: Node A on Port 5001) |
-  | • Google Lens QR Scanner  |       | • Express REST Storage Service       |
-  | • Zero-Auth Triage Engine |       | • Local Volume: /storage/hospital-a  |
-  +-------------+-------------+       +------------------+-------------------+
-                |                                        |
-                | (HTTPS Internet)                       | (Local Intranet)
-                v                                        v
-  +--------------------------------------------------------------------------+
-  |                     EVM CONSORTIUM BLOCKCHAIN NETWORK                    |
-  | • Node 1 (Validator A)      • Node 2 (Validator B)   • Node 3 (MOH Root) |
-  | QBFT Zero-Gas Consensus     Smart Contract: MedicalRecordLedger.sol      |
-  +--------------------------------------------------------------------------+
-                           """)
+    add_h3("Deployment Diagram")
+    add_p("Every developer runs their own copy of the CLI binary against their own local object store; the only shared component is whichever Ethereum-compatible node they all point their remote configuration at.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("4.11", "State diagram: pull-request lifecycle",
-                           "UML State Machine Diagram mapping medical record lifecycle: Uncommitted -> Encrypted -> Anchored -> Verified / Tampered",
-                           """
-  (*) ---> [Drafting Consultation]
-                 |
-                 v (Doctor Submits)
-           [AES-256-GCM Encrypted]
-                 |
-                 v (Off-Chain Upload)
-           [Stored on Hospital Appliance]
-                 |
-                 v (Anchor SHA-256 Hash via eth_sendTx)
-           [Anchored on Blockchain Ledger]
-                 |
-                 +-----------------------+
-                 | (Query Record)        | (Tamper Attack Simulated)
-                 v                       v
-           [Hash Matched]          [Hash Mismatched]
-                 |                       |
-                 v                       v
-        [In-Memory Decrypted]      [CRITICAL TAMPER ALERT]
-        [✓ Verified Dossier]       [⚠️ Decryption Blocked]
-                           """)
+    add_figure_or_image("4.10", "Deployment diagram",
+                        "Deployment topology showing Developer Machines with local store connecting via JSON-RPC to EVM Node")
+
+    add_h3("State Diagram: Pull-Request Lifecycle")
+    add_p("A pull request has exactly four reachable states, and the transitions between them are exactly the ones the contract enforces, not a larger set the CLI merely suggests: an author cannot push it from Open to Approved by approving their own work, and Merged is only reachable through a fast-forward the contract itself checks at merge time.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_figure_or_image("4.11", "State diagram: pull-request lifecycle",
+                        "State Machine Diagram showing Open -> Approved -> Merged / Closed states with guard conditions")
 
     doc.add_page_break()
 
@@ -986,61 +817,65 @@ Cost_MediQR           = 21,000 (Base) + SSTORE(fileHash) + SSTORE(metadata)
 
     add_h2("5.1 PROJECT ESTIMATE")
     add_h3("5.1.1 Reconciled Estimates")
-    add_p("Project sizing and effort estimation were formulated using an empirical Work Breakdown Structure (WBS) aligned with our Incremental SDLC model. The project encompassed six major functional components spanning approximately 12,000 lines of original TypeScript, Solidity, and shell automation code. Total effort was estimated at 540 engineering hours distributed across a 12-week timeline.",
+    add_p("Effort was planned around the same increments described in Section 3.6, since each one was independently estimable: the contract core and the from-scratch cryptographic primitives were expected, correctly, to take the largest share of early effort, because nothing above them could be trusted until Keccak-256 and the ABI codec were each verified against external references rather than just against each other.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h3("5.1.2 Project Resources")
-    add_p("Development required two development workstations running 64-bit Linux/Windows environments with Node.js v18+, Docker Desktop, Git, and VS Code. Blockchain simulation leveraged Hardhat's in-memory EVM client. No external cloud subscription or paid commercial infrastructure was required, ensuring complete reproducibility without financial overhead.",
-          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+    add_bullet("Workstations: ", "One development machine running Linux/Windows, with native compiler, Node.js, and solcjs installed locally.")
+    add_bullet("EVM Node: ", "A local Hardhat node for every test run, redeployed fresh each time rather than reused, so no test could pass only because of leftover state from a previous run.")
+    add_bullet("Infrastructure: ", "No paid infrastructure, no public testnet deployment, and no external services beyond package registries used during development.")
 
     add_h2("5.2 RISK MANAGEMENT")
-    add_p("Table 5.1 outlines the formal project risk register, identifying potential technological and security vulnerabilities alongside the concrete mitigations implemented.", space_after=4)
+    add_p("Table 5.1: Project task set and effort estimate", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    risk_headers = ["Risk Identified", "Likelihood", "Impact Severity", "Mitigation Strategy Implemented"]
+    risk_headers = ["Risk", "Likelihood", "Impact", "Mitigation actually taken"]
     risk_rows = [
-        ["Mobile Camera Freezing\n(Optical Moiré Interference)", "High", "Critical\n(Paramedic Lockout)", "Refactored QR schema to ultra-compact URL (?b=...&n=...) under 95 chars, yielding chunky Version 4 (33x33) QR matrix."],
-        ["Smart Contract Reentrancy\n& Unauthorized State Edits", "Low", "Critical\n(Ledger Corruption)", "Implemented strict OpenZeppelin Ownable patterns, custom access modifiers, and 14 automated Hardhat assertion test suites."],
-        ["Accidental PHI Leakage\non Public Blockchain", "Medium", "Critical\n(Statutory Violation)", "Enforced architectural separation: zero clinical data touches transactions; only 32-byte SHA-256 hashes and salted HMACs are anchored."],
-        ["Internal Hospital Storage\nData Tampering by Rogue Insider", "Medium", "High\n(Falsified Care)", "Automated client-side SHA-256 integrity checks compare retrieved file bytes against on-chain fingerprints before decrypting."],
-        ["Browser Memory Leaks during\nLarge Payload Decryption", "Low", "Medium\n(Workstation Lag)", "Scoped AES-GCM decryption buffers strictly inside local function scopes, allowing rapid garbage collection after rendering."]
+        ["A from-scratch Keccak-256 implementation is subtly wrong", "Medium", "Critical (breaks everything)", "Checked against known Ethereum test vectors, including the real ERC-20 transfer selector, before any other module depended on it"],
+        ["Hand-written ABI encoding diverges from what the EVM / other tools expect", "Medium", "Critical", "Checked byte-for-byte against live ethers.js output rather than only against hand-derived expected values"],
+        ["Backend compiler hangs compiling a project this size", "Occurred during development", "High (blocks all builds)", "Root-caused to the default compiler backend internal self-check; fixed by building with documented required flag"],
+        ["An interrupted push leaves on-chain state partially written", "Medium", "High (data integrity)", "Every commit and blob chunk is its own independently confirmed transaction; blobAnnounced / commitExists let a re-run skip what already landed"],
+        ["'Private' repositories are only private by label, not in fact", "High if unaddressed", "High (false security)", "CLI refuses to push unencrypted content to a repo marked private; real AES-256-GCM encryption is required before anything is sent"],
+        ["Self-approval of a pull request by its own author", "High if unenforced", "Medium", "Enforced inside the contract itself (tested against both a non-owner author and the owner acting as author), not only suggested by the CLI"],
+        ["Transient RPC failures against a local dev node under rapid requests", "Observed during integration testing", "Medium", "Added retry-with-backoff (up to 3 attempts) to the RPC client after the integration suite first surfaced the flakiness"]
     ]
 
-    add_styled_table(risk_headers, risk_rows, col_widths=[1.5, 0.9, 1.4, 2.7])
+    add_styled_table(risk_headers, risk_rows, col_widths=[1.5, 1.1, 1.4, 2.8])
 
     add_h2("5.3 PROJECT SCHEDULE")
-    add_p("Table 5.2 outlines the sequential work breakdown structure across the 12-week project duration.", space_after=4)
+    add_h3("5.3.1 Project Task Set")
+    add_p("Table 5.2: Risk register", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    task_headers = ["Task ID", "Project Task Description", "Dependencies", "Allocated Weeks"]
+    task_headers = ["Task", "Depends on", "Weeks"]
     task_rows = [
-        ["T1", "Domain Research, Statutory Compliance Review, and System SRS", "None", "Weeks 1 - 2"],
-        ["T2", "Core Cryptography Library Development (HMAC, AES-GCM, Vectors)", "T1", "Weeks 2 - 4"],
-        ["T3", "Solidity Smart Contract Architecture & Hardhat Test Suite", "T2", "Weeks 4 - 6"],
-        ["T4", "Dockerized Hospital Storage Appliance & REST Engine", "T3", "Weeks 6 - 7"],
-        ["T5", "Dual-Segment QR Engine & Roadside Paramedic Scanner Optimization", "T2, T4", "Weeks 7 - 8"],
-        ["T6", "Clinical Doctor Workstation & Biometric Gatekeeper Module", "T3, T4", "Weeks 8 - 10"],
-        ["T7", "Government Installer Appliance & Bulk Legacy Data Ingestion", "T3, T6", "Weeks 10 - 11"],
-        ["T8", "End-to-End System Security Auditing, Benchmarking & Final Report", "T1 - T7", "Weeks 11 - 12"]
+        ["T1. Contract core (repositories, commits, branches, roles) + Keccak-256 + ABI codec", "-", "2"],
+        ["T2. Local object store, staging, commit, push, pull", "T1", "2"],
+        ["T3. Branching, rollback, three-way merge, rebase", "T2", "2"],
+        ["T4. Identity registry, role-based access, AES-256-GCM encryption", "T2", "2"],
+        ["T5. Pull-request workflow, self-approval rule, fast-forward pre-check", "T3, T4", "2"],
+        ["T6. Unit test suites alongside each module", "running throughout", "2.5"],
+        ["T7. Integration test suite against a real local chain", "T5", "1.5"],
+        ["T8. Documentation, Docker image, demo tooling", "T7", "1.5"]
     ]
 
-    add_styled_table(task_headers, task_rows, col_widths=[0.8, 3.8, 1.0, 1.2])
+    add_styled_table(task_headers, task_rows, col_widths=[3.8, 1.4, 1.4])
 
-    add_figure_placeholder("5.1", "Project timeline (Gantt chart)",
-                           "12-Week project development timeline illustrating parallel and sequential milestone execution",
-                           """
-  Task                                  W1  W2  W3  W4  W5  W6  W7  W8  W9 W10 W11 W12
-  ------------------------------------------------------------------------------------
-  T1: Domain Analysis & SRS            [======]
-  T2: Core Crypto Library                  [======]
-  T3: Smart Contract Ledger                    [======]
-  T4: Docker Storage Node                          [====]
-  T5: Compact QR & Paramedic Scanner                   [====]
-  T6: Doctor Clinical Workstation                          [======]
-  T7: Gov Installer & Legacy Ingestion                         [====]
-  T8: Auditing, Benchmarks & Report                                [======]
-                           """)
+    add_h3("5.3.2 Task Network")
+    add_p("T1 blocks everything, since every later module either calls the contract or depends on Keccak-256/ABI encoding being correct. T3 and T4 could run in either order relative to each other (branching logic and identity/encryption are independent of one another) but both had to land before T5, since pull requests reference branches and are gated by roles. T6 ran continuously alongside every other task rather than as a separate phase, which is why its own duration overlaps the others in the chart below.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_h3("5.3.3 Timeline Chart")
+    add_figure_or_image("5.1", "Project timeline (Gantt chart)",
+                        "12-Week project development timeline illustrating WBS tasks from T1 to T8")
 
     add_h2("5.4 TEAM ORGANIZATION")
-    add_p("The project was executed by a collaborative student team from the Department of Computer Science and Engineering, CSMSS Chhatrapati Shahu College of Engineering. Responsibilities were delineated between blockchain consensus engineering, full-stack client development, cryptographic security implementation, and academic documentation. Progress was formally evaluated through departmental progress reviews (Review I through Review IV) adhering to university evaluation protocols.",
+    add_h3("5.4.1 Team Structure")
+    add_p("The project was carried out by the student group named on the cover page of this report, under the supervision of the assigned project guide, following the department's standard review structure (Review I through Review IV) for tracking progress against the project book.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_h3("5.4.2 Management Reporting and Communication")
+    add_p("Progress was reported at each scheduled department review, with working code and test results demonstrated rather than only slides, since a claim like 'self-approval is blocked' is only meaningful once it has actually been run against a live chain and shown to fail the way it is supposed to.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     doc.add_page_break()
@@ -1051,81 +886,74 @@ Cost_MediQR           = 21,000 (Base) + SSTORE(fileHash) + SSTORE(metadata)
     add_h1("CHAPTER 6\nPROJECT IMPLEMENTATION", space_before=18, space_after=18)
 
     add_h2("6.1 OVERVIEW OF PROJECT MODULES")
-    add_p("The MediQR repository is organized into five tightly integrated, modular packages:", space_after=4)
-
-    add_bullet("1. contracts (Solidity Smart Contract Suite): ", "Contains MedicalRecordLedger.sol, comprehensive Hardhat unit tests (14 passing tests), deployment scripts, and typechain ABI bindings.")
-    add_bullet("2. core-crypto (Cryptographic & Optical Engine): ", "A standalone TypeScript library implementing HMAC-SHA256 salted patient hashing, AES-256-GCM authenticated encryption, SHA-256 document hashing, and dual-segment QR serialization.")
-    add_bullet("3. hospital-nodes (Off-Chain Storage Appliances): ", "Express.js REST services simulating Node A (Apollo) and Node B (Fortis) storage appliances with isolated JSON file vaults, health endpoints, and tamper simulation controls.")
-    add_bullet("4. doctor-portal (Full-Stack Next.js Application): ", "Delivers three decoupled user interfaces: (a) The Roadside Paramedic Triage terminal (/emergency); (b) The Clinical EMR Workstation (/doctor); and (c) The Government Appliance Installer (/installer).")
-    add_bullet("5. deploy (Containerized Distribution Package): ", "Includes Docker Compose recipes, environment templates, and comprehensive operational deployment guides for hospital IT engineers.")
+    add_p("The contract, contracts/DVCS.sol, is roughly 760 lines of Solidity and owns all consensus-critical state: repositories, commits, branches, tags, roles, pull requests, and the identity registry. The CLI, under cli/, is about 4,850 lines split across focused modules, each covering one concern: main for command dispatch, repo for local repository state, objects for the content-addressed blob store, blobs for chunked sync, merge3 for three-way merges, crypto_local for AES-256-GCM, abi and keccak for talking the EVM's own language, rpc for JSON-RPC, changelog for the local audit trail, and ignore for pattern matching. Every one of these modules has a matching test file beside it.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("6.2 TOOLS AND TECHNOLOGIES USED")
-    add_bullet("Solidity (v0.8.20+): ", "Contract programming language compiled via Hardhat with optimizer enabled (200 runs).")
-    add_bullet("Next.js (v14.1+) & React (v18): ", "Modern web application framework utilizing App Router architecture and server-side rendering for lightning-fast UI delivery.")
-    add_bullet("TypeScript (v5.3+): ", "Enforces static type safety across data schemas, cryptographic buffers, and smart contract bindings.")
-    add_bullet("Web Crypto API: ", "W3C standard browser cryptographic engine providing native, hardware-accelerated AES-GCM and SHA-256 operations.")
-    add_bullet("Ethers.js (v6.11): ", "Lightweight, secure Web3 communication library for JSON-RPC contract invocation and event log parsing.")
-    add_bullet("Docker & Docker Compose: ", "Containerization platform ensuring identical off-chain storage appliance execution across disparate operating systems.")
+    add_bullet("Solidity ^0.8.24: ", "Compiled with solcjs (viaIR: true, evmVersion: paris) via a small wrapper script, since the plain solc --bin --abi flags cannot express those two settings together.")
+    add_bullet("Client Language: ", "Chosen specifically because it produces a single, dependency-free native binary with near-C performance (see the benchmark in Chapter 8) and because building the needed primitives from scratch was judged more reliable than depending on an immature or nonexistent web3 ecosystem.")
+    add_bullet("Hardhat: ", "Used only as a local development/test chain and for its JavaScript-based deployment and integration-test tooling (ethers.js), never as part of the shipped system.")
+    add_bullet("Docker: ", "For a reproducible build path (all pinned inside one image) aimed mainly at Windows users who would otherwise need to set up WSL2 by hand.")
 
     add_h2("6.3 ALGORITHM DETAILS")
-    add_h3("6.3.1 HMAC-SHA256 Salted Patient Query Hash")
-    add_p("To prevent correlation attacks across public blockchain transactions, the patient query token is derived using a secret institutional salt:",
+    add_h3("6.3.1 Keccak-256 (from scratch)")
+    add_p("The EVM's hash function is Keccak-256, not NIST SHA3-256; the two differ in their padding byte (0x01/0x80 multi-rate padding for Keccak, a 0x06 domain separator for SHA3), which is a common source of silent, hard-to-notice bugs when a general-purpose SHA3 library gets substituted in by mistake. Since no built-in or mature Keccak implementation existed, this project implements the full Keccak-f [1600] permutation (theta, rho, pi, chi, iota across 24 rounds) directly, and verifies it against known Ethereum test vectors rather than only checking that it runs without crashing.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_code_block("""// core-crypto/src/patient-hash.ts
-export function generatePatientHash(patientId: string, salt: string = DEFAULT_CONSORTIUM_SALT): string {
-  const normalizedId = patientId.trim().toUpperCase();
-  const hmac = crypto.createHmac('sha256', salt);
-  hmac.update(normalizedId);
-  return '0x' + hmac.digest('hex'); // Returns 32-byte bytes32 hexadecimal
+    add_code_block("""fn (mut st KeccakState) keccak_f() {
+    for round := 0; round < keccak_rounds; round++ {
+        // Theta: XOR-mix each column into every lane in that column
+        for i in 0 .. 5 {
+            bc[i] = st.s[i] ^ st.s[i+5] ^ st.s[i+10] ^ st.s[i+15] ^ st.s[i+20]
+        }
+        // ... Rho+Pi (lane rotation/permutation), Chi, Iota ...
+        st.s[0] ^= round_constants[round]
+    }
 }""")
 
-    add_h3("6.3.2 Client-Side AES-256-GCM Encryption with Authentication Tag")
-    add_p("Medical records are encrypted in browser memory. The 128-bit authentication tag is stored alongside the ciphertext, enabling immediate rejection of tampered bytes upon decryption:",
+    add_p("Verification, from test/keccak_test: the empty string, 'abc', and 'hello' are hashed and compared against their published Keccak-256 digests, and the selector for transfer(address,uint256) is computed and checked against the well-known ERC-20 value a9059cbb, since that selector is something any Ethereum developer can independently confirm.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_code_block("""// core-crypto/src/record-crypto.ts
-export async function encryptMedicalRecord(data: MedicalRecordPayload, key: CryptoKey): Promise<EncryptedPackage> {
-  const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit unique IV
-  const encodedData = new TextEncoder().encode(JSON.stringify(data));
-  const ciphertextBuffer = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv, tagLength: 128 },
-    key,
-    encodedData
-  );
-  return {
-    ciphertext: Buffer.from(ciphertextBuffer).toString('base64'),
-    iv: Buffer.from(iv).toString('hex'),
-    algorithm: 'AES-256-GCM'
-  };
-}""")
-
-    add_h3("6.3.3 Dual-Segment Compact QR Code Generator & Parser")
-    add_p("To prevent Google Lens camera freezes caused by optical moiré distortion, MediQR dynamically compresses emergency triage parameters into an ultra-compact URL query string under 95 characters:",
+    add_h3("6.3.2 Three-way merge (file-hash level)")
+    add_p("Because every tracked file is a content-addressed blob rather than a line-based text file, a textual diff/merge (as git merge performs) does not apply here. What this project implements instead is a three-way merge at the whole-file level: for every path, compare its hash at the common ancestor, on the current branch, and on the other branch, and classify the result using the same four cases Git's own merge uses internally, just applied per path rather than per line.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_code_block("""// URL Format: http://<LAN-IP>:3000/emergency?b=O-&n=Jane+Doe&a=Penicillin&p=555-0199
-const compactParams = new URLSearchParams({
-  b: triage.bloodType,
-  n: triage.fullName,
-  a: triage.criticalAllergies.slice(0, 2).join(','),
-  p: triage.emergencyContacts[0]?.phone || ''
-});
-const qrString = `${window.location.origin}/emergency?${compactParams.toString()}`;
-// Yields Version 4 (33x33 matrix) chunky QR code - scans in <20ms!""")
+    add_code_block("""if o == t {
+    if o.len > 0 { merged[p] = o }    // both sides agree (incl. both deleting it)
+    continue
+}
+if b == o {                            // ours unchanged since base -> take theirs
+    if t.len > 0 { merged[p] = t }
+    continue
+}
+if b == t {                            // theirs unchanged since base -> keep ours
+    if o.len > 0 { merged[p] = o }
+    continue
+}
+conflicts << p                         // all three differ: real conflict""")
 
-    add_h3("6.3.4 Gas Cost Reference & Storage Trade-Off")
-    add_p("Table 6.1 compares on-chain gas costs between traditional full-storage approaches and MediQR's hybrid architecture.", space_after=4)
+    add_p("This one function backs both rebase and the fast-forward pre-check pr-merge runs before sending anything on-chain, so there is one conflict story in the whole system rather than two slightly different ones. It is unit-tested against every case in the table above, including add/add conflicts (both sides introduce the same new path with different content) and modify/delete conflicts (one side edits a path the other side removed), not only the straightforward clean-merge case.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    gas_headers = ["Operation Type", "Traditional On-Chain Storage", "MediQR Hybrid Architecture", "Architectural Advantage"]
+    add_h3("6.3.3 ABI encoding and blob chunking")
+    add_p("Every contract call needs its arguments packed the exact way the EVM expects: a 4-byte function selector (the first four bytes of keccak256(signature)) followed by arguments padded and laid out per the Solidity ABI specification, with dynamic types (strings, byte arrays) stored via head/tail offset encoding rather than inline. abi implements encode_call() and the matching decode_*() helpers for exactly the type combinations this project's contract calls actually use, and its output is checked byte-for-byte against live ethers.js encoding of the same calls rather than only against hand-derived expected bytes, since a self-consistent but wrong encoder would otherwise be very easy to miss.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_p("File content is split into chunks of at most MAX_CHUNK_BYTES (24 KiB) before pushing, each becoming one pushBlobChunk transaction. The limit is enforced on both sides: client-side to decide where to split, and on-chain via a ChunkTooLarge revert, confirmed by testing a chunk exactly at the limit (accepted) and one byte over it (rejected).",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_p("Table 6.1: On-chain gas cost reference", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
+
+    gas_headers = ["Operation", "Approximate cost", "Why it matters here"]
     gas_rows = [
-        ["Commit Medical Record", "~6,250,000 gas ($18.50 on L1)", "68,420 gas ($0.20 or $0.00 on QBFT)", "98.9% Reduction in Gas Costs"],
-        ["Query Record History", "Variable gas based on byte length", "0 gas (Instant eth_call state read)", "Zero cost for read queries"],
-        ["Emergency Triage Scan", "Requires on-chain transaction", "0 gas (Completely offline optical scan)", "Zero network dependency in emergency"],
-        ["Tamper Verification", "Requires full contract recalculation", "0 gas (Client-side SHA-256 match)", "Instant verification in client memory"]
+        ["SSTORE, cold 32-byte word", "~20,000 gas", "Why file content is not stored directly in contract storage"],
+        ["Event log data, per byte", "~16 gas", "Why BlobChunk events are the default content-storage mode"],
+        ["Base transaction cost", "21,000 gas", "Paid once per transaction, which is why chunking has a floor on how small a chunk should be"],
+        ["ChunkTooLarge revert threshold", "> 24 KiB per chunk (MAX_CHUNK_BYTES)", "Keeps any single transaction's calldata, and its gas cost, bounded and predictable"]
     ]
 
-    add_styled_table(gas_headers, gas_rows, col_widths=[1.5, 1.8, 1.8, 1.6])
+    add_styled_table(gas_headers, gas_rows, col_widths=[1.8, 1.8, 3.0])
 
     doc.add_page_break()
 
@@ -1135,45 +963,59 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     add_h1("CHAPTER 7\nSOFTWARE TESTING", space_before=18, space_after=18)
 
     add_h2("7.1 TYPE OF TESTING")
-    add_p("A multi-layered verification strategy was executed across all development tiers to guarantee fault tolerance and regulatory compliance:",
+    add_p("Two layers were used, and both were meant to actually run as part of the development loop rather than exist only as documentation of intent.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_bullet("1. Cryptographic Unit Testing: ", "Automated test suites (test/crypto.test.ts) verified HMAC-SHA256 uniqueness, AES-256-GCM auth-tag rejection of bit flips, SHA-256 deterministic digest generation, and QR schema boundary validation.")
-    add_bullet("2. Smart Contract Testing: ", "Hardhat test scripts (test/MedicalRecordLedger.test.ts) evaluated 14 distinct governance assertions covering root administration, hospital onboarding, unauthorized doctor blocking, cascading hospital suspensions, and bulk legacy migration.")
-    add_bullet("3. Live Tamper Simulation Testing: ", "An automated exploit injector directly modified encrypted bytes on off-chain storage appliances. The client workstation was evaluated to verify that 100% of tampered records are flagged and blocked.")
-    add_bullet("4. Mobile Optical Field Testing: ", "The generated emergency QR codes were scanned across multiple physical smartphones (iOS and Android) under varying ambient lighting conditions and distances to verify fast Google Lens optical parsing.")
+    add_bullet("Unit testing: ", "pure-logic tests next to the code they test (every *_test.v file), run with test ., covering hashing, ABI round-trips, hex helpers, Merkle-root properties, .dvcsignore matching, blob chunking/reassembly, and every case of the three-way merge. No chain is required for this layer, and it runs in a few seconds.")
+    add_bullet("Integration testing: ", "a real end-to-end suite (test/integration/run.sh) that builds the CLI, compiles the contract, starts its own isolated Hardhat node, deploys a fresh contract, and drives the actual compiled binary, not a mock of it, through more than 40 assertions covering nearly the whole command surface, including the negative/failure cases (a wrong passphrase, a blocked self-approval, a rejected over-limit chunk), not only the paths that are expected to succeed.")
+
+    add_p("Both suites are safe to re-run: the integration suite gets a fresh chain and fresh temporary directories on every run, and cleans up its own Hardhat process on exit, so a result is never contaminated by state left over from an earlier run.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("7.2 TEST CASES & TEST RESULTS")
-    add_p("Table 7.1 summarizes the unit test execution results across core cryptographic modules.", space_after=4)
+    add_p("Table 7.1: Unit test suite summary", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    t1_headers = ["Module Under Test", "Validation Scope", "Observed Outcome", "Status"]
+    t1_headers = ["Module under test", "What is checked"]
     t1_rows = [
-        ["crypto.test.ts [1]", "HMAC-SHA256 Salted Patient Identifier Generation", "Deterministic 32-byte hex derived matching test vectors", "PASS"],
-        ["crypto.test.ts [2]", "AES-256-GCM Record Encryption & AuthTag Verification", "Decrypted plaintext matches original JSON payload exactly", "PASS"],
-        ["crypto.test.ts [3]", "Tamper Detection on Modified Ciphertext Byte", "Altered ciphertext rejected by GCM AuthTag: State Invalid", "PASS"],
-        ["crypto.test.ts [4]", "SHA-256 Document Fingerprint Integrity", "Hex digest strictly matches standalone sha256sum utility", "PASS"],
-        ["crypto.test.ts [5]", "Dual-Segment MediQR Schema & Compact URL Parser", "Catches missing blood group, malformed allergy arrays", "PASS"]
+        ["keccak.v", "Digest matches known test vectors for '', 'abc', 'hello'; ERC-20 transfer selector matches a9059cbb"],
+        ["abi.v", "encode_call()/decode_*() round-trip for every type combination used; encoding matches live ethers.js output byte-for-byte"],
+        ["hex.v", "hex<->bytes conversion round-trips, including odd-length and empty-input edge cases"],
+        ["objects.v", "Merkle root is order-independent for the same file set and changes when any tracked file changes"],
+        ["ignore.v", "Exact-name, directory-prefix, and wildcard .dvcsignore patterns correctly exclude matching paths"],
+        ["blobs.v", "Chunking a blob and reassembling the chunks reproduces the original bytes exactly, at and around the chunk-size boundary"],
+        ["merge3.v", "Clean merge, both-sides-identical-change, add/add conflict, modify/delete conflict, and deletion-agreement cases all resolve as specified in Section 6.3.2"],
+        ["crypto_local.v", "Encrypt/decrypt round-trip recovers the original plaintext; a wrong passphrase fails via AES-GCM's own authentication check rather than returning corrupted output"]
     ]
 
-    add_styled_table(t1_headers, t1_rows, col_widths=[1.4, 2.5, 2.3, 0.8])
+    add_styled_table(t1_headers, t1_rows, col_widths=[1.8, 4.8])
 
-    add_p("Table 7.2 presents the comprehensive integration, governance, and tamper test cases.", space_after=4)
+    add_p("Table 7.2: Integration test cases and results", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    t2_headers = ["Test ID", "Scenario Description", "Expected System Behavior", "Actual Verified Result"]
+    t2_headers = ["#", "Scenario (input)", "Expected output", "Actual result"]
     t2_rows = [
-        ["INT-01", "Root Admin onboards certified hospital node", "Hospital registered on-chain with active status; emits event", "PASS (HospitalOnboarded event emitted)"],
-        ["INT-02", "Unauthorized caller attempts hospital onboarding", "Transaction reverts with '403: Caller is not Root Admin'", "PASS (Revert caught by Hardhat test)"],
-        ["INT-03", "Hospital Admin credentials new doctor wallet", "Doctor stored in contract mapped to affiliated hospital", "PASS (DoctorRegistered event verified)"],
-        ["INT-04", "Attending Doctor commits record with SHA-256 hash", "Record anchored; RecordAdded event emitted with timestamp", "PASS (Anchored on-chain in 1 block)"],
-        ["INT-05", "Root Admin suspends compromised hospital", "Hospital isActive set to false; HospitalSuspended emitted", "PASS (Hospital deactivated instantly)"],
-        ["INT-06", "Doctor under suspended hospital attempts to add record", "Contract modifier blocks execution with 'Hospital suspended'", "PASS (Cascading suspension verified)"],
-        ["INT-07", "Attending Doctor queries patient history", "Contract returns record list and emits RecordAccessed audit log", "PASS (Non-repudiable audit logged)"],
-        ["INT-08", "Root Admin executes bulk legacy record migration", "Batch imports historical records with original timestamps", "PASS (3-patient dataset migrated in 38ms)"],
-        ["INT-09", "Attacking rogue insider alters off-chain record byte", "Client SHA-256 check fails; terminal displays Tamper Alert", "PASS (100% of bit-flip attacks blocked)"],
-        ["INT-10", "Paramedic scans compact QR with Google Lens", "URL opens in <1.5s offline; vitals displayed immediately", "PASS (Verified on physical Android/iOS)"]
+        ["1", "Push unencrypted content to a --private repo", "Refused client-side before any transaction is sent", "Pass: refused with a clear error"],
+        ["2", "Same push, after crypto-init", "Succeeds; content stored encrypted on-chain", "Pass"],
+        ["3", "Two accounts each register a handle, owner grants the second Contributor by handle only", "member-list shows both handles resolved to addresses", "Pass"],
+        ["4", "A second, independent repo pull()s encrypted content without being told the salt", "Salt auto-discovered on-chain; content decrypts correctly", "Pass: byte-for-byte match"],
+        ["5", "pull() with a deliberately wrong passphrase", "AES-GCM authentication failure, not silent corruption; commit metadata still syncs (always public)", "Pass: content sync stayed at zero, metadata synced"],
+        ["6", "pushBlobChunk() with a chunk one byte over MAX_CHUNK_BYTES", "Reverts with ChunkTooLarge", "Pass"],
+        ["7", "pushBlobChunk() with a chunk exactly at MAX_CHUNK_BYTES", "Accepted", "Pass"],
+        ["8", "PR author calls pr-approve on their own PR", "Reverts (CannotApproveOwnPR), tested for both a non-owner author and the repo owner as author", "Pass, both cases"],
+        ["9", "Owner opens a second PR, attempts self-approval", "Reverts; merge then correctly fails at 0/2 required approvals", "Pass"],
+        ["10", "User without a granted role attempts to push", "Rejected (access control)", "Pass"],
+        ["11", "Same user, after member-add grants Contributor", "Push succeeds immediately", "Pass"],
+        ["12", "Two branches independently edit the same path, then rebase", "CONFLICT reported, naming the exact path, not a silently picked winner", "Pass"],
+        ["13", "Same scenario, rebase --theirs", "Conflict auto-resolves to the other branch's content", "Pass"],
+        ["14", "rollback <hash> --hard", "Branch pointer and working files both restored to the target commit", "Pass"],
+        ["15", "5 back-to-back RPC calls that previously triggered a transient failure", "All 5 succeed via retry-with-backoff", "Pass"]
     ]
 
-    add_styled_table(t2_headers, t2_rows, col_widths=[0.8, 2.3, 2.4, 1.5])
+    add_styled_table(t2_headers, t2_rows, col_widths=[0.5, 2.2, 2.4, 1.5])
+
+    add_p("The table above is a representative subset; the full suite exceeds 40 assertions covering the remaining commands (diff, ls, show, cat, pr-list, pr-show, pr-min-approvals, delete-branch, and the changelog) against real local commit data.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     doc.add_page_break()
 
@@ -1182,93 +1024,44 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     # =========================================================================
     add_h1("CHAPTER 8\nRESULT ANALYSIS", space_before=18, space_after=18)
 
-    add_h2("8.1 OUTCOMES AND BENCHMARK COMPARISONS")
-    add_p("The empirical benchmarks gathered from rigorous testing demonstrate that MediQR achieves unparalleled performance advantages over both traditional centralized EHRs and previous blockchain healthcare frameworks. Table 8.1 and Figure 8.1 summarize the comparative performance metrics.",
+    add_h2("8.1 OUTCOMES")
+    add_p("Every claim in the Testing chapter was reproducible, not a one-time observation: re-running the integration suite against a freshly deployed contract and a fresh chain produced the same 40-plus passing assertions each time, including the negative cases. That repeatability matters more here than in most student projects, since the entire point of the system is that its guarantees should not depend on anything being set up 'just right' by hand.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    res_headers = ["Performance Metric", "Centralized EHR (Epic/FHIR)", "Full On-Chain Blockchain", "MediQR Enterprise (Observed)"]
-    res_rows = [
-        ["Emergency Triage Scan Latency", "10 to 30 minutes (Login/Auth delay)", "N/A (No offline scan capability)", "1.2 to 1.8 seconds (Total scan-to-view)"],
-        ["Record Encryption Speed (5 MB)", "Server-side (~450 ms)", "Client-side (~380 ms)", "64 milliseconds (Native Web Crypto)"],
-        ["Tamper Attack Detection Rate", "0% (Undetected on direct SQL edit)", "100% (Cryptographic mismatch)", "100% (Instant UI alert and block)"],
-        ["Transaction Gas Overhead", "None (Cloud hosting bills)", "$15.00 to $45.00 per record", "$0.00 (QBFT Permissioned Consortium)"],
-        ["Client Memory Footprint", "~180 MB (Bulky EHR enterprise portal)", "~120 MB (Web3 wallet extensions)", "34 MB (Streamlined Next.js client)"],
-        ["QR Optical Density", "High (81x81 dense moiré grid)", "High (Dense transaction hash grid)", "Low (33x33 chunky matrix, zero moiré)"]
+    add_p("The language choice was chosen specifically because it compiles to a single native binary with performance close to C, which matters for a command-line tool a developer will run dozens of times a session. Python was never seriously considered for this role (it has far better web3 tooling available, but a noticeably heavier runtime footprint for a CLI meant to feel instant), so the comparison below exists to show what that choice actually cost and bought, not to argue one language is faster than C, which it is not.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_figure_or_image("8.1", "CLI build/runtime benchmark: C vs. V vs. Python",
+                        "Measured on the same machine; the V binary was built with the tcc backend used throughout this project.")
+
+    add_p("Table 8.1: Benchmark results: C vs. V vs. Python", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
+
+    b_headers = ["Metric", "C (compiled)", "V (compiled, tcc)", "Python (interpreted)"]
+    b_rows = [
+        ["Compile time (s)", "0.07", "0.25", "n/a"],
+        ["Runtime (s)", "0.005", "0.008", "0.27"],
+        ["Peak memory (MB)", "3.2", "4.5", "11.0"],
+        ["Binary size (KB)", "18", "175", "n/a"]
     ]
 
-    add_styled_table(res_headers, res_rows, col_widths=[1.8, 1.8, 1.8, 1.6])
+    add_styled_table(b_headers, b_rows, col_widths=[1.8, 1.5, 1.8, 1.5])
 
-    add_figure_placeholder("8.1", "Benchmarking: MediQR vs. traditional healthcare systems",
-                           "Bar chart comparison of emergency access latency, encryption overhead, and memory utilization",
-                           """
-  Emergency Retrieval Latency (Seconds) - Lower is Better:
-  Centralized EHR : [==================================================] 900.0s (15 mins)
-  On-Chain Web3   : [========================] 45.0s
-  MediQR          : [=] 1.5s
-  
-  Cryptographic Tamper Detection Rate (%) - Higher is Better:
-  Centralized EHR : [ ] 0% (Silent insider DB modification)
-  MediQR          : [==================================================] 100% (Guaranteed)
-                           """)
+    add_p("Runtime and memory numbers sit close to C and well ahead of Python, which is the property that actually mattered for a CLI invoked repeatedly in a developer's normal workflow; its larger binary size and slightly longer compile time were an acceptable trade for not needing an installed interpreter on every machine that runs the CLI.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_h2("8.2 SCREEN SHOTS AND USER WORKFLOWS")
-    add_p("The user workflows and operational interfaces implemented in MediQR are illustrated in Figures 8.2 through 8.4.", space_after=4)
+    add_h2("8.2 SCREEN SHOTS")
+    add_p("The three captures below are real CLI and terminal output, reproduced from an actual run against a local Hardhat chain (transaction hashes and commit hashes are abbreviated here for readability but are full 32-byte values in the live output).",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_figure_placeholder("8.2", "Terminal output & interface: First-responder roadside emergency triage terminal",
-                           "Screenshot of /emergency showing high-visibility blood group (O-), red allergy tags, and instant dial contact",
-                           """
-  +-----------------------------------------------------------------------------------------+
-  | [!] FIRST-RESPONDER TRIAGE TERMINAL                                [Emergency Active]   |
-  |                                                                                         |
-  |  +-----------------------------------------------------------------------------------+  |
-  |  | PATIENT: JANE DOE                                        BLOOD GROUP: [ O- ]      |  |
-  |  +-----------------------------------------------------------------------------------+  |
-  |  | [!] CRITICAL ALLERGIES:   [ Penicillin G ]   [ Beta-Lactams ]   [ Peanuts ]       |  |
-  |  | [*] CHRONIC CONDITIONS:   Severe Asthma, Hypertension                             |  |
-  |  | [?] DIRECTIVES:           Full Resuscitation Code, Registered Organ Donor          |  |
-  |  | [T] EMERGENCY CONTACT:    John Doe (Spouse) - +1-555-0199      [ DIAL NOW ]       |  |
-  |  +-----------------------------------------------------------------------------------+  |
-  |  | > Open in Doctor Clinical Workstation ->                                          |  |
-  |  +-----------------------------------------------------------------------------------+  |
-  +-----------------------------------------------------------------------------------------+
-                           """)
+    add_figure_or_image("8.2", "Terminal output: repository creation, commit, and push",
+                        "Terminal output showing repository creation, file staging, commit, and three-phase push")
 
-    add_figure_placeholder("8.3", "Terminal output & interface: Doctor clinical workstation with verified record",
-                           "Screenshot of /doctor showing attending physician credentials, ✓ Blockchain Verified badge, notes, and lab diagnostics",
-                           """
-  +-----------------------------------------------------------------------------------------+
-  | [HOSPITAL A] Clinical EMR Workstation      Dr. Ramesh Gupta       [* Biometric Active]  |
-  +-----------------------------------------------------------------------------------------+
-  | PATIENT QUERY: 0x69c2fcaeb8ca20eefe... (HMAC Token)               [ QUERY LEDGER ]      |
-  |                                                                                         |
-  | +-------------------------------------------------------------------------------------+ |
-  | | Consultation Dossier - REC-APOLLO-001               [ ✓ Blockchain Verified ]       | |
-  | | Facility: Apollo Speciality (Node A)                Attending: Dr. Ramesh Gupta     | |
-  | | Notes: Acute bilateral wheezing; prescribed Salbutamol inhaler.                     | |
-  | | Prescriptions: Salbutamol 100mcg (TID x 7d), Amoxicillin (Discontinued - Allergy)   | |
-  | | Lab Diagnostics: Peak Expiratory Flow 280 L/min (Flag: LOW), SpO2 94% (Flag: LOW)  | |
-  | | > Collapsible Technical Cryptographic Audit Proof (Solidity Fingerprint: 0xf305...) | |
-  | +-------------------------------------------------------------------------------------+ |
-  +-----------------------------------------------------------------------------------------+
-                           """)
+    add_figure_or_image("8.3", "Terminal output: blocked self-approval and PR merge",
+                        "Terminal output showing PR open, CannotApproveOwnPR revert, external approval, and merge")
 
-    add_figure_placeholder("8.4", "Terminal output & interface: Government commissioning appliance",
-                           "Screenshot of /installer showing Ministry of Health emblem, hardware UUID binding, and doctor fingerprint enrolment pad",
-                           """
-  +-----------------------------------------------------------------------------------------+
-  | [MOH NHA] National Health Authority Field Appliance Commissioning  [UID-GOV-DEL-9921]   |
-  +-----------------------------------------------------------------------------------------+
-  | Step 1: Server Identity & Hardware UUID Binding (HW-SVR-DELL-POWEREDGE-R740)            |
-  | Step 2: Blockchain Consortium Node Pairing (Status: CONNECTED to MedicalRecordLedger)   |
-  | Step 3: Physician Biometric Fingerprint Enrolment                                       |
-  |         +-------------------------+     +----------------------------------------+      |
-  |         | [OPTICAL SENSOR TOUCH]  |     | Practitioner: Dr. Ramesh Gupta         |      |
-  |         | Scanning Ridges 500 DPI | --> | License: MCI-DEL-10294                 |      |
-  |         | Status: 99.98% MATCH    |     | Ridge Pattern: WHORL-CENTRAL-POCKET    |      |
-  |         +-------------------------+     +----------------------------------------+      |
-  | Step 4: Appliance Sealing & Certificate Generation (CERT-GOV-MED-COMMISSION-7A9B)       |
-  +-----------------------------------------------------------------------------------------+
-                           """)
+    add_figure_or_image("8.4", "Terminal output: rebase conflict detection and resolution",
+                        "Terminal output showing rebase conflict detection, conflict reporting, and --theirs auto-resolution")
 
     doc.add_page_break()
 
@@ -1278,28 +1071,25 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     add_h1("CHAPTER 9\nCONCLUSION", space_before=18, space_after=18)
 
     add_h2("9.1 CONCLUSIONS")
-    add_p("The objectives articulated at the inception of this research project have been fully achieved, implemented, and empirically verified. MediQR successfully resolves the healthcare trilemma by establishing a decentralized, privacy-preserving medical record archive that bridges immediate roadside emergency triage with rigorous clinical provenance.",
+    add_p("The objectives set out in Chapter 1 were met and verified, not just implemented. The contract enforces, as properties of the data itself rather than as server policy, exactly the things a centrally hosted Git host currently enforces only as revocable permissions: who may push, who may approve a pull request, and that an author cannot approve their own work. The CLI gives that system a workflow a Git user already knows, while keeping the operations that do not need to be public (staging, diffing, local commits, rebasing) entirely local and fast.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
-    add_p("Key engineering contributions demonstrated by this project include:", space_after=4)
-    add_bullet("1. Dual-Segment Optical Segregation: ", "Demonstrated that bifurcating medical records into public roadside triage and deeply encrypted clinical vaults provides sub-2-second emergency access while protecting lifelong medical history from unauthorized exposure.")
-    add_bullet("2. Zero On-Chain PHI Exposure: ", "Proved that anchoring only deterministic 32-byte SHA-256 document fingerprints and salted HMAC patient identifiers guarantees 100% compliance with HIPAA and India's DPDP Act while drastically reducing on-chain gas expenditure.")
-    add_bullet("3. Absolute Non-Repudiation: ", "Established an unalterable digital wax seal on Solidity smart contracts that automatically identifies and rejects any off-chain file tampering, eliminating risks of insider database manipulation.")
-    add_bullet("4. Biometric Access Security: ", "Integrated hardware biometric fingerprint authentication into clinical workstations, ensuring that cryptographic decryption keys cannot be leveraged by unaccredited actors.")
+    add_p("The two pieces of infrastructure that had to be built from nothing, Keccak-256 and the ABI codec, turned out to be the right things to get right first: every other guarantee in the system, from a verifiable repository id to a trustworthy commit hash, is downstream of those two being correct. Verifying them against external references (known Ethereum test vectors, live ethers.js output) rather than only against each other is what makes the rest of the system's claims credible rather than circular.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
+
+    add_p("Equally, the project treats 'private' honestly: nothing on a public chain can actually be hidden from a block explorer, so the system does not pretend otherwise. A private repository is private because its content is encrypted client-side before it ever leaves the machine, not because a flag says so.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("9.2 FUTURE WORK")
-    add_p("While MediQR provides an enterprise-ready architecture, future research extensions encompass:", space_after=4)
-    add_bullet("Zero-Knowledge Proofs (ZK-SNARKs): ", "Integrating zero-knowledge proofs would enable patients to prove specific medical criteria (e.g., proof of negative COVID-19 status, valid immunization, or insurance pre-qualification) without revealing any underlying diagnostic records or physician identities.")
-    add_bullet("National Healthcare Integration (ABHA / ABDM): ", "Extending MediQR's HMAC identity mapping to natively bind with India's Ayushman Bharat Health Account (ABHA) standards, facilitating nation-wide clinical portability across public and private hospitals.")
-    add_bullet("Hardware Security Module (HSM) Integration: ", "Equipping hospital server appliances with dedicated hardware security modules (YubiHSM2 / TPM 2.0) to safeguard institutional master encryption keys against memory scraping and physical server theft.")
-    add_bullet("Cross-Chain Interoperability Protocols: ", "Implementing Chainlink CCIP or LayerZero bridges to mirror cryptographic record fingerprints across disparate consortium chains (e.g., Hyperledger Fabric and Ethereum).")
+    add_bullet("Real transaction signing: ", "The CLI currently relies on a node's unlocked accounts (eth_sendTransaction), which is fine for local development but not for a public chain. Adding local key management and eth_sendRawTransaction signing would be the single highest-value next step toward actual production use.")
+    add_bullet("Per-collaborator encryption: ", "The current scheme uses one shared passphrase for everyone with read access to a private repository, so revoking one person's access means rotating the passphrase for the whole group. Envelope encryption, wrapping a per-repository content key separately for each collaborator's public key, would allow individual revocation.")
+    add_bullet("Full merge-history reconstruction: ", "getFirstParentChain only follows first-parents by design, as a gas-cost tradeoff; a production-grade indexer replaying the full event log off-chain could reconstruct complete merge history without that limitation.")
+    add_bullet("A richer conflict resolution tool: ", "Rebase and PR-divergence conflicts currently resolve per whole file (--ours/--theirs); a line-level merge view, even if it stays client-side and never touches the chain, would make resolving a specific conflicting file less blunt than choosing one side entirely.")
+    add_bullet("Deployment to a public testnet: ", "To validate gas costs and transaction-confirmation behavior under real network conditions rather than only against a local, instantly-mining Hardhat node.")
 
     add_h2("9.3 APPLICATIONS")
-    add_p("The architecture formalized in MediQR extends across critical real-world medical and civil domains:", space_after=4)
-    add_bullet("1. Roadside Trauma & Ambulance Response: ", "Enables municipal paramedics and highway ambulance crews to instantly identify blood types and severe drug contraindications, dramatically reducing Golden Hour mortality rates.")
-    add_bullet("2. Disaster Relief & Mass Casualty Incidents: ", "Provides military field hospitals and humanitarian relief organizations with offline, self-contained medical triage tokens during earthquakes, floods, or telecommunication blackouts.")
-    add_bullet("3. Cross-Border Medical Tourism: ", "Allows international medical travelers to carry their verified medical dossiers across borders without relying on fragile paper files, translation faxes, or incompatible electronic portals.")
-    add_bullet("4. Clinical Research & Longitudinal Provenance: ", "Supplies pharmaceutical research trials with mathematically tamper-evident clinical trial data, preventing retroactive data manipulation or selective reporting.")
+    add_p("The most direct application is exactly the one this project targets: a small team or an open-source project that wants commit history and code review enforced by something other than a platform operator's goodwill, particularly where contributors do not already trust each other or a shared employer. The same underlying pattern, moving only the trust-sensitive state transitions on-chain while keeping fast, local-first operations off it, generalizes beyond version control to other workflows built around a review-and-approve gate: document approval chains, configuration-change sign-off, or any process where 'who approved this, and in what order' needs to be provably tamper-resistant rather than merely logged somewhere a server administrator could edit.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     doc.add_page_break()
 
@@ -1309,31 +1099,34 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     add_h1("APPENDIX A\nFEASIBILITY & COMPLEXITY ASSESSMENT", space_before=18, space_after=18)
 
     add_h2("A.1 TECHNICAL FEASIBILITY")
-    add_p("The technical feasibility of MediQR was validated by successfully assembling the entire technology stack using production-grade open-source libraries: Solidity smart contracts, the Next.js App Router, the W3C Web Cryptography API, and Docker containers. Modern browser runtimes natively execute AES-256-GCM and SHA-256 computations in hardware via WebAssembly and C++ browser bindings, requiring zero proprietary plugin installations. The system operates seamlessly across mobile and desktop architectures.",
+    add_p("Every dependency this project needs (a Solidity compiler, an Ethereum-compatible JSON-RPC node, and compiler) is freely available and was actually used throughout development; nothing in the design depends on unreleased or inaccessible tooling. The two components with no existing library to lean on, Keccak-256 and the ABI codec, were the technical risk this project actually carried, and both were resolved by implementation and verification rather than assumed away, as described in Chapter 6.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("A.2 OPERATIONAL FEASIBILITY")
-    add_p("Operationally, MediQR requires minimal behavioral change from clinical users. Paramedics use standard smartphone cameras without downloading third-party applications. Doctors interact with an intuitive EMR interface that automates key derivation and cryptographic hash verification in the background. The Government installer automates hospital node provisioning through a streamlined 4-step commissioning wizard.",
+    add_p("The command vocabulary (init, add, commit, branch, push, pull, rebase) deliberately mirrors Git, so the operational cost of adopting this tool is mostly the cost of learning which operations now require a confirmed transaction instead of being instantaneous, not a wholly new mental model.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("A.3 ECONOMIC FEASIBILITY")
-    add_p("By deploying the smart contract on permissioned consortium chains (using QBFT or Proof-of-Authority consensus with min-gas-price=0), transaction fees are entirely eliminated for participating healthcare institutions. Hospital appliances execute on standard low-cost commodity server hardware, eliminating expensive commercial cloud database licensing fees.",
+    add_p("Development required no paid infrastructure: a local Hardhat chain stood in for a live network throughout. The ongoing cost of real use would be the gas cost of transactions on whatever chain a team deploys to, which is exactly why the gas-cost model in Section 4.2 and Table 6.1 was treated as a design constraint from the start rather than an afterthought.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     add_h2("A.4 ALGORITHMIC COMPLEXITY OF KEY COMPONENTS")
-    add_p("Table A.1 documents the theoretical time and space complexity of MediQR's core cryptographic and data handling algorithms.", space_after=4)
+    add_p("Table A.1: Time complexity of the project's core algorithms", align=WD_ALIGN_PARAGRAPH.CENTER)
+    for r in doc.paragraphs[-1].runs: set_run_font(r, "Times New Roman", 11, bold=True)
 
-    c_headers = ["Algorithmic Component", "Time Complexity", "Space Complexity", "Operational Notes"]
+    c_headers = ["Component", "Complexity", "Note"]
     c_rows = [
-        ["HMAC-SHA256 Token Derivation", "O(L) - Linear in ID length", "O(1) - Constant 32 bytes", "Executes in <0.5ms; independent of ledger size"],
-        ["AES-256-GCM Symmetric Encryption", "O(M) - Linear in payload size", "O(M) - Linear in ciphertext", "Hardware accelerated via AES-NI CPU instructions"],
-        ["SHA-256 Document Fingerprinting", "O(M) - Linear in file bytes", "O(1) - Constant 32 bytes", "Chunked processing supports large multi-MB files"],
-        ["Smart Contract Record Anchoring", "O(1) - Constant state write", "O(1) - Constant storage slot", "Fixed gas consumption (approx 68,500 gas)"],
-        ["Smart Contract Record Lookup", "O(K) - Linear in patient records", "O(K) - Linear in record count", "K is typically <100 per patient lifetime"],
-        ["Compact QR Optical Parsing", "O(1) - Constant URL query string", "O(1) - Fixed string memory", "Parses <95 characters in <15ms offline"]
+        ["Keccak-256 permutation", "O(1) per 136-byte block (fixed 24 rounds)", "Overall O(n) in input length n"],
+        ["Merkle tree root (objects.v)", "O(n log n)", "n = number of tracked files; dominated by sorting paths before hashing"],
+        ["Three-way merge (merge3.v)", "O(n)", "n = number of distinct tracked paths across base/ours/theirs"],
+        ["ABI encode/decode", "O(n)", "n = size of the encoded arguments/result"],
+        ["Blob chunking", "O(n)", "n = blob size in bytes; chunk count = ceil(n / 24 KiB)"]
     ]
 
-    add_styled_table(c_headers, c_rows, col_widths=[1.8, 1.8, 1.4, 2.0])
+    add_styled_table(c_headers, c_rows, col_widths=[2.0, 2.2, 2.4])
+
+    add_p("None of the operations this system performs client-side are worse than linear or log-linear in the size of the data they process; nothing in the design required framing any part of it as NP-hard or NP-complete, since the hard problem here was never computational complexity but trust, which is what the contract's role-based access control and review workflow address directly.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
 
     doc.add_page_break()
 
@@ -1342,13 +1135,8 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     # =========================================================================
     add_h1("APPENDIX B\nPAPER PUBLICATION / PRESENTATION", space_before=18, space_after=18)
 
-    add_p("A research paper synthesizing the cryptographic architecture, dual-segment QR compression methodology, and empirical tamper-detection benchmarks formulated in this project has been authored for peer-reviewed dissemination:",
-          align=WD_ALIGN_PARAGRAPH.JUSTIFY)
-
-    add_p("Paper Title: MediQR: An Enterprise Tamper-Proof Healthcare Archive and Roadside Emergency Triage Ledger Using Dual-Segment Optical Cryptography",
-          space_before=12, space_after=6)
-    add_p("Authors: Sakshi D. Thombare, Pushpak M. Jaiswal, Prof. N. Z. Patel\nInstitution: CSMSS Chhatrapati Shahu College of Engineering, Chh. Sambhajinagar\nTarget Conference / Journal: IEEE International Conference on Healthcare Informatics (ICHI) / International Journal of Medical Informatics (Elsevier)\nStatus: Manuscript Prepared & Under Departmental Review",
-          space_after=24)
+    add_p("No paper arising from this project has been submitted or presented at the time of writing. This section is left in place, per the department's report format, for the student group to complete if a paper is submitted before final submission of this report: title, authors, venue/journal name, and date/volume/page numbers or ISSN, with the acceptance certificate and camera-ready copy attached.",
+          align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_after=36)
 
     doc.add_page_break()
 
@@ -1357,7 +1145,7 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     # =========================================================================
     add_h1("APPENDIX C\nPLAGIARISM REPORT", space_before=18, space_after=18)
 
-    add_p("The research and implementation presented in this report represent the original, independent work of the student authors under the guidance of the faculty supervisor. All external libraries, algorithms, and conceptual references have been rigorously cited in accordance with academic integrity guidelines. The formal similarity index report generated by the institutional plagiarism detection system (Turnitin / DrillBit) shall be appended following institutional review per department guidelines.",
+    add_p("The department's plagiarism-check report for this document should be generated through the institute's designated plagiarism-detection tool and attached here as a printed or scanned copy before final submission, per instruction 19 of the report-format guidelines.",
           align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_after=36)
 
     doc.add_page_break()
@@ -1370,16 +1158,16 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     refs = [
         "[1] S. Nakamoto, 'Bitcoin: A Peer-to-Peer Electronic Cash System,' White Paper, 2008.",
         "[2] V. Buterin, 'A Next-Generation Smart Contract and Decentralized Application Platform,' Ethereum White Paper, 2014.",
-        "[3] A. Ekblaw, A. Azaria, J. D. Halamka, and A. Lippman, 'A Case Study for Blockchain in Healthcare: \"MedRec\" prototype for medical data access and permission management,' in Proc. IEEE Open & Big Data Conf., 2016.",
-        "[4] National Health Authority (NHA), 'Ayushman Bharat Digital Mission (ABDM) Architecture & Consultation Paper,' Government of India, 2021.",
-        "[5] Ministry of Electronics and Information Technology (MeitY), 'The Digital Personal Data Protection Act, 2023 (No. 22 of 2023),' Gazette of India, Aug. 2023.",
-        "[6] U.S. Department of Health and Human Services, 'Health Insurance Portability and Accountability Act (HIPAA) Security Standards for the Protection of Electronic Protected Health Information,' 45 CFR Part 160 and Part 164, 2003.",
-        "[7] D. Dworkin, 'Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC,' NIST Special Publication 800-38D, National Institute of Standards and Technology, 2007.",
-        "[8] H. Krawczyk, M. Bellare, and R. Canetti, 'HMAC: Keyed-Hashing for Message Authentication,' RFC 2104, Network Working Group, 1997.",
-        "[9] D. Boneh, B. Bünz, and B. Fisch, 'Batching Techniques for Accumulators with Applications to IOPs and Stateless Blockchains,' in Proc. CRYPTO 2019, LNCS, vol. 11692, pp. 561-586, 2019.",
-        "[10] HL7 International, 'Fast Healthcare Interoperability Resources (FHIR) Release 4B,' Specification Standard, 2022.",
-        "[11] T. ISO/IEC, 'Information technology - Automatic identification and data capture techniques - QR Code bar code symbology specification,' ISO/IEC 18004:2015, International Organization for Standardization, 2015.",
-        "[12] OpenZeppelin, 'OpenZeppelin Contracts: Secure Smart Contract Library for Solidity,' v5.0, 2024. [Online]. Available: https://github.com/OpenZeppelin/openzeppelin-contracts"
+        "[3] G. Wood, 'Ethereum: A Secure Decentralised Generalised Transaction Ledger,' Ethereum Project Yellow Paper, 2014.",
+        "[4] NIST, 'SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions,' FIPS PUB 202, National Institute of Standards and Technology, 2015.",
+        "[5] G. Bertoni, J. Daemen, M. Peeters, and G. Van Assche, 'The Keccak Reference,' Submission to NIST SHA-3 Competition, 2011.",
+        "[6] Ethereum Foundation, 'Ethereum Contract ABI Specification,' Ethereum Documentation, 2024.",
+        "[7] D. Dworkin, 'Recommendation for Block Cipher Modes of Operation: Galois/Counter Mode (GCM) and GMAC,' NIST Special Publication 800-38D, 2007.",
+        "[8] J. Benet, 'IPFS - Content Addressed, Versioned, P2P File System,' arXiv:1407.3561, 2014.",
+        "[9] L. Torvalds and Git Contributors, 'Git: Fast Version Control System,' Open-Source Project, 2005.",
+        "[10] V Community, 'The V Programming Language Documentation,' The V Language Foundation, 2024.",
+        "[11] OpenZeppelin, 'OpenZeppelin Contracts: A Library for Secure Smart Contract Development,' 2024.",
+        "[12] N. Szabo, 'Formalizing and Securing Relationships on Public Networks,' First Monday, vol. 2, no. 9, 1997."
     ]
 
     for ref in refs:
@@ -1393,7 +1181,7 @@ const qrString = `${window.location.origin}/emergency?${compactParams.toString()
     # Save to workspace root
     output_path = "c:\\Users\\soham\\Desktop\\Work\\projects\\complete\\purvaja-mediqr\\MediQR_Final_Project_Report.docx"
     doc.save(output_path)
-    print(f"Document successfully created at: {output_path}")
+    print(f"Document successfully created with original table format & real images at: {output_path}")
 
 if __name__ == "__main__":
     create_report()
