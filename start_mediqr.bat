@@ -8,17 +8,17 @@ echo.
 echo [0/3] Checking and freeing ports 3000, 5001, and 5002...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000, 5001, 5002 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" 2>nul
 
-timeout /t 1 /nobreak >nul
+ping 127.0.0.1 -n 2 >nul
 
 echo [1/3] Starting Multi-Hospital Storage Nodes (Hospital A :5001, Hospital B :5002)...
 start "MediQR Hospital Nodes (Ports 5001 and 5002)" cmd /k "cd /d "%~dp0\hospital-nodes" && npm start"
 
-timeout /t 3 /nobreak >nul
+ping 127.0.0.1 -n 4 >nul
 
 echo [2/3] Starting Healthcare Web Portal (Next.js :3000 bound to 0.0.0.0)...
 start "MediQR Web Portal (Port 3000)" cmd /k "cd /d "%~dp0\doctor-portal" && npm run dev"
 
-timeout /t 3 /nobreak >nul
+ping 127.0.0.1 -n 4 >nul
 
 echo [3/3] Opening MediQR Portal in default browser...
 start http://localhost:3000
