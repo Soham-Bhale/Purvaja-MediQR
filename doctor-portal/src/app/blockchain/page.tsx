@@ -86,6 +86,25 @@ export default function BlockchainDashboardPage() {
           </p>
         </div>
 
+        {/* Cinematic Blockchain Animation Pill */}
+        <div className="hidden xl:flex items-center gap-3 bg-black/40 border border-indigo-500/20 rounded-2xl p-2 backdrop-blur-md">
+          <div className="w-36 aspect-video rounded-xl overflow-hidden border border-indigo-400/30 shadow-lg relative bg-black">
+            <video
+              src="/videos/blockchain-seal.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-1 left-1.5 text-[8px] font-mono text-emerald-400 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Consortium Active
+            </div>
+          </div>
+        </div>
+
         {/* Action Controls for Academic Demo */}
         <div className="flex flex-wrap items-center gap-3">
           {integrityStatus.isValid ? (

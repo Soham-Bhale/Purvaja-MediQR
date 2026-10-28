@@ -10,6 +10,7 @@ import {
 import { mineNewBlock } from '../lib/blockchain-blocks';
 import { sendAppointmentConfirmationEmail } from '../lib/email-service';
 import CinematicBackground from '../components/CinematicBackground';
+import AppleVideoCard from '../components/AppleVideoCard';
 import AssetPromptModal from '../components/AssetPromptModal';
 import EmailInboxModal from '../components/EmailInboxModal';
 
@@ -52,7 +53,7 @@ export default function PatientPortalHomePage() {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
 
   // Video State
-  const [heroVideoAvailable, setHeroVideoAvailable] = useState(false);
+  const [heroVideoAvailable, setHeroVideoAvailable] = useState(true);
 
   useEffect(() => {
     // Check if user has dropped an MP4 into public/videos/hero.mp4
@@ -274,6 +275,18 @@ export default function PatientPortalHomePage() {
             </p>
           </div>
 
+          {/* Cinematic Problem Video Reconstruction */}
+          <div className="max-w-4xl mx-auto">
+            <AppleVideoCard
+              src="/videos/the-crisis.mp4"
+              title="Roadside Emergency Triage Failure"
+              subtitle="INCIDENT RECONSTRUCTION • 250,000+ FATALITIES/YR"
+              badge="THE CRISIS WE SOLVE"
+              badgeColor="rose"
+              telemetryText="Unconscious Victim • Missing Identity • Cloud Blackout • 45m ER Delay"
+            />
+          </div>
+
           {/* 3 Problem Cards with Cinematic Aesthetics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
@@ -340,6 +353,18 @@ export default function PatientPortalHomePage() {
             </p>
           </div>
 
+          {/* Cinematic Solution Video Demonstration */}
+          <div className="max-w-4xl mx-auto">
+            <AppleVideoCard
+              src="/videos/the-solution.mp4"
+              title="Dual-Segment Optical MediQR Acquisition"
+              subtitle="0.018s ULTRA-FAST RECOGNITION"
+              badge="THE BREAKTHROUGH"
+              badgeColor="emerald"
+              telemetryText="Laser Barcode Scan • Offline Air-Gapped Key • Instant Critical ICE Payload"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Solution 1 */}
@@ -361,15 +386,33 @@ export default function PatientPortalHomePage() {
             </div>
 
             {/* Solution 2 */}
-            <div className="rounded-3xl bg-gradient-to-b from-white/[0.07] to-white/[0.02] border border-white/10 p-7 space-y-4 hover:border-blue-500/40 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl font-bold">
-                ⛓️
+            <div className="rounded-3xl bg-gradient-to-b from-white/[0.07] to-white/[0.02] border border-white/10 p-7 space-y-4 hover:border-blue-500/40 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl font-bold">
+                  ⛓️
+                </div>
+                <h3 className="text-lg font-bold text-white">2. Blockchain Immutability Seal</h3>
+                
+                {/* Embedded Video Loop of Blockchain Seal */}
+                <div className="rounded-2xl overflow-hidden border border-blue-500/20 shadow-lg relative aspect-video bg-black/60">
+                  <video
+                    src="/videos/blockchain-seal.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-2 left-2 right-2 px-2 py-1 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-blue-300 border border-white/10">
+                    Consortium Seal • SHA-256 Hashes
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Our Solidity smart contract (<code className="font-mono text-blue-300">MedicalRecordLedger.sol</code>) anchors 32-byte SHA-256 hashes of off-chain encrypted records. If a single bit is modified, the hash mismatch is mathematically rejected.
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-white">2. Blockchain Immutability Seal</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Our Solidity smart contract (<code className="font-mono text-blue-300">MedicalRecordLedger.sol</code>) anchors 32-byte SHA-256 hashes of off-chain encrypted records. If a single bit in the hospital server is modified, the hash mismatch is mathematically rejected and decryption is blocked.
-              </p>
-              <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-300 font-mono text-[11px]">
+              <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-300 font-mono text-[11px] mt-4">
                 ✓ Mathematically impossible to alter medical history undetected.
               </div>
             </div>
@@ -386,6 +429,78 @@ export default function PatientPortalHomePage() {
               <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-indigo-300 font-mono text-[11px]">
                 ✓ Private 192.168.4.1 routing with hardware LED indicators.
               </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* =========================================================================
+            SECTION 2.5: PHYSICAL HARDWARE (THE MEDIQR TITANIUM KEYCARD & WRISTBAND)
+        ========================================================================= */}
+        <section id="hardware-showcase" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          
+          <div className="text-center space-y-3">
+            <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+              Physical-to-Digital Architecture
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+              Indestructible Roadside Hardware.
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
+              Laser-etched aerospace titanium keycard and emergency silicone wristband designed to survive extreme trauma without power or cellular networks.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Apple Video Card Showcase for Smart Card */}
+            <div className="lg:col-span-7">
+              <AppleVideoCard
+                src="/videos/smart-card-mockup.mp4"
+                title="MediQR Titanium Emergency Card & Dynamic Wristband"
+                subtitle="HARDWARE PROTOTYPE v2.4"
+                badge="PHYSICAL ARTIFACT"
+                badgeColor="indigo"
+                telemetryText="Dual-Segment High-Density Optical Matrix • 1200 DPI Ceramic Laser Engraving"
+              />
+            </div>
+
+            {/* Hardware Specifications Grid */}
+            <div className="lg:col-span-5 space-y-4">
+              
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-indigo-500/30 transition space-y-2">
+                <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                  <span>🛡️</span> Aerospace Titanium &amp; Ceramic Core
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Rated fireproof up to 850°C and 10 ATM immersion. Carried in the patient's wallet or worn on wrist as an impervious lifeline.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-emerald-500/30 transition space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                  <span>⚡</span> 0.02s Instant Optical Triage
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Any smartphone camera decodes blood group, allergies, and ICE emergency contacts directly from the visual barcode glyph with zero app installation.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-blue-500/30 transition space-y-2">
+                <div className="flex items-center gap-2 text-blue-400 font-bold text-sm">
+                  <span>⛓️</span> Encrypted Doctor Query Token
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Secondary salted cryptographic token queries verified hospital consortium nodes and compares against the Ethereum smart contract hash ledger.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 font-mono text-[11px] text-indigo-300 flex items-center justify-between">
+                <span>NFC Standard: ISO/IEC 14443 Type A</span>
+                <span className="text-emerald-400">● 100% Passive</span>
+              </div>
+
             </div>
 
           </div>
@@ -863,6 +978,30 @@ export default function PatientPortalHomePage() {
                   </div>
                   <div className="text-xs text-slate-400">
                     Slot: <strong className="text-slate-200">{confirmedAppointment.appointmentDate}</strong> at <strong className="text-slate-200">{confirmedAppointment.timeSlot}</strong>
+                  </div>
+                </div>
+
+                {/* Looping Blockchain Seal Video Artifact */}
+                <div className="rounded-2xl overflow-hidden border border-emerald-500/30 max-w-sm mx-auto shadow-xl bg-black/60">
+                  <div className="aspect-video relative">
+                    <video
+                      src="/videos/blockchain-seal.mp4"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-2 left-3 right-3 text-left">
+                      <div className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        Ledger Proof Confirmed
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-300 truncate">
+                        Block Ref: {confirmedAppointment.paymentTxRef}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

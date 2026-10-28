@@ -6,7 +6,7 @@ interface CinematicBackgroundProps {
   videoSrc?: string;
 }
 
-export default function CinematicBackground({ videoSrc }: CinematicBackgroundProps) {
+export default function CinematicBackground({ videoSrc = '/videos/hero.mp4' }: CinematicBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function CinematicBackground({ videoSrc }: CinematicBackgroundPro
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-20 filter saturate-150 contrast-125"
+          className="absolute inset-0 w-full h-full object-cover opacity-30 filter saturate-150 contrast-125 transition-opacity duration-1000"
         >
           <source src={videoSrc} type="video/mp4" />
         </video>

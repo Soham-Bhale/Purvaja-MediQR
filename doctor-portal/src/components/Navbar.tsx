@@ -152,6 +152,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               <nav className="hidden lg:flex items-center gap-8 text-xs font-semibold text-slate-300">
                 <a href="#the-crisis" className="hover:text-white transition">The Crisis</a>
                 <a href="#the-breakthrough" className="hover:text-white transition">The Breakthrough</a>
+                <a href="#hardware-showcase" className="hover:text-white transition">Hardware &amp; Card</a>
                 <a href="#blockchain-ledger" className="hover:text-white transition">Blockchain Security</a>
                 <a href="#booking-portal" className="hover:text-white transition">Book Consultation</a>
                 <a href="#faq" className="hover:text-white transition">FAQ</a>
