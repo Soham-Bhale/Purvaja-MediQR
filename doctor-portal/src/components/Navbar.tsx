@@ -112,15 +112,6 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Simplified and Streamlined Nav Links for Academic Presentation
-  const navLinks = [
-    { href: '/', label: 'Patient Booking', icon: '🎟️' },
-    { href: '/doctor', label: 'Doctor Workstation', icon: '🩺' },
-    { href: '/blockchain', label: 'Blockchain Explorer', icon: '⛓️' },
-    { href: '/emergency', label: 'Emergency Triage', icon: '🚑' },
-    { href: '/esp32-setup', label: 'ESP32 Network', icon: '📡' },
-  ];
-
   const currentDoc = doctorOptions.find(
     (d) => d.address.toLowerCase() === activeDoctor.toLowerCase()
   ) || {
@@ -130,157 +121,275 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
     verified: !!VERIFIED_DOCTORS[activeDoctor.toLowerCase()],
   };
 
-  return (
-    <>
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
-            
-            {/* Logo & Brand */}
-            <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm font-bold text-lg group-hover:bg-blue-700 transition">
+  // =========================================================================
+  // VIEW 1: PATIENT-FACING WEBSITE HEADER (LAPTOP 1)
+  // Clean, professional, Apple-style. Zero cross-device toggles!
+  // =========================================================================
+  if (pathname === '/') {
+    return (
+      <>
+        <header className="bg-slate-950/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-50 transition-all">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-18 gap-4">
+              
+              {/* Brand Logo */}
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 font-bold text-xl group-hover:scale-105 transition-transform">
                   +
                 </div>
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-slate-900 text-base tracking-tight">MediQR</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
-                      Paid Healthcare
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-white text-lg tracking-tight">MediQR</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-400/30">
+                      Enterprise Health
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 hidden sm:block">Blockchain Healthcare System</p>
+                  <p className="text-[11px] text-slate-400 hidden sm:block">Zero-Trust Emergency Healthcare</p>
                 </div>
               </Link>
 
-              {/* Navigation Tabs */}
-              <nav className="hidden md:flex items-center gap-1">
-                {navLinks.map((link) => {
-                  const isActive = pathname === link.href;
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`}
-                    >
-                      <span>{link.icon}</span>
-                      <span>{link.label}</span>
-                    </Link>
-                  );
-                })}
+              {/* Apple-style Smooth Scroll Navigation */}
+              <nav className="hidden lg:flex items-center gap-8 text-xs font-semibold text-slate-300">
+                <a href="#the-crisis" className="hover:text-white transition">The Crisis</a>
+                <a href="#the-breakthrough" className="hover:text-white transition">The Breakthrough</a>
+                <a href="#blockchain-ledger" className="hover:text-white transition">Blockchain Security</a>
+                <a href="#booking-portal" className="hover:text-white transition">Book Consultation</a>
+                <a href="#faq" className="hover:text-white transition">FAQ</a>
               </nav>
-            </div>
 
-            {/* Right Controls: Nodes, Emails, Biometrics, Doctor Switcher */}
-            <div className="flex items-center gap-2.5">
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEmailModalOpen(true)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+                  title="Check dispatched appointment confirmation emails"
+                >
+                  <span>✉️</span>
+                  <span className="hidden sm:inline">Emails</span>
+                </button>
+
+                <a
+                  href="#booking-portal"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all transform hover:-translate-y-0.5"
+                >
+                  Book Care (₹500) →
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </header>
+
+        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+      </>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 2: DEDICATED DOCTOR CLINICAL WORKSTATION (LAPTOP 2)
+  // =========================================================================
+  if (pathname === '/doctor') {
+    return (
+      <>
+        <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 gap-4">
               
-              {/* Storage Node Status */}
-              <div className="hidden xl:flex items-center gap-1.5 text-xs font-mono">
-                <div
-                  title="Hospital Node A :5001"
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] ${
-                    nodeAStatus === 'UP' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${nodeAStatus === 'UP' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                  <span>Node-A</span>
+              {/* Doctor Station Branding */}
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                  🩺
                 </div>
-                <div
-                  title="Hospital Node B :5002"
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] ${
-                    nodeBStatus === 'UP' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${nodeBStatus === 'UP' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                  <span>Node-B</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-white">Clinical EMR Workstation</span>
+                    <span className="text-[10px] font-bold uppercase bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/40">
+                      Laptop 2 Terminal
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">{currentDoc.hospital}</p>
                 </div>
               </div>
 
-              {/* Email Outbox Preview Trigger */}
-              <button
-                type="button"
-                onClick={() => setEmailModalOpen(true)}
-                title="View outbound emails dispatched for appointment tokens & emergency MediQR codes"
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition shadow-2xs cursor-pointer"
-              >
-                <span>✉️</span>
-                <span className="hidden sm:inline">Emails</span>
-              </button>
+              {/* Right Doctor Controls: LEDs, Biometrics, Doctor Switcher */}
+              <div className="flex items-center gap-3">
+                {/* Node Status */}
+                <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono">
+                  <span className={`px-2 py-0.5 rounded border text-[10px] ${nodeAStatus === 'UP' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' : 'bg-rose-950 text-rose-300 border-rose-800'}`}>
+                    Node-A :5001
+                  </span>
+                  <span className={`px-2 py-0.5 rounded border text-[10px] ${nodeBStatus === 'UP' ? 'bg-emerald-950 text-emerald-300 border-emerald-800' : 'bg-rose-950 text-rose-300 border-rose-800'}`}>
+                    Node-B :5002
+                  </span>
+                </div>
 
-              {/* Biometric Status Pill */}
-              {isBioUnlocked ? (
+                <Link
+                  href="/blockchain"
+                  className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-xs"
+                >
+                  <span>⛓️ Live Blockchain</span>
+                </Link>
+
                 <button
                   type="button"
-                  onClick={() => {
-                    clearBiometricSession();
-                    setIsBioUnlocked(false);
-                  }}
-                  title="Biometrics verified. Click to lock terminal."
-                  className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-1 rounded-xl transition cursor-pointer"
+                  onClick={() => setEmailModalOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-bold transition cursor-pointer"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>🔓 Biometric Active</span>
+                  ✉️ Emails
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    createBiometricSession(activeDoctor, currentDoc.name);
-                    setIsBioUnlocked(true);
-                  }}
-                  title="Click to unlock with biometric authentication"
-                  className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2 py-1 rounded-xl transition cursor-pointer animate-pulse"
-                >
-                  <span>🔒 Unlock</span>
-                </button>
-              )}
 
-              {/* Doctor switcher dropdown */}
-              <select
-                value={activeDoctor.toLowerCase()}
-                onChange={(e) => onDoctorChange(e.target.value)}
-                aria-label="Active Practitioner"
-                className="bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs max-w-[140px] sm:max-w-none truncate"
-              >
-                {doctorOptions.map((doc) => (
-                  <option key={doc.address} value={doc.address.toLowerCase()}>
-                    {doc.verified ? '✓ ' : '✗ '}{doc.name}
-                  </option>
-                ))}
-              </select>
+                {/* Biometric Status */}
+                {isBioUnlocked ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearBiometricSession();
+                      setIsBioUnlocked(false);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-950 border border-emerald-700 px-2.5 py-1 rounded-xl"
+                  >
+                    <span>🔓 Bio Verified</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      createBiometricSession(activeDoctor, currentDoc.name);
+                      setIsBioUnlocked(true);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-amber-950 border border-amber-700 px-2.5 py-1 rounded-xl animate-pulse"
+                  >
+                    <span>🔒 Unlock</span>
+                  </button>
+                )}
+
+                {/* Doctor Switcher */}
+                <select
+                  value={activeDoctor.toLowerCase()}
+                  onChange={(e) => onDoctorChange(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white py-1.5 px-2 cursor-pointer max-w-[140px] sm:max-w-none truncate"
+                >
+                  {doctorOptions.map((doc) => (
+                    <option key={doc.address} value={doc.address.toLowerCase()}>
+                      {doc.verified ? '✓ ' : '✗ '}{doc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
             </div>
-
           </div>
+        </header>
 
-          {/* Mobile Navigation Bar */}
-          <div className="flex md:hidden items-center justify-between overflow-x-auto py-2 border-t border-slate-100 gap-1.5">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
+        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+      </>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 3: DEDICATED LIVE BLOCKCHAIN EXPLORER HEADER
+  // =========================================================================
+  if (pathname === '/blockchain') {
+    return (
+      <>
+        <header className="bg-slate-950 border-b border-indigo-900/60 text-white sticky top-0 z-40 shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                  ⛓️
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-white">Consortium Blockchain Explorer</span>
+                    <span className="text-[10px] font-bold uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/40">
+                      Live Block Visualizer
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Proof-of-Authority Healthcare Ledger</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`whitespace-nowrap px-2.5 py-1 rounded-lg text-xs font-bold ${
-                    isActive
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                  href="/doctor"
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 transition"
                 >
-                  {link.icon} {link.label}
+                  🩺 Doctor Terminal →
                 </Link>
-              );
-            })}
+                <button
+                  type="button"
+                  onClick={() => setEmailModalOpen(true)}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 transition"
+                >
+                  ✉️ Outbox
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+      </>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 4: DEDICATED EMERGENCY PARAMEDIC HEADER (MOBILE PHONE)
+  // =========================================================================
+  if (pathname === '/emergency') {
+    return (
+      <header className="bg-slate-950 border-b border-rose-900/60 text-white sticky top-0 z-40 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                🚑
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-white">Emergency Paramedic Terminal</span>
+                  <span className="text-[10px] font-bold uppercase bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded border border-rose-500/40">
+                    Device 3 Mobile Scan
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">Rapid Roadside Optical Scan &amp; Vitals</p>
+              </div>
+            </div>
+
+            <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950 border border-emerald-800 px-3 py-1 rounded-full">
+              ✓ Offline Ready
+            </span>
           </div>
         </div>
       </header>
+    );
+  }
 
-      {/* Outbound Email Modal Accessible Across All Pages */}
-      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
-    </>
+  // =========================================================================
+  // VIEW 5: ESP32 SETUP / GENERAL FALLBACK HEADER
+  // =========================================================================
+  return (
+    <header className="bg-slate-950 border-b border-slate-800 text-white sticky top-0 z-40 shadow-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg">
+              📡
+            </div>
+            <div>
+              <span className="font-bold text-sm text-white">ESP32 Hardware Gateway</span>
+              <p className="text-[11px] text-slate-400">MediQR Private Mesh Setup</p>
+            </div>
+          </Link>
+          <Link
+            href="/doctor"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition"
+          >
+            Doctor Terminal →
+          </Link>
+        </div>
+      </div>
+    </header>
   );
 }

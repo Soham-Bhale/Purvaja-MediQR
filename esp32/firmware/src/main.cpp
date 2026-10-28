@@ -4,6 +4,14 @@
  *  Designed for: ESP32 DevKit V1 / ESP32-WROOM-32 (4MB Flash)
  *  Project: Purvaja MediQR - 3-Device Isolated Healthcare Network
  * ======================================================================================
+ *  LED Behavior:
+ *   - >= 3 Devices Connected (Laptop 1, Laptop 2, Mobile Phone):
+ *     Blue LED stays SOLID ON (flashing stops, network fully locked & ready).
+ *   - 1-2 Devices Connected:
+ *     Slow gentle pulse (waiting for remaining demonstration stations).
+ *   - 0 Devices Connected:
+ *     Blinking (standby / ready for connection).
+ * ======================================================================================
  */
 
 #include <Arduino.h>
@@ -22,6 +30,7 @@ IPAddress subnet(255, 255, 255, 0);
 WebServer server(80);
 
 const int STATUS_LED = 2; // Built-in blue LED on DevKit V1
+const int TARGET_DEVICES = 3; // Laptop 1, Laptop 2, Mobile Phone
 
 unsigned long lastBlink = 0;
 bool ledState = false;
@@ -52,7 +61,7 @@ void handleRoot() {
   html += "<div class='grid'>";
   html += "<div class='stat'><div class='stat-label'>SSID</div><div class='stat-val'>" + String(AP_SSID) + "</div></div>";
   html += "<div class='stat'><div class='stat-label'>Gateway IP</div><div class='stat-val'>192.168.4.1</div></div>";
-  html += "<div class='stat'><div class='stat-label'>Connected Devices</div><div class='stat-val' style='color:#34d399;'>" + String(clientCount) + " Stations</div></div>";
+  html += "<div class='stat'><div class='stat-label'>Connected Devices</div><div class='stat-val' style='color:#34d399;'>" + String(clientCount) + " / " + String(TARGET_DEVICES) + " Stations</div></div>";
   html += "<div class='stat'><div class='stat-label'>Router Uptime</div><div class='stat-val'>" + String(uptimeSeconds) + "s</div></div>";
   html += "</div>";
 
@@ -62,6 +71,16 @@ void handleRoot() {
   html += "<li><strong>Laptop 2 (Doctor Terminal & Blockchain)</strong>: Examination & Live Block Explorer (Port :3000)</li>";
   html += "<li><strong>Mobile Phone (Emergency Triage)</strong>: Zero-latency QR Scanning without WAN</li>";
   html += "</ul>";
+
+  if (clientCount >= TARGET_DEVICES) {
+    html += "<div style='background:#065f46; color:#a7f3d0; padding:12px; border-radius:10px; font-size:12px; font-weight:bold; margin-top:16px;'>";
+    html += "✓ ALL 3 DEMO DEVICES CONNECTED. Hardware LED locked Solid ON.";
+    html += "</div>";
+  } else {
+    html += "<div style='background:#78350f; color:#fde68a; padding:12px; border-radius:10px; font-size:12px; font-weight:bold; margin-top:16px;'>";
+    html += "Waiting for remaining devices (" + String(clientCount) + " of " + String(TARGET_DEVICES) + " connected). LED pulsing.";
+    html += "</div>";
+  }
   
   html += "<div style='margin-top: 24px; padding-top: 14px; border-top: 1px solid #334155; font-size: 11px; color: #64748b; text-align: center;'>";
   html += "MediQR Consortium Hardware Gateway • ESP32 Security Layer";
@@ -72,11 +91,14 @@ void handleRoot() {
 
 // JSON API Endpoint for diagnostic telemetry
 void handleStatusApi() {
+  int count = WiFi.softAPgetStationNum();
   String json = "{";
   json += "\"network\":\"" + String(AP_SSID) + "\",";
   json += "\"status\":\"ACTIVE_SECURE\",";
   json += "\"gatewayIP\":\"192.168.4.1\",";
-  json += "\"connectedDevices\":" + String(WiFi.softAPgetStationNum()) + ",";
+  json += "\"connectedDevices\":" + String(count) + ",";
+  json += "\"targetDevices\":" + String(TARGET_DEVICES) + ",";
+  json += "\"allConnected\":" + String(count >= TARGET_DEVICES ? "true" : "false") + ",";
   json += "\"uptimeSeconds\":" + String(millis() / 1000);
   json += "}";
   server.send(200, "application/json", json);
@@ -87,7 +109,7 @@ void setup() {
   delay(1000);
 
   pinMode(STATUS_LED, OUTPUT);
-  digitalWrite(STATUS_LED, HIGH);
+  digitalWrite(STATUS_LED, LOW);
 
   Serial.println();
   Serial.println("========================================================");
@@ -126,10 +148,25 @@ void setup() {
 void loop() {
   server.handleClient();
 
-  // Heartbeat LED pulse
-  if (millis() - lastBlink > 1000) {
-    lastBlink = millis();
-    ledState = !ledState;
-    digitalWrite(STATUS_LED, ledState ? HIGH : LOW);
+  int clientCount = WiFi.softAPgetStationNum();
+
+  if (clientCount >= TARGET_DEVICES) {
+    // ALL 3 DEVICES CONNECTED (Laptop 1, Laptop 2, Mobile Phone):
+    // Stop flashing! Keep LED solidly ON.
+    digitalWrite(STATUS_LED, HIGH);
+  } else if (clientCount > 0) {
+    // 1-2 devices connected: Slow gentle pulse (waiting for remaining)
+    if (millis() - lastBlink > 1200) {
+      lastBlink = millis();
+      ledState = !ledState;
+      digitalWrite(STATUS_LED, ledState ? HIGH : LOW);
+    }
+  } else {
+    // 0 devices connected: Standby flash
+    if (millis() - lastBlink > 500) {
+      lastBlink = millis();
+      ledState = !ledState;
+      digitalWrite(STATUS_LED, ledState ? HIGH : LOW);
+    }
   }
 }
