@@ -32,3 +32,6 @@ Thumbs.db
 *.tsbuildinfo
 
 ~$*
+
+# Binaries
+*.exe
