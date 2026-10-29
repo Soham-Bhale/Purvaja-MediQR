@@ -1,0 +1,42 @@
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: carbotrace-db
+    ports:
+      - "15432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=carbotrace
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: carbotrace-backend
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app/backend
+      - .env:/app/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/carbotrace
+      - SYNC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/carbotrace
+      - TEMP_CLONE_DIR=/app/backend/temp_repos
+      # LLM settings (Ollama Cloud model/key) come from the mounted /app/.env file,
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/backend/app
+
+volumes:
+  pgdata:

@@ -132,33 +132,48 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-18 gap-4">
               
-              {/* Brand Logo */}
+              {/* Bespoke Geometric Brand Logo */}
               <Link href="/" className="flex items-center gap-3 group">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 font-bold text-xl group-hover:scale-105 transition-transform">
-                  +
+                <div className="w-9 h-9 rounded-xl bg-slate-900 border border-cyan-500/30 flex items-center justify-center p-1.5 shadow-sm shadow-cyan-950/50 group-hover:border-cyan-400 transition-colors">
+                  <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
+                    {/* Precision Crosshair Outer Ring */}
+                    <circle cx="16" cy="16" r="14" stroke="#334155" strokeWidth="1" strokeDasharray="3 3" />
+                    {/* 3 Optical QR Corner Markers */}
+                    <rect x="6" y="6" width="7" height="7" rx="1.5" stroke="#38bdf8" strokeWidth="1.5" fill="none" />
+                    <rect x="8" y="8" width="3" height="3" fill="#38bdf8" />
+                    <rect x="19" y="6" width="7" height="7" rx="1.5" stroke="#38bdf8" strokeWidth="1.5" fill="none" />
+                    <rect x="21" y="8" width="3" height="3" fill="#38bdf8" />
+                    <rect x="6" y="19" width="7" height="7" rx="1.5" stroke="#38bdf8" strokeWidth="1.5" fill="none" />
+                    <rect x="8" y="21" width="3" height="3" fill="#38bdf8" />
+                    {/* Center Medical Cross / Keyhole in Emerald */}
+                    <path d="M19 19H25M22 16V22" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="22" cy="19" r="1.5" fill="#10b981" />
+                  </svg>
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-white text-lg tracking-tight">MediQR</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-400/30">
-                      Enterprise Health
+                  <div className="flex items-center">
+                    <span className="font-semibold text-white tracking-[-0.03em] text-base font-sans">
+                      medi<span className="text-cyan-400 font-bold">qr</span>
+                    </span>
+                    <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase ml-2 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/10">
+                      v2.4
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 hidden sm:block">Zero-Trust Emergency Healthcare</p>
+                  <p className="text-[10.5px] font-mono text-slate-400 hidden sm:block">Roadside Emergency Protocol</p>
                 </div>
               </Link>
 
-              {/* Apple-style Smooth Scroll Navigation */}
-              <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-slate-300">
-                <a href="#interactive-stage" className="text-cyan-300 hover:text-white font-bold transition flex items-center gap-1.5">
+              {/* Apple/Carbo-Trace Smooth Navigation */}
+              <nav className="hidden lg:flex items-center gap-7 text-xs font-medium text-slate-300">
+                <a href="/#interactive-stage" className="text-cyan-300 hover:text-white font-semibold transition flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   3D Architecture
                 </a>
-                <a href="#the-crisis" className="hover:text-white transition">The Crisis</a>
-                <a href="#the-breakthrough" className="hover:text-white transition">The Breakthrough</a>
-                <a href="#hardware-showcase" className="hover:text-white transition">Hardware &amp; Card</a>
-                <a href="#booking-portal" className="hover:text-white transition">Book Consultation</a>
-                <a href="#faq" className="hover:text-white transition">FAQ</a>
+                <a href="/#the-crisis" className="hover:text-white transition">The Crisis</a>
+                <a href="/#the-breakthrough" className="hover:text-white transition">The Breakthrough</a>
+                <a href="/#hardware-showcase" className="hover:text-white transition">Hardware &amp; Card</a>
+                <Link href="/book" className="text-slate-200 hover:text-cyan-400 transition">Book Consultation</Link>
+                <a href="/#faq" className="hover:text-white transition">FAQ</a>
               </nav>
 
               {/* Action Buttons */}
@@ -166,19 +181,19 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => setEmailModalOpen(true)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl text-xs font-mono font-medium text-slate-300 hover:text-white hover:bg-white/10 border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
                   title="Check dispatched appointment confirmation emails"
                 >
                   <span>✉️</span>
                   <span className="hidden sm:inline">Emails</span>
                 </button>
 
-                <a
-                  href="#booking-portal"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all transform hover:-translate-y-0.5"
+                <Link
+                  href="/book"
+                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow-md shadow-cyan-600/25 transition-all transform hover:-translate-y-0.5"
                 >
                   Book Care (₹500) →
-                </a>
+                </Link>
               </div>
 
             </div>

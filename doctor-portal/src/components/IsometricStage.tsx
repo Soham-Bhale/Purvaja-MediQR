@@ -7,10 +7,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 // =========================================================================
 const COS30 = Math.cos(Math.PI / 6); // ~0.866025
 const SIN30 = 0.5;
-const STAGE_CX = 620;
-const STAGE_CY = 480;
+const STAGE_CX = 600;
+const STAGE_CY = 420;
 
-// Converts 3D Cartesian (x, y, z) into 2.5D Isometric Screen Coordinates (sx, sy)
 function iso(x: number, y: number, z: number = 0): [number, number] {
   return [
     STAGE_CX + (x - y) * COS30,
@@ -27,7 +26,6 @@ function isoPath(points: Array<[number, number]>, close: boolean = true): string
   return `M${coords}${close ? 'Z' : ''}`;
 }
 
-// Cubic smoothing for camera easing: t in [0, 1]
 function easeInOut(t: number): number {
   const c = Math.max(0, Math.min(1, t));
   return c * c * (3 - 2 * c);
@@ -38,7 +36,7 @@ function lerp(a: number, b: number, t: number): number {
 }
 
 // =========================================================================
-// CHAPTERS: THE 8-STAGE SCROLLYTELLING ODYSSEY
+// CHAPTERS (8-STAGE NARRATIVE)
 // =========================================================================
 export interface Chapter {
   id: string;
@@ -297,137 +295,15 @@ export const MEDIQR_CHAPTERS: Chapter[] = [
 ];
 
 // =========================================================================
-// ISOMETRIC NODE DEFINITIONS
-// =========================================================================
-interface IsoNode {
-  id: string;
-  label: string;
-  sub: string;
-  x: number;
-  y: number;
-  w: number;
-  d: number;
-  h: number;
-  color: string;
-  badge: string;
-}
-
-const NODES: IsoNode[] = [
-  {
-    id: 'ambulance',
-    label: 'Roadside Trauma Scene',
-    sub: 'Ambulance 04 · NH-48',
-    x: -420,
-    y: -140,
-    w: 160,
-    d: 110,
-    h: 120,
-    color: '#ef4444',
-    badge: '0.02s TRIAGE',
-  },
-  {
-    id: 'card',
-    label: 'MediQR Titanium Card',
-    sub: 'High-Density Micro-QR',
-    x: -200,
-    y: -70,
-    w: 130,
-    d: 100,
-    h: 140,
-    color: '#10b981',
-    badge: 'DUAL-SEGMENT',
-  },
-  {
-    id: 'esp32',
-    label: 'ESP32 Hardware Router',
-    sub: 'Gateway 192.168.4.1',
-    x: 20,
-    y: 20,
-    w: 140,
-    d: 110,
-    h: 110,
-    color: '#38bdf8',
-    badge: 'SOVEREIGN MESH',
-  },
-  {
-    id: 'doctor',
-    label: 'Doctor Workstation',
-    sub: 'Laptop 2 Terminal (:3000)',
-    x: 230,
-    y: 70,
-    w: 150,
-    d: 110,
-    h: 130,
-    color: '#818cf8',
-    badge: 'CLINICAL EMR',
-  },
-  {
-    id: 'nodeA',
-    label: 'Hospital Node A',
-    sub: 'Apollo Health (:5001)',
-    x: 220,
-    y: -150,
-    w: 110,
-    d: 90,
-    h: 180,
-    color: '#06b6d4',
-    badge: 'VAULT A',
-  },
-  {
-    id: 'nodeB',
-    label: 'Hospital Node B',
-    sub: 'Fortis Health (:5002)',
-    x: 360,
-    y: -150,
-    w: 110,
-    d: 90,
-    h: 180,
-    color: '#3b82f6',
-    badge: 'VAULT B',
-  },
-  {
-    id: 'blockchain',
-    label: 'Ethereum Ledger',
-    sub: 'Consortium Blocks (:3000)',
-    x: 460,
-    y: 50,
-    w: 160,
-    d: 120,
-    h: 150,
-    color: '#f59e0b',
-    badge: 'CONSENSUS',
-  },
-];
-
-// Conduits / Optical Laser Lines connecting the nodes
-interface Conduit {
-  id: string;
-  from: string;
-  to: string;
-  color: string;
-  pulseSpeed: string;
-}
-
-const CONDUITS: Conduit[] = [
-  { id: 'amb-card', from: 'ambulance', to: 'card', color: '#10b981', pulseSpeed: '2s' },
-  { id: 'card-esp', from: 'card', to: 'esp32', color: '#38bdf8', pulseSpeed: '1.8s' },
-  { id: 'esp-doc', from: 'esp32', to: 'doctor', color: '#818cf8', pulseSpeed: '1.6s' },
-  { id: 'doc-nodeA', from: 'doctor', to: 'nodeA', color: '#06b6d4', pulseSpeed: '2.2s' },
-  { id: 'doc-nodeB', from: 'doctor', to: 'nodeB', color: '#3b82f6', pulseSpeed: '2.2s' },
-  { id: 'doc-chain', from: 'doctor', to: 'blockchain', color: '#f59e0b', pulseSpeed: '1.4s' },
-  { id: 'nodes-chain', from: 'nodeB', to: 'blockchain', color: '#f59e0b', pulseSpeed: '1.9s' },
-];
-
-// =========================================================================
-// ISOMETRIC STAGE COMPONENT
+// ISOMETRIC STAGE COMPONENT (PURE SCROLL-DRIVEN SCROLLYTELLING)
 // =========================================================================
 export default function IsometricStage() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [scrollFraction, setScrollFraction] = useState(0);
 
-  // Smooth Interpolated Camera State
-  const [cam, setCam] = useState({ fx: -380, fy: -140, zoom: 1.35 });
+  // Smooth Camera State
+  const [cam, setCam] = useState(MEDIQR_CHAPTERS[0].camera);
   const animRef = useRef<number | null>(null);
 
   const activeChapter = MEDIQR_CHAPTERS[currentIdx];
@@ -435,44 +311,37 @@ export default function IsometricStage() {
   // Animated Counter Value
   const [displayedMetric, setDisplayedMetric] = useState(activeChapter.metric.countFrom);
 
-  // Keyboard navigation: 1-8 keys, left/right arrows, space to toggle autoplay
+  // Pure scroll listener mapping vertical scroll position through 480vh container
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+    const handleScroll = () => {
+      const el = containerRef.current;
+      if (!el) return;
 
-      if (e.key >= '1' && e.key <= '8') {
-        const num = parseInt(e.key, 10) - 1;
-        if (num >= 0 && num < MEDIQR_CHAPTERS.length) {
-          setCurrentIdx(num);
-        }
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        setCurrentIdx((prev) => (prev + 1) % MEDIQR_CHAPTERS.length);
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        setCurrentIdx((prev) => (prev - 1 + MEDIQR_CHAPTERS.length) % MEDIQR_CHAPTERS.length);
-      } else if (e.key === ' ') {
-        e.preventDefault();
-        setIsAutoPlaying((prev) => !prev);
-      }
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+      const rect = el.getBoundingClientRect();
+      const totalDist = el.offsetHeight - window.innerHeight;
+      if (totalDist <= 0) return;
+
+      // Progress 0 to 1 as user scrolls through container
+      const scrolled = -rect.top;
+      const progress = Math.max(0, Math.min(1, scrolled / totalDist));
+      setScrollFraction(progress);
+
+      const totalChapters = MEDIQR_CHAPTERS.length;
+      const chIndex = Math.min(Math.floor(progress * totalChapters), totalChapters - 1);
+      setCurrentIdx(chIndex);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Autoplay timer: advances chapter every 6.5 seconds
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    const interval = setInterval(() => {
-      setCurrentIdx((prev) => (prev + 1) % MEDIQR_CHAPTERS.length);
-    }, 6500);
-    return () => clearInterval(interval);
-  }, [isAutoPlaying]);
 
   // Smooth camera spring interpolation toward active chapter target
   useEffect(() => {
     const target = activeChapter.camera;
     let startTime: number | null = null;
     const startCam = { ...cam };
-    const duration = 950; // ms
+    const duration = 650; // ms
 
     function step(timestamp: number) {
       if (!startTime) startTime = timestamp;
@@ -503,7 +372,7 @@ export default function IsometricStage() {
     const fromVal = activeChapter.metric.countFrom;
     const toVal = activeChapter.metric.value;
     const startTime = performance.now();
-    const duration = 850;
+    const duration = 600;
 
     let frameId: number;
     function countStep(now: number) {
@@ -521,98 +390,62 @@ export default function IsometricStage() {
     return () => cancelAnimationFrame(frameId);
   }, [currentIdx]);
 
-  // Compute node center points for conduit lasers
-  const nodeCenters = useMemo(() => {
-    const map = new Map<string, [number, number]>();
-    NODES.forEach((node) => {
-      const topCenter = iso(node.x + node.w / 2, node.y + node.d / 2, node.h);
-      map.set(node.id, topCenter);
-    });
-    return map;
-  }, []);
-
   return (
-    <section className="relative w-full overflow-hidden bg-slate-950 border-y border-white/10 select-none py-12 lg:py-16">
-      
-      {/* Background Ambience & Cyber Grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px]" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    // Outer scroll container: 480vh tall so scrolling drives the camera & story
+    <div
+      ref={containerRef}
+      className="relative w-full bg-slate-950 border-y border-white/10"
+      style={{ height: '480vh' }}
+    >
+      {/* Sticky Fullscreen Presentation Viewport */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between p-4 sm:p-6 lg:p-8 select-none">
         
-        {/* Top Header: Carbo-Trace Style Kicker & Mode Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
+        {/* Top Minimalist Header & Progress Indicator */}
+        <div className="flex items-center justify-between z-20 border-b border-white/10 pb-3">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              Interactive Isometric Cyber-Physical Stage
-            </span>
-            <span className="hidden sm:inline-block text-xs font-mono text-slate-400">
-              SVG 2.5D Vector Projection · Zero GPU Load
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-xs font-mono font-semibold tracking-wider text-slate-300 uppercase">
+              CHAPTER {activeChapter.num} OF 08 · {activeChapter.tag}
             </span>
           </div>
 
-          {/* Autoplay & Quick Jump Controls */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 border ${
-                isAutoPlaying
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                  : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
-              }`}
-            >
-              <span>{isAutoPlaying ? '⏸ Auto Tour ON' : '▶ Auto Tour'}</span>
-            </button>
-
-            <div className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 text-[11px] font-mono text-slate-400">
-              <span>Keys</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-black/60 text-slate-200 border border-white/10">1</kbd>
-              <span>-</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-black/60 text-slate-200 border border-white/10">8</kbd>
-              <span>/</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-black/60 text-slate-200 border border-white/10">←</kbd>
-              <kbd className="px-1.5 py-0.5 rounded bg-black/60 text-slate-200 border border-white/10">→</kbd>
+          {/* Slim Scroll Progress Line */}
+          <div className="flex items-center gap-3 font-mono text-xs text-slate-400">
+            <span className="hidden sm:inline">Scroll to Navigate Architecture</span>
+            <div className="w-32 h-1.5 rounded-full bg-slate-800 overflow-hidden border border-white/10">
+              <div
+                className="h-full bg-cyan-400 transition-all duration-150"
+                style={{ width: `${Math.round(scrollFraction * 100)}%` }}
+              />
             </div>
+            <span className="text-cyan-300 font-bold">{Math.round(scrollFraction * 100)}%</span>
           </div>
         </div>
 
-        {/* =========================================================================
-            STAGE VIEWPORT & SPLIT INTERACTION HUD
-        ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Center Grid: Left 3D Isometric Canvas, Right Telemetry Card */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center flex-1 my-auto py-2">
           
-          {/* LEFT: 3D Vector Isometric Projection Canvas (SVG) */}
-          <div className="lg:col-span-8 relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-3xl overflow-hidden bg-slate-900/90 border border-cyan-500/20 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl">
+          {/* =========================================================================
+              LEFT: 3D ISOMETRIC VECTOR STAGE (WITH TEXTURES & SILKSCREEN LABELS)
+          ========================================================================= */}
+          <div className="lg:col-span-8 relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-3xl overflow-hidden bg-slate-900/90 border border-cyan-500/20 shadow-2xl backdrop-blur-xl">
             
-            {/* Ambient Radial Backlights */}
-            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+            {/* Ambient Lighting Gradients */}
+            <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
 
-            {/* SVG Camera Viewport */}
-            <svg
-              viewBox="0 0 1200 800"
-              className="w-full h-full cursor-grab active:cursor-grabbing transition-transform duration-75"
-            >
+            <svg viewBox="0 0 1200 800" className="w-full h-full">
               <defs>
-                {/* Glowing Laser Conduit Filter */}
                 <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3.5" result="blur" />
+                  <feGaussianBlur stdDeviation="3" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
-                <linearGradient id="laser-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#38bdf8" />
-                  <stop offset="50%" stopColor="#818cf8" />
-                  <stop offset="100%" stopColor="#10b981" />
-                </linearGradient>
               </defs>
 
-              {/* Virtual Camera Transform Group */}
+              {/* Dynamic Camera Group */}
               <g
                 transform={`
                   translate(600, 400)
@@ -620,11 +453,11 @@ export default function IsometricStage() {
                   translate(${-STAGE_CX - cam.fx}, ${-STAGE_CY - cam.fy})
                 `}
               >
-                {/* Ground Foundation Grid / Isometric Cyber Floor */}
-                <g opacity="0.35">
+                {/* Floor Grid Lines */}
+                <g opacity="0.25">
                   {[-600, -400, -200, 0, 200, 400, 600].map((x) => (
                     <path
-                      key={`grid-x-${x}`}
+                      key={`gx-${x}`}
                       d={isoPath([iso(x, -500, 0), iso(x, 500, 0)], false)}
                       stroke="#334155"
                       strokeWidth="1"
@@ -634,7 +467,7 @@ export default function IsometricStage() {
                   ))}
                   {[-500, -300, -100, 100, 300, 500].map((y) => (
                     <path
-                      key={`grid-y-${y}`}
+                      key={`gy-${y}`}
                       d={isoPath([iso(-600, y, 0), iso(600, y, 0)], false)}
                       stroke="#334155"
                       strokeWidth="1"
@@ -644,160 +477,612 @@ export default function IsometricStage() {
                   ))}
                 </g>
 
-                {/* Laser Conduits & Flowing Packets */}
+                {/* Laser Conduits */}
                 <g>
-                  {CONDUITS.map((cond) => {
-                    const p1 = nodeCenters.get(cond.from);
-                    const p2 = nodeCenters.get(cond.to);
-                    if (!p1 || !p2) return null;
-
-                    const isActive =
-                      activeChapter.activeNodes.includes(cond.from) &&
-                      activeChapter.activeNodes.includes(cond.to);
-
-                    return (
-                      <g key={cond.id}>
-                        {/* Static Base Conduit */}
-                        <path
-                          d={`M ${p1[0]} ${p1[1]} L ${p2[0]} ${p2[1]}`}
-                          stroke={isActive ? cond.color : '#334155'}
-                          strokeWidth={isActive ? '2.5' : '1.2'}
-                          opacity={isActive ? 0.9 : 0.3}
-                          strokeDasharray={isActive ? '8 4' : 'none'}
-                          filter={isActive ? 'url(#neon-glow)' : undefined}
-                          fill="none"
-                        />
-                        {/* Animated Travelling Laser Packet */}
-                        {isActive && (
-                          <circle r="4.5" fill="#ffffff" filter="url(#neon-glow)">
-                            <animateMotion
-                              path={`M ${p1[0]} ${p1[1]} L ${p2[0]} ${p2[1]}`}
-                              dur={cond.pulseSpeed}
-                              repeatCount="indefinite"
-                            />
-                          </circle>
-                        )}
-                      </g>
-                    );
-                  })}
+                  {/* Ambulance to Card */}
+                  <path
+                    d={`M ${iso(-340, -85, 80)[0]} ${iso(-340, -85, 80)[1]} L ${iso(-135, -20, 90)[0]} ${iso(-135, -20, 90)[1]}`}
+                    stroke={activeChapter.activeNodes.includes('ambulance') ? '#10b981' : '#334155'}
+                    strokeWidth="2"
+                    strokeDasharray="6 4"
+                    fill="none"
+                  />
+                  {/* Card to ESP32 */}
+                  <path
+                    d={`M ${iso(-135, -20, 90)[0]} ${iso(-135, -20, 90)[1]} L ${iso(90, 75, 70)[0]} ${iso(90, 75, 70)[1]}`}
+                    stroke={activeChapter.activeNodes.includes('card') ? '#38bdf8' : '#334155'}
+                    strokeWidth="2"
+                    strokeDasharray="6 4"
+                    fill="none"
+                  />
+                  {/* ESP32 to Doctor */}
+                  <path
+                    d={`M ${iso(90, 75, 70)[0]} ${iso(90, 75, 70)[1]} L ${iso(305, 125, 80)[0]} ${iso(305, 125, 80)[1]}`}
+                    stroke={activeChapter.activeNodes.includes('esp32') ? '#818cf8' : '#334155'}
+                    strokeWidth="2"
+                    strokeDasharray="6 4"
+                    fill="none"
+                  />
+                  {/* Doctor to Nodes */}
+                  <path
+                    d={`M ${iso(305, 125, 80)[0]} ${iso(305, 125, 80)[1]} L ${iso(275, -105, 120)[0]} ${iso(275, -105, 120)[1]}`}
+                    stroke={activeChapter.activeNodes.includes('nodeA') ? '#06b6d4' : '#334155'}
+                    strokeWidth="2"
+                    strokeDasharray="6 4"
+                    fill="none"
+                  />
+                  {/* Nodes to Blockchain */}
+                  <path
+                    d={`M ${iso(415, -105, 120)[0]} ${iso(415, -105, 120)[1]} L ${iso(540, 110, 100)[0]} ${iso(540, 110, 100)[1]}`}
+                    stroke={activeChapter.activeNodes.includes('blockchain') ? '#f59e0b' : '#334155'}
+                    strokeWidth="2"
+                    strokeDasharray="6 4"
+                    fill="none"
+                  />
                 </g>
 
-                {/* 3D Extruded Isometric Hardware & Software Nodes */}
-                {NODES.map((node) => {
-                  const isActive = activeChapter.activeNodes.includes(node.id);
-                  const isHovered = hoveredNode === node.id;
+                {/* ===================================================================
+                    NODE 1: AMBULANCE 04 (ROADSIDE COLLISION SCENE)
+                =================================================================== */}
+                <g opacity={activeChapter.activeNodes.includes('ambulance') ? 1 : 0.45}>
+                  {/* Road Base Surface */}
+                  <path
+                    d={isoPath([iso(-460, -180, 0), iso(-260, -180, 0), iso(-260, -80, 0), iso(-460, -80, 0)])}
+                    fill="#0f172a"
+                    stroke="#1e293b"
+                    strokeWidth="1"
+                  />
+                  {/* Road Stripe */}
+                  <path
+                    d={isoPath([iso(-450, -130, 1), iso(-270, -130, 1)], false)}
+                    stroke="#eab308"
+                    strokeWidth="2"
+                    strokeDasharray="8 8"
+                    fill="none"
+                  />
 
-                  // 8 Vertices of the 3D Isometric Box
-                  const p0 = iso(node.x, node.y, 0);
-                  const p1 = iso(node.x + node.w, node.y, 0);
-                  const p2 = iso(node.x + node.w, node.y + node.d, 0);
-                  const p3 = iso(node.x, node.y + node.d, 0);
+                  {/* Vehicle Body Box */}
+                  <path
+                    d={isoPath([iso(-420, -140, 0), iso(-260, -140, 0), iso(-260, -140, 90), iso(-420, -140, 90)])}
+                    fill="#1e293b"
+                    stroke="#ef4444"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(-260, -140, 0), iso(-260, -40, 0), iso(-260, -40, 90), iso(-260, -140, 90)])}
+                    fill="#0f172a"
+                    stroke="#ef4444"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(-420, -140, 90), iso(-260, -140, 90), iso(-260, -40, 90), iso(-420, -40, 90)])}
+                    fill="#334155"
+                    stroke="#ef4444"
+                    strokeWidth="1.5"
+                  />
 
-                  const t0 = iso(node.x, node.y, node.h);
-                  const t1 = iso(node.x + node.w, node.y, node.h);
-                  const t2 = iso(node.x + node.w, node.y + node.d, node.h);
-                  const t3 = iso(node.x, node.y + node.d, node.h);
+                  {/* Red Cross Medical Insignia */}
+                  <path
+                    d={`M ${iso(-340, -140, 55)[0]} ${iso(-340, -140, 55)[1]} L ${iso(-340, -140, 75)[0]} ${iso(-340, -140, 75)[1]}`}
+                    stroke="#ef4444"
+                    strokeWidth="5"
+                    strokeLinecap="square"
+                  />
+                  <path
+                    d={`M ${iso(-350, -140, 65)[0]} ${iso(-350, -140, 65)[1]} L ${iso(-330, -140, 65)[0]} ${iso(-330, -140, 65)[1]}`}
+                    stroke="#ef4444"
+                    strokeWidth="5"
+                    strokeLinecap="square"
+                  />
 
-                  // Colors
-                  const topFill = isActive ? '#1e293b' : '#0f172a';
-                  const leftFill = isActive ? '#0f172a' : '#020617';
-                  const rightFill = isActive ? '#1e293b' : '#090d16';
-                  const strokeColor = isActive ? node.color : '#334155';
+                  {/* Flashing Emergency Siren Beacon */}
+                  <circle
+                    cx={iso(-340, -90, 95)[0]}
+                    cy={iso(-340, -90, 95)[1]}
+                    r="4"
+                    fill="#ef4444"
+                    className="animate-ping"
+                  />
+                  <circle
+                    cx={iso(-340, -90, 95)[0]}
+                    cy={iso(-340, -90, 95)[1]}
+                    r="3"
+                    fill="#ef4444"
+                  />
 
-                  return (
-                    <g
-                      key={node.id}
-                      onMouseEnter={() => setHoveredNode(node.id)}
-                      onMouseLeave={() => setHoveredNode(null)}
-                      className="cursor-pointer transition-all duration-300"
-                    >
-                      {/* Left Face */}
+                  {/* Silkscreen Text */}
+                  <text
+                    x={iso(-390, -140, 30)[0]}
+                    y={iso(-390, -140, 30)[1]}
+                    fill="#ffffff"
+                    fontSize="9"
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                  >
+                    AMBULANCE 04 · NH-48
+                  </text>
+                  <text
+                    x={iso(-390, -140, 18)[0]}
+                    y={iso(-390, -140, 18)[1]}
+                    fill="#94a3b8"
+                    fontSize="7.5"
+                    fontFamily="var(--font-mono)"
+                  >
+                    STATUS: UNCONSCIOUS VICTIM
+                  </text>
+                </g>
+
+                {/* ===================================================================
+                    NODE 2: MEDIQR TITANIUM KEYCARD & WRISTBAND
+                =================================================================== */}
+                <g opacity={activeChapter.activeNodes.includes('card') ? 1 : 0.45}>
+                  {/* Card Main Block */}
+                  <path
+                    d={isoPath([iso(-200, -70, 0), iso(-70, -70, 0), iso(-70, -70, 120), iso(-200, -70, 120)])}
+                    fill="#0f172a"
+                    stroke="#10b981"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(-70, -70, 0), iso(-70, 30, 0), iso(-70, 30, 120), iso(-70, -70, 120)])}
+                    fill="#020617"
+                    stroke="#10b981"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(-200, -70, 120), iso(-70, -70, 120), iso(-70, 30, 120), iso(-200, 30, 120)])}
+                    fill="#1e293b"
+                    stroke="#10b981"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Laser-Etched Micro-QR Matrix Texture */}
+                  {/* Top-left finder */}
+                  <rect
+                    x={iso(-170, -40, 120)[0]}
+                    y={iso(-170, -40, 120)[1] - 8}
+                    width="10"
+                    height="10"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x={iso(-170, -40, 120)[0] + 3}
+                    y={iso(-170, -40, 120)[1] - 5}
+                    width="4"
+                    height="4"
+                    fill="#10b981"
+                  />
+                  {/* Top-right finder */}
+                  <rect
+                    x={iso(-110, -40, 120)[0]}
+                    y={iso(-110, -40, 120)[1] - 8}
+                    width="10"
+                    height="10"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="1.5"
+                  />
+                  <rect
+                    x={iso(-110, -40, 120)[0] + 3}
+                    y={iso(-110, -40, 120)[1] - 5}
+                    width="4"
+                    height="4"
+                    fill="#10b981"
+                  />
+
+                  {/* Silkscreen Text on Front Face */}
+                  <text
+                    x={iso(-190, -70, 95)[0]}
+                    y={iso(-190, -70, 95)[1]}
+                    fill="#10b981"
+                    fontSize="9"
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                  >
+                    MEDIQR TITANIUM KEY
+                  </text>
+                  <text
+                    x={iso(-190, -70, 80)[0]}
+                    y={iso(-190, -70, 80)[1]}
+                    fill="#ffffff"
+                    fontSize="8"
+                    fontFamily="var(--font-mono)"
+                  >
+                    BLOOD: B+ · ALLERGY: PENICILLIN
+                  </text>
+                  <text
+                    x={iso(-190, -70, 65)[0]}
+                    y={iso(-190, -70, 65)[1]}
+                    fill="#64748b"
+                    fontSize="7"
+                    fontFamily="var(--font-mono)"
+                  >
+                    SEC: HMAC-SHA256 (32B SALT)
+                  </text>
+                  <text
+                    x={iso(-190, -70, 50)[0]}
+                    y={iso(-190, -70, 50)[1]}
+                    fill="#38bdf8"
+                    fontSize="7"
+                    fontFamily="var(--font-mono)"
+                  >
+                    LATENCY: 0.018s · ZERO CLOUD
+                  </text>
+                </g>
+
+                {/* ===================================================================
+                    NODE 3: ESP32 SOVEREIGN HARDWARE ROUTER
+                =================================================================== */}
+                <g opacity={activeChapter.activeNodes.includes('esp32') ? 1 : 0.45}>
+                  {/* PCB Body */}
+                  <path
+                    d={isoPath([iso(20, 20, 0), iso(160, 20, 0), iso(160, 20, 70), iso(20, 20, 70)])}
+                    fill="#042f2e"
+                    stroke="#38bdf8"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(160, 20, 0), iso(160, 130, 0), iso(160, 130, 70), iso(160, 20, 70)])}
+                    fill="#022c22"
+                    stroke="#38bdf8"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(20, 20, 70), iso(160, 20, 70), iso(160, 130, 70), iso(20, 130, 70)])}
+                    fill="#0f172a"
+                    stroke="#38bdf8"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Serpentine PCB Wi-Fi Antenna Trace */}
+                  <path
+                    d={`M ${iso(30, 30, 70)[0]} ${iso(30, 30, 70)[1]} l 6 -4 l 6 4 l 6 -4 l 6 4 l 6 -4`}
+                    stroke="#eab308"
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+
+                  {/* Microchip Die Box */}
+                  <rect
+                    x={iso(70, 60, 70)[0] - 12}
+                    y={iso(70, 60, 70)[1] - 8}
+                    width="28"
+                    height="20"
+                    fill="#020617"
+                    stroke="#64748b"
+                    strokeWidth="1"
+                    rx="2"
+                  />
+
+                  {/* Smart Blue Status LED (Solid when 3 devices connected) */}
+                  <circle
+                    cx={iso(135, 35, 70)[0]}
+                    cy={iso(135, 35, 70)[1]}
+                    r="4"
+                    fill="#38bdf8"
+                    className="animate-pulse"
+                  />
+                  <circle
+                    cx={iso(135, 35, 70)[0]}
+                    cy={iso(135, 35, 70)[1]}
+                    r="2.5"
+                    fill="#ffffff"
+                  />
+
+                  {/* Silkscreen Text */}
+                  <text
+                    x={iso(35, 20, 48)[0]}
+                    y={iso(35, 20, 48)[1]}
+                    fill="#38bdf8"
+                    fontSize="8.5"
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                  >
+                    ESP32-D0WD-V3 GATEWAY
+                  </text>
+                  <text
+                    x={iso(35, 20, 34)[0]}
+                    y={iso(35, 20, 34)[1]}
+                    fill="#ffffff"
+                    fontSize="7.5"
+                    fontFamily="var(--font-mono)"
+                  >
+                    SSID: MediQR-Secure-Net
+                  </text>
+                  <text
+                    x={iso(35, 20, 20)[0]}
+                    y={iso(35, 20, 20)[1]}
+                    fill="#94a3b8"
+                    fontSize="7"
+                    fontFamily="var(--font-mono)"
+                  >
+                    IP: 192.168.4.1 (AIR-GAPPED)
+                  </text>
+                </g>
+
+                {/* ===================================================================
+                    NODE 4: DOCTOR CLINICAL WORKSTATION (LAPTOP 2)
+                =================================================================== */}
+                <g opacity={activeChapter.activeNodes.includes('doctor') ? 1 : 0.45}>
+                  {/* Desk / Station Block */}
+                  <path
+                    d={isoPath([iso(230, 70, 0), iso(380, 70, 0), iso(380, 70, 75), iso(230, 70, 75)])}
+                    fill="#1e1e2f"
+                    stroke="#818cf8"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(380, 70, 0), iso(380, 180, 0), iso(380, 180, 75), iso(380, 70, 75)])}
+                    fill="#0f0f1c"
+                    stroke="#818cf8"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(230, 70, 75), iso(380, 70, 75), iso(380, 180, 75), iso(230, 180, 75)])}
+                    fill="#2a2a44"
+                    stroke="#818cf8"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Dual Monitor Displays on Desk */}
+                  <path
+                    d={isoPath([iso(250, 90, 75), iso(320, 90, 75), iso(320, 90, 130), iso(250, 90, 130)])}
+                    fill="#020617"
+                    stroke="#38bdf8"
+                    strokeWidth="1.2"
+                  />
+                  {/* ECG Rhythm Waveform on Screen */}
+                  <path
+                    d={`M ${iso(255, 90, 100)[0]} ${iso(255, 90, 100)[1]} l 8 0 l 3 -8 l 4 14 l 3 -10 l 4 4 l 8 0`}
+                    stroke="#10b981"
+                    strokeWidth="1.5"
+                    fill="none"
+                  />
+
+                  {/* Stethoscope Accent */}
+                  <circle
+                    cx={iso(350, 130, 75)[0]}
+                    cy={iso(350, 130, 75)[1]}
+                    r="4"
+                    fill="none"
+                    stroke="#818cf8"
+                    strokeWidth="1.2"
+                  />
+
+                  {/* Silkscreen Text */}
+                  <text
+                    x={iso(245, 70, 50)[0]}
+                    y={iso(245, 70, 50)[1]}
+                    fill="#818cf8"
+                    fontSize="8.5"
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                  >
+                    DOCTOR EMR WORKSTATION
+                  </text>
+                  <text
+                    x={iso(245, 70, 36)[0]}
+                    y={iso(245, 70, 36)[1]}
+                    fill="#ffffff"
+                    fontSize="7.5"
+                    fontFamily="var(--font-mono)"
+                  >
+                    LAPTOP 2 :3000/doctor
+                  </text>
+                  <text
+                    x={iso(245, 70, 22)[0]}
+                    y={iso(245, 70, 22)[1]}
+                    fill="#34d399"
+                    fontSize="7"
+                    fontFamily="var(--font-mono)"
+                  >
+                    AES-256 CLINICAL VAULT: UNLOCKED
+                  </text>
+                </g>
+
+                {/* ===================================================================
+                    NODE 5 & 6: HOSPITAL STORAGE VAULTS (APOLLO & FORTIS SERVER RACKS)
+                =================================================================== */}
+                {/* Node A (Apollo) */}
+                <g opacity={activeChapter.activeNodes.includes('nodeA') ? 1 : 0.45}>
+                  <path
+                    d={isoPath([iso(220, -150, 0), iso(330, -150, 0), iso(330, -150, 160), iso(220, -150, 160)])}
+                    fill="#082f49"
+                    stroke="#06b6d4"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(330, -150, 0), iso(330, -60, 0), iso(330, -60, 160), iso(330, -150, 160)])}
+                    fill="#031f33"
+                    stroke="#06b6d4"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(220, -150, 160), iso(330, -150, 160), iso(330, -60, 160), iso(220, -60, 160)])}
+                    fill="#0e3f61"
+                    stroke="#06b6d4"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Drive Bay Slots & LED Activity */}
+                  {[30, 60, 90, 120].map((h) => (
+                    <g key={`bay-a-${h}`}>
                       <path
-                        d={isoPath([p3, p2, t2, t3])}
-                        fill={leftFill}
-                        stroke={strokeColor}
-                        strokeWidth="1.2"
+                        d={isoPath([iso(230, -150, h), iso(320, -150, h)], false)}
+                        stroke="#0284c7"
+                        strokeWidth="1.5"
+                        fill="none"
                       />
-
-                      {/* Right Face */}
-                      <path
-                        d={isoPath([p1, p2, t2, t1])}
-                        fill={rightFill}
-                        stroke={strokeColor}
-                        strokeWidth="1.2"
-                      />
-
-                      {/* Top Face */}
-                      <path
-                        d={isoPath([t0, t1, t2, t3])}
-                        fill={topFill}
-                        stroke={strokeColor}
-                        strokeWidth={isActive ? '2' : '1.2'}
-                        filter={isActive ? 'url(#neon-glow)' : undefined}
-                      />
-
-                      {/* Internal Isometric Accents & LED Indicators */}
-                      <circle
-                        cx={t2[0] - 12}
-                        cy={t2[1] - 8}
-                        r="3"
-                        fill={isActive ? node.color : '#475569'}
-                        className={isActive ? 'animate-ping' : ''}
-                      />
-                      <circle
-                        cx={t2[0] - 12}
-                        cy={t2[1] - 8}
-                        r="2.5"
-                        fill={isActive ? node.color : '#475569'}
-                      />
-
-                      {/* Floating HUD Node Label */}
-                      <g transform={`translate(${t2[0] - 40}, ${t2[1] - 32})`}>
-                        <rect
-                          x="0"
-                          y="0"
-                          width="110"
-                          height="24"
-                          rx="6"
-                          fill="#020617"
-                          fillOpacity="0.88"
-                          stroke={isActive ? node.color : '#334155'}
-                          strokeWidth="1"
-                        />
-                        <text
-                          x="55"
-                          y="16"
-                          textAnchor="middle"
-                          fill={isActive ? '#ffffff' : '#94a3b8'}
-                          fontSize="9.5"
-                          fontFamily="ui-monospace, monospace"
-                          fontWeight="bold"
-                        >
-                          {node.badge}
-                        </text>
-                      </g>
+                      <circle cx={iso(235, -150, h)[0]} cy={iso(235, -150, h)[1]} r="1.8" fill="#38bdf8" />
                     </g>
-                  );
-                })}
+                  ))}
+
+                  <text
+                    x={iso(230, -150, 145)[0]}
+                    y={iso(230, -150, 145)[1]}
+                    fill="#38bdf8"
+                    fontSize="8"
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                  >
+                    APOLLO VAULT (:5001)
+                  </text>
+                  <text
+                    x={iso(230, -150, 15)[0]}
+                    y={iso(230, -150, 15)[1]}
+                    fill="#94a3b8"
+                    fontSize="6.5"
+                    fontFamily="var(--font-mono)"
+                  >
+                    ENC AT REST: AES-256
+                  </text>
+                </g>
+
+                {/* Node B (Fortis) */}
+                <g opacity={activeChapter.activeNodes.includes('nodeB') ? 1 : 0.45}>
+                  <path
+                    d={isoPath([iso(360, -150, 0), iso(470, -150, 0), iso(470, -150, 160), iso(360, -150, 160)])}
+                    fill="#172554"
+                    stroke="#3b82f6"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(470, -150, 0), iso(470, -60, 0), iso(470, -60, 160), iso(470, -150, 160)])}
+                    fill="#0f172a"
+                    stroke="#3b82f6"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(360, -150, 160), iso(470, -150, 160), iso(470, -60, 160), iso(360, -60, 160)])}
+                    fill="#1e3a8a"
+                    stroke="#3b82f6"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Drive Bays */}
+                  {[30, 60, 90, 120].map((h) => (
+                    <g key={`bay-b-${h}`}>
+                      <path
+                        d={isoPath([iso(370, -150, h), iso(460, -150, h)], false)}
+                        stroke="#2563eb"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <circle cx={iso(375, -150, h)[0]} cy={iso(375, -150, h)[1]} r="1.8" fill="#60a5fa" />
+                    </g>
+                  ))}
+
+                  <text
+                    x={iso(370, -150, 145)[0]}
+                    y={iso(370, -150, 145)[1]}
+                    fill="#60a5fa"
+                    fontSize="8"
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                  >
+                    FORTIS VAULT (:5002)
+                  </text>
+                  <text
+                    x={iso(370, -150, 15)[0]}
+                    y={iso(370, -150, 15)[1]}
+                    fill="#94a3b8"
+                    fontSize="6.5"
+                    fontFamily="var(--font-mono)"
+                  >
+                    DECOUPLED CONSORTIUM
+                  </text>
+                </g>
+
+                {/* ===================================================================
+                    NODE 7: ETHEREUM CONSORTIUM BLOCKCHAIN LEDGER
+                =================================================================== */}
+                <g opacity={activeChapter.activeNodes.includes('blockchain') ? 1 : 0.45}>
+                  {/* Block 1 */}
+                  <path
+                    d={isoPath([iso(460, 50, 0), iso(530, 50, 0), iso(530, 50, 65), iso(460, 50, 65)])}
+                    fill="#451a03"
+                    stroke="#f59e0b"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(530, 50, 0), iso(530, 110, 0), iso(530, 110, 65), iso(530, 50, 65)])}
+                    fill="#291002"
+                    stroke="#f59e0b"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(460, 50, 65), iso(530, 50, 65), iso(530, 110, 65), iso(460, 110, 65)])}
+                    fill="#78350f"
+                    stroke="#f59e0b"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Block 2 (Chained above) */}
+                  <path
+                    d={isoPath([iso(500, 70, 75), iso(580, 70, 75), iso(580, 70, 145), iso(500, 70, 145)])}
+                    fill="#78350f"
+                    stroke="#fbbf24"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(580, 70, 75), iso(580, 140, 75), iso(580, 140, 145), iso(580, 70, 145)])}
+                    fill="#451a03"
+                    stroke="#fbbf24"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d={isoPath([iso(500, 70, 145), iso(580, 70, 145), iso(580, 140, 145), iso(500, 140, 145)])}
+                    fill="#b45309"
+                    stroke="#fbbf24"
+                    strokeWidth="1.5"
+                  />
+
+                  {/* Cryptographic Laser Chain linking Block 1 & 2 */}
+                  <path
+                    d={`M ${iso(495, 80, 65)[0]} ${iso(495, 80, 65)[1]} L ${iso(500, 70, 75)[0]} ${iso(500, 70, 75)[1]}`}
+                    stroke="#fbbf24"
+                    strokeWidth="3"
+                  />
+
+                  {/* Silkscreen Blockchain Text */}
+                  <text
+                    x={iso(505, 70, 125)[0]}
+                    y={iso(505, 70, 125)[1]}
+                    fill="#ffffff"
+                    fontSize="8.5"
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                  >
+                    CONSORTIUM BLOCK #04
+                  </text>
+                  <text
+                    x={iso(505, 70, 110)[0]}
+                    y={iso(505, 70, 110)[1]}
+                    fill="#fef08a"
+                    fontSize="7"
+                    fontFamily="var(--font-mono)"
+                  >
+                    PREV: 0x9f4a...3d72
+                  </text>
+                  <text
+                    x={iso(505, 70, 95)[0]}
+                    y={iso(505, 70, 95)[1]}
+                    fill="#94a3b8"
+                    fontSize="6.5"
+                    fontFamily="var(--font-mono)"
+                  >
+                    SHA-256 HASH CHAIN: VALID
+                  </text>
+                </g>
               </g>
             </svg>
-
-            {/* Bottom HUD Overlay: Node Info Tooltip */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-              <div className="px-3.5 py-1.5 rounded-xl bg-black/75 border border-white/10 backdrop-blur-md text-[11px] font-mono text-slate-300 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span>Camera Target: <strong>{activeChapter.tag}</strong></span>
-                <span className="text-slate-500">|</span>
-                <span>Zoom: {cam.zoom.toFixed(2)}x</span>
-              </div>
-
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/75 border border-white/10 backdrop-blur-md text-[11px] font-mono text-slate-400">
-                <span>Active Nodes: {activeChapter.activeNodes.join(' ⇄ ')}</span>
-              </div>
-            </div>
           </div>
 
-          {/* RIGHT: Carbo-Trace Style Dynamic Telemetry & Story Panel */}
+          {/* =========================================================================
+              RIGHT: CARBO-TRACE STYLE TELEMETRY & NARRATIVE HUD
+          ========================================================================= */}
           <div className="lg:col-span-4 flex flex-col justify-between rounded-3xl bg-slate-900/90 border border-white/10 p-6 sm:p-7 shadow-2xl backdrop-blur-xl space-y-6">
             
             {/* Chapter Header */}
@@ -856,7 +1141,6 @@ export default function IsometricStage() {
 
             {/* Scientific Formula & Facts Matrix */}
             <div className="space-y-3">
-              {/* Formula Strip */}
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 font-mono text-xs text-slate-300 space-y-1">
                 <div className="text-[10px] uppercase font-bold text-slate-500">
                   Scientific Verification Formula
@@ -883,70 +1167,23 @@ export default function IsometricStage() {
               </div>
             </div>
 
-            {/* Chapter Stepper Buttons */}
-            <div className="flex items-center justify-between pt-2 border-t border-white/10">
-              <button
-                type="button"
-                onClick={() =>
-                  setCurrentIdx((prev) => (prev - 1 + MEDIQR_CHAPTERS.length) % MEDIQR_CHAPTERS.length)
-                }
-                className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 transition"
-              >
-                ← Prev Chapter
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentIdx((prev) => (prev + 1) % MEDIQR_CHAPTERS.length)}
-                className="px-5 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-lg shadow-cyan-600/30"
-              >
-                Next Chapter →
-              </button>
-            </div>
-
           </div>
 
         </div>
 
-        {/* =========================================================================
-            BOTTOM: CARBO-TRACE STYLE TIMELINE SCRUBBER (CHAPTERS 01-08)
-        ========================================================================= */}
-        <div className="rounded-2xl bg-slate-900/90 border border-white/10 p-3 sm:p-4 shadow-xl backdrop-blur-md">
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            {MEDIQR_CHAPTERS.map((ch, idx) => {
-              const isCurrent = idx === currentIdx;
-              return (
-                <button
-                  key={ch.id}
-                  type="button"
-                  onClick={() => setCurrentIdx(idx)}
-                  className={`p-2.5 rounded-xl text-left transition flex flex-col justify-between border cursor-pointer ${
-                    isCurrent
-                      ? 'bg-cyan-500/15 border-cyan-500/50 text-white shadow-md shadow-cyan-500/20'
-                      : 'bg-white/[0.02] border-white/5 hover:border-white/20 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span
-                      className={`text-[10px] font-mono font-bold ${
-                        isCurrent ? 'text-cyan-400' : 'text-slate-500'
-                      }`}
-                    >
-                      {ch.num}
-                    </span>
-                    {isCurrent && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                    )}
-                  </div>
-                  <div className="text-[11px] font-bold truncate mt-1">
-                    {ch.tag}
-                  </div>
-                </button>
-              );
-            })}
+        {/* Bottom Status Ticker */}
+        <div className="flex items-center justify-between border-t border-white/10 pt-3 text-[11px] font-mono text-slate-400">
+          <div className="flex items-center gap-2">
+            <span className="text-emerald-400">● 3D Physics &amp; Projection Engine Active</span>
+            <span className="hidden sm:inline text-slate-600">|</span>
+            <span className="hidden sm:inline">Scroll Down to Advance</span>
+          </div>
+          <div>
+            Camera Target: <strong className="text-white">{activeChapter.tag}</strong>
           </div>
         </div>
 
       </div>
-    </section>
+    </div>
   );
 }

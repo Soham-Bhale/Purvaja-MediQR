@@ -2,13 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  saveAppointment,
-  getStoredAppointments,
-  Appointment,
-} from '../lib/appointments';
-import { mineNewBlock } from '../lib/blockchain-blocks';
-import { sendAppointmentConfirmationEmail } from '../lib/email-service';
 import CinematicBackground from '../components/CinematicBackground';
 import AppleVideoCard from '../components/AppleVideoCard';
 import IsometricStage from '../components/IsometricStage';
@@ -16,39 +9,6 @@ import AssetPromptModal from '../components/AssetPromptModal';
 import EmailInboxModal from '../components/EmailInboxModal';
 
 export default function PatientPortalHomePage() {
-  const [bookingStep, setBookingStep] = useState<1 | 2 | 3 | 4>(1);
-
-  // Patient Registration Details
-  const [fullName, setFullName] = useState('Rahul Sharma');
-  const [email, setEmail] = useState('rahul.sharma@healthmail.com');
-  const [phone, setPhone] = useState('+91-98765-43210');
-  const [age, setAge] = useState<number>(29);
-  const [gender, setGender] = useState('Male');
-  const [bloodType, setBloodType] = useState('B+');
-  const [criticalAllergies, setCriticalAllergies] = useState('Penicillin G, Aspirin');
-  const [chronicConditions, setChronicConditions] = useState('Mild Asthma');
-  const [emergencyContactName, setEmergencyContactName] = useState('Pooja Sharma (Spouse)');
-  const [emergencyContactPhone, setEmergencyContactPhone] = useState('+91-98765-43211');
-  const [nationalId, setNationalId] = useState('IN-AADHAAR-9012-3482-1984');
-
-  // Appointment & Doctor Selection
-  const [selectedHospital, setSelectedHospital] = useState<'apollo' | 'fortis'>('apollo');
-  const [selectedDoctor, setSelectedDoctor] = useState('0x70997970c51812dc3a010c7d01b50e0d17dc79c8');
-  const [appointmentDate, setAppointmentDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [timeSlot, setTimeSlot] = useState('11:00 AM - 11:30 AM');
-  const [consultationReason, setConsultationReason] = useState('Persistent chest tightness and allergic respiratory symptoms');
-  const serviceFee = 500;
-
-  // Payment State
-  const [paymentMethod, setPaymentMethod] = useState<'demo' | 'upi' | 'card'>('demo');
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [confirmedAppointment, setConfirmedAppointment] = useState<Appointment | null>(null);
-
-  // Lookup Token State
-  const [searchToken, setSearchToken] = useState('');
-  const [lookupResult, setLookupResult] = useState<Appointment | null>(null);
-  const [lookupError, setLookupError] = useState<string | null>(null);
-
   // Modals
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
@@ -66,118 +26,6 @@ export default function PatientPortalHomePage() {
       })
       .catch(() => {});
   }, []);
-
-  // Sync doctor with hospital
-  useEffect(() => {
-    if (selectedHospital === 'apollo') {
-      setSelectedDoctor('0x70997970c51812dc3a010c7d01b50e0d17dc79c8');
-    } else {
-      setSelectedDoctor('0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc');
-    }
-  }, [selectedHospital]);
-
-  async function handleConfirmAndPay() {
-    setIsProcessingPayment(true);
-    try {
-      await new Promise((res) => setTimeout(res, 1200));
-
-      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-      const hospitalPrefix = selectedHospital === 'apollo' ? 'APO' : 'FOR';
-      const tokenId = `APT-${hospitalPrefix}-2026-${randomSuffix}`;
-      const patientId = `PAT-${fullName.replace(/\s+/g, '-').toUpperCase()}-${randomSuffix}`;
-      const txRef = `TXN-PAY-${Date.now().toString(36).toUpperCase()}`;
-
-      const patientHash = `0x${Array.from(new TextEncoder().encode(nationalId + fullName))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('')
-        .slice(0, 64)
-        .padEnd(64, '0')}`;
-
-      const doctorName = selectedHospital === 'apollo' ? 'Dr. Ramesh Gupta' : 'Dr. Ananya Sharma';
-      const hospitalName = selectedHospital === 'apollo' ? 'Apollo Speciality Hospital' : 'Fortis Healthcare Network';
-      const hospitalNodeUrl = selectedHospital === 'apollo' ? 'http://localhost:5001' : 'http://localhost:5002';
-      const department = selectedHospital === 'apollo' ? 'Lead Emergency & Pulmonology' : 'Chief Pathology & Diagnostics';
-
-      const newAppointment: Appointment = {
-        id: tokenId,
-        patientId,
-        patientName: fullName,
-        email,
-        phone,
-        age: Number(age) || 30,
-        gender,
-        bloodType,
-        criticalAllergies: criticalAllergies.split(',').map((s) => s.trim()).filter(Boolean),
-        chronicConditions: chronicConditions.split(',').map((s) => s.trim()).filter(Boolean),
-        emergencyContactName,
-        emergencyContactPhone,
-        nationalId,
-        patientHash,
-        hospitalId: selectedHospital === 'apollo' ? 'HOSPITAL-NODE-A' : 'HOSPITAL-NODE-B',
-        hospitalName,
-        hospitalNodeUrl,
-        doctorId: selectedDoctor,
-        doctorName,
-        department,
-        appointmentDate,
-        timeSlot,
-        consultationReason,
-        serviceFee,
-        paymentStatus: 'PAID',
-        paymentMethod: paymentMethod === 'upi' ? 'UPI / GPay' : paymentMethod === 'card' ? 'Credit Card (Visa)' : 'MediQR 1-Click Pay',
-        paymentTxRef: txRef,
-        status: 'PENDING_EXAMINATION',
-        bookedAt: Date.now(),
-      };
-
-      saveAppointment(newAppointment);
-
-      await mineNewBlock([
-        {
-          txId: `0x${Array.from(crypto.getRandomValues(new Uint8Array(32))).map((b) => b.toString(16).padStart(2, '0')).join('')}`,
-          type: 'APPOINTMENT_PAYMENT_CONFIRMED',
-          timestamp: Date.now(),
-          patientHash,
-          patientName: fullName,
-          details: `Service Fee Paid (₹${serviceFee}) | Token ${tokenId} Assigned to ${doctorName}`,
-          amount: `₹${serviceFee}.00`,
-          doctor: doctorName,
-          status: 'MINED',
-        },
-      ]);
-
-      sendAppointmentConfirmationEmail(newAppointment);
-      setConfirmedAppointment(newAppointment);
-      setBookingStep(4);
-    } catch (err: any) {
-      alert(`Booking payment failed: ${err.message}`);
-    } finally {
-      setIsProcessingPayment(false);
-    }
-  }
-
-  function handleLookupToken(e: React.FormEvent) {
-    e.preventDefault();
-    setLookupError(null);
-    setLookupResult(null);
-
-    const query = searchToken.trim().toLowerCase();
-    if (!query) {
-      setLookupError('Please enter an Appointment Token ID or email.');
-      return;
-    }
-
-    const all = getStoredAppointments();
-    const found = all.find(
-      (a) => a.id.toLowerCase() === query || a.email.toLowerCase() === query
-    );
-
-    if (found) {
-      setLookupResult(found);
-    } else {
-      setLookupError(`No appointment found for "${searchToken}". Format: APT-APO-2026-XXXX.`);
-    }
-  }
 
   return (
     <div className="relative min-h-screen text-slate-100 selection:bg-blue-500 selection:text-white font-sans antialiased overflow-x-hidden">
@@ -222,12 +70,12 @@ export default function PatientPortalHomePage() {
               <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
               <span>🎮 3D Architecture Tour (01–08)</span>
             </a>
-            <a
-              href="#booking-portal"
+            <Link
+              href="/book"
               className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transition-all transform hover:-translate-y-0.5"
             >
               Book Care Consultation (₹500) →
-            </a>
+            </Link>
             <a
               href="#the-crisis"
               className="px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-bold text-sm sm:text-base backdrop-blur-md transition"
@@ -523,577 +371,63 @@ export default function PatientPortalHomePage() {
         </section>
 
         {/* =========================================================================
-            SECTION 3: THE APPOINTMENT BOOKING STUDIO (APPLE-STYLE STUDIO)
+            SECTION 3: DEDICATED CARE CONSULTATION & TOKEN PORTAL (CTA)
         ========================================================================= */}
-        <section id="booking-portal" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          
-          <div className="text-center space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
-              Live Care Reservation
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Book Your MediQR Consultation &amp; Identity Token.
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
-              Service Fee: <strong className="text-white font-mono text-base">₹500.00</strong>. Includes emergency triage encoding, doctor consultation, and immutable blockchain ledger anchor.
-            </p>
-          </div>
-
-          {/* Glassmorphic Wizard Card */}
-          <div className="rounded-3xl bg-slate-900/90 border border-white/15 p-6 sm:p-10 shadow-2xl backdrop-blur-xl space-y-8">
+        <section id="book" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative rounded-3xl bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-white/10 p-8 sm:p-14 text-center overflow-hidden shadow-2xl backdrop-blur-xl">
+            {/* Ambient background glow */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/20 blur-[100px] pointer-events-none rounded-full" />
             
-            {/* Step Breadcrumbs */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3">
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  bookingStep >= 1 ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-400'
-                }`}>
-                  1
-                </span>
-                <span className={`text-xs font-bold hidden sm:inline ${bookingStep === 1 ? 'text-blue-400' : 'text-slate-400'}`}>
-                  Patient Vitals
-                </span>
-                <span className="text-slate-600">→</span>
+            <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono font-semibold text-blue-400">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                DEDICATED PATIENT PORTAL
+              </span>
 
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  bookingStep >= 2 ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-400'
-                }`}>
-                  2
-                </span>
-                <span className={`text-xs font-bold hidden sm:inline ${bookingStep === 2 ? 'text-blue-400' : 'text-slate-400'}`}>
-                  Facility &amp; Doctor
-                </span>
-                <span className="text-slate-600">→</span>
+              <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                Schedule Your MediQR Consultation &amp; Mint Identity Token
+              </h2>
 
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  bookingStep >= 3 ? 'bg-blue-600 text-white' : 'bg-white/10 text-slate-400'
-                }`}>
-                  3
-                </span>
-                <span className={`text-xs font-bold hidden sm:inline ${bookingStep === 3 ? 'text-blue-400' : 'text-slate-400'}`}>
-                  Fee Payment
-                </span>
-                <span className="text-slate-600">→</span>
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                Register emergency roadside vitals (blood group, anaphylaxis allergies, ICE contacts), select certified Apollo or Fortis specialists, pay the ₹500 fee, and anchor your appointment directly onto the Ethereum consortium ledger.
+              </p>
 
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  bookingStep === 4 ? 'bg-emerald-600 text-white' : 'bg-white/10 text-slate-400'
-                }`}>
-                  4
-                </span>
-                <span className={`text-xs font-bold hidden sm:inline ${bookingStep === 4 ? 'text-emerald-400' : 'text-slate-400'}`}>
-                  Mined Token
-                </span>
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/book"
+                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transition-all transform hover:-translate-y-0.5 inline-flex items-center gap-2"
+                >
+                  <span>Open Patient Consultation Portal (₹500)</span>
+                  <span>→</span>
+                </Link>
+                <Link
+                  href="/doctor"
+                  className="px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 hover:text-white font-semibold text-sm transition"
+                >
+                  Doctor EMR Portal →
+                </Link>
               </div>
 
-              <span className="text-xs font-mono text-emerald-400 font-bold">₹500.00 Service Fee</span>
+              <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/10 text-left text-xs">
+                <div>
+                  <div className="text-white font-bold">1. Emergency Vitals</div>
+                  <div className="text-slate-400 text-[11px] mt-0.5">Static text encoded into offline camera QR.</div>
+                </div>
+                <div>
+                  <div className="text-white font-bold">2. ₹500 Instant Fee</div>
+                  <div className="text-slate-400 text-[11px] mt-0.5">Simulated demo or UPI/card token settlement.</div>
+                </div>
+                <div>
+                  <div className="text-white font-bold">3. Mined Block Proof</div>
+                  <div className="text-slate-400 text-[11px] mt-0.5">Live block broadcasted to doctor dashboard.</div>
+                </div>
+              </div>
             </div>
-
-            {/* STEP 1: PATIENT REGISTRATION */}
-            {bookingStep === 1 && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-white">Step 1: Patient Information &amp; Roadside Emergency Vitals</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    These critical vitals are encoded into your emergency MediQR so paramedics can identify your blood type and drug allergies in 0.02s.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Full Legal Name *</label>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      placeholder="e.g. Rahul Sharma"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Email (for Token &amp; MediQR) *</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      placeholder="rahul@example.com"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Phone Number *</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      placeholder="+91-98765-43210"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Age</label>
-                    <input
-                      type="number"
-                      value={age}
-                      onChange={(e) => setAge(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      min="1"
-                      max="120"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Gender</label>
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                    >
-                      <option value="Male" className="bg-slate-900">Male</option>
-                      <option value="Female" className="bg-slate-900">Female</option>
-                      <option value="Other" className="bg-slate-900">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-rose-300 block mb-1">Blood Group (Critical for Triage) *</label>
-                    <select
-                      value={bloodType}
-                      onChange={(e) => setBloodType(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 bg-rose-950/40 border border-rose-500/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-extrabold text-rose-300"
-                    >
-                      <option value="A+" className="bg-slate-900">A+ (A Positive)</option>
-                      <option value="A-" className="bg-slate-900">A- (A Negative)</option>
-                      <option value="B+" className="bg-slate-900">B+ (B Positive)</option>
-                      <option value="B-" className="bg-slate-900">B- (B Negative)</option>
-                      <option value="AB+" className="bg-slate-900">AB+ (Universal Plasma Recipient)</option>
-                      <option value="AB-" className="bg-slate-900">AB- (AB Negative)</option>
-                      <option value="O+" className="bg-slate-900">O+ (O Positive)</option>
-                      <option value="O-" className="bg-slate-900">O- (Universal Red Cell Donor)</option>
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="font-bold text-slate-300 block mb-1">Critical Drug / Anaphylaxis Allergies *</label>
-                    <input
-                      type="text"
-                      value={criticalAllergies}
-                      onChange={(e) => setCriticalAllergies(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      placeholder="e.g. Penicillin G, Aspirin, Peanuts"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Chronic Conditions</label>
-                    <input
-                      type="text"
-                      value={chronicConditions}
-                      onChange={(e) => setChronicConditions(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      placeholder="e.g. Mild Asthma, Hypertension"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Emergency Contact Person *</label>
-                    <input
-                      type="text"
-                      value={emergencyContactName}
-                      onChange={(e) => setEmergencyContactName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      placeholder="Pooja Sharma (Spouse)"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Emergency Contact Phone *</label>
-                    <input
-                      type="tel"
-                      value={emergencyContactPhone}
-                      onChange={(e) => setEmergencyContactPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      placeholder="+91-98765-43211"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">National ID / Aadhaar *</label>
-                    <input
-                      type="text"
-                      value={nationalId}
-                      onChange={(e) => setNationalId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white font-mono"
-                      placeholder="IN-AADHAAR-XXXX-XXXX"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!fullName || !email || !phone) {
-                        alert('Please fill in your name, email, and phone number.');
-                        return;
-                      }
-                      setBookingStep(2);
-                    }}
-                    className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Proceed to Doctor &amp; Facility Selection</span>
-                    <span>→</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 2: DOCTOR & HOSPITAL */}
-            {bookingStep === 2 && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-white">Step 2: Choose Accredited Hospital &amp; Doctor</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Select a hospital storage node and accredited clinician in the MediQR consortium.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Apollo */}
-                  <div
-                    onClick={() => setSelectedHospital('apollo')}
-                    className={`p-6 rounded-2xl border-2 transition cursor-pointer ${
-                      selectedHospital === 'apollo'
-                        ? 'border-blue-500 bg-blue-600/15 shadow-xl shadow-blue-500/10'
-                        : 'border-white/10 hover:border-white/20 bg-black/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-blue-400">Node A :5001</span>
-                      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selectedHospital === 'apollo' ? 'border-blue-400 bg-blue-500' : 'border-slate-600'
-                      }`} />
-                    </div>
-                    <h4 className="text-base font-bold text-white">Apollo Speciality Hospital</h4>
-                    <p className="text-xs text-slate-400 mt-1">Lead Department: Emergency Medicine &amp; Pulmonology</p>
-                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Attending Doctor:</span>
-                      <strong className="text-blue-300">Dr. Ramesh Gupta</strong>
-                    </div>
-                  </div>
-
-                  {/* Fortis */}
-                  <div
-                    onClick={() => setSelectedHospital('fortis')}
-                    className={`p-6 rounded-2xl border-2 transition cursor-pointer ${
-                      selectedHospital === 'fortis'
-                        ? 'border-indigo-500 bg-indigo-600/15 shadow-xl shadow-indigo-500/10'
-                        : 'border-white/10 hover:border-white/20 bg-black/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">Node B :5002</span>
-                      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selectedHospital === 'fortis' ? 'border-indigo-400 bg-indigo-500' : 'border-slate-600'
-                      }`} />
-                    </div>
-                    <h4 className="text-base font-bold text-white">Fortis Healthcare Network</h4>
-                    <p className="text-xs text-slate-400 mt-1">Lead Department: Clinical Diagnostics &amp; Pathology</p>
-                    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Attending Doctor:</span>
-                      <strong className="text-indigo-300">Dr. Ananya Sharma</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-2">
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Appointment Date *</label>
-                    <input
-                      type="date"
-                      value={appointmentDate}
-                      onChange={(e) => setAppointmentDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Time Slot *</label>
-                    <select
-                      value={timeSlot}
-                      onChange={(e) => setTimeSlot(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                    >
-                      <option value="10:00 AM - 10:30 AM" className="bg-slate-900">10:00 AM - 10:30 AM</option>
-                      <option value="11:00 AM - 11:30 AM" className="bg-slate-900">11:00 AM - 11:30 AM</option>
-                      <option value="02:00 PM - 02:30 PM" className="bg-slate-900">02:00 PM - 02:30 PM</option>
-                      <option value="04:30 PM - 05:00 PM" className="bg-slate-900">04:30 PM - 05:00 PM</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-300 block mb-1">Consultation Reason *</label>
-                    <input
-                      type="text"
-                      value={consultationReason}
-                      onChange={(e) => setConsultationReason(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setBookingStep(1)}
-                    className="px-5 py-2.5 border border-white/15 hover:bg-white/5 text-slate-300 font-bold text-xs rounded-xl transition"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBookingStep(3)}
-                    className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Proceed to Service Fee Payment (₹500)</span>
-                    <span>→</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 3: PAYMENT GATEWAY */}
-            {bookingStep === 3 && (
-              <div className="space-y-6 max-w-xl mx-auto">
-                <div className="text-center space-y-1">
-                  <h3 className="text-lg font-bold text-white">Step 3: Pay Consultation &amp; Blockchain Fee</h3>
-                  <p className="text-xs text-slate-400">
-                    Payment unlocks your cryptographic token ID and queues consultation on Doctor Terminal.
-                  </p>
-                </div>
-
-                <div className="bg-black/50 border border-white/10 rounded-2xl p-5 space-y-3 text-xs">
-                  <div className="flex justify-between items-center text-slate-400">
-                    <span>Patient:</span>
-                    <strong className="text-white">{fullName}</strong>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-400">
-                    <span>Facility:</span>
-                    <span className="text-white">{selectedHospital === 'apollo' ? 'Apollo Speciality (Dr. Ramesh Gupta)' : 'Fortis Healthcare (Dr. Ananya Sharma)'}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-400">
-                    <span>Schedule:</span>
-                    <span className="text-white">{appointmentDate} at {timeSlot}</span>
-                  </div>
-                  <div className="border-t border-white/10 pt-3 flex justify-between items-center text-sm">
-                    <span className="font-bold text-white">Service Fee Total:</span>
-                    <span className="font-extrabold text-emerald-400 font-mono text-lg">₹500.00</span>
-                  </div>
-                </div>
-
-                {/* Payment Methods */}
-                <div className="space-y-3">
-                  <label className="font-bold text-xs text-slate-300 block">Select Payment Channel:</label>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('demo')}
-                      className={`p-3.5 rounded-xl border-2 transition cursor-pointer text-center ${
-                        paymentMethod === 'demo'
-                          ? 'border-emerald-500 bg-emerald-500/15 text-white font-bold'
-                          : 'border-white/10 hover:bg-white/5 text-slate-400'
-                      }`}
-                    >
-                      <span className="block text-lg mb-1">⚡</span>
-                      <span>1-Click Academic Pay</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('upi')}
-                      className={`p-3.5 rounded-xl border-2 transition cursor-pointer text-center ${
-                        paymentMethod === 'upi'
-                          ? 'border-blue-500 bg-blue-500/15 text-white font-bold'
-                          : 'border-white/10 hover:bg-white/5 text-slate-400'
-                      }`}
-                    >
-                      <span className="block text-lg mb-1">📱</span>
-                      <span>UPI / GPay</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('card')}
-                      className={`p-3.5 rounded-xl border-2 transition cursor-pointer text-center ${
-                        paymentMethod === 'card'
-                          ? 'border-blue-500 bg-blue-500/15 text-white font-bold'
-                          : 'border-white/10 hover:bg-white/5 text-slate-400'
-                      }`}
-                    >
-                      <span className="block text-lg mb-1">💳</span>
-                      <span>Credit Card</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setBookingStep(2)}
-                    disabled={isProcessingPayment}
-                    className="px-5 py-2.5 border border-white/15 hover:bg-white/5 text-slate-300 font-bold text-xs rounded-xl transition"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleConfirmAndPay}
-                    disabled={isProcessingPayment}
-                    className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white font-extrabold text-xs rounded-xl shadow-xl transition flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>{isProcessingPayment ? '⌛ Anchoring on Blockchain...' : '✓ Pay ₹500 & Generate Token'}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 4: MINED TOKEN CONFIRMATION */}
-            {bookingStep === 4 && confirmedAppointment && (
-              <div className="space-y-6 text-center max-w-xl mx-auto animate-in zoom-in-95">
-                <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 rounded-full flex items-center justify-center text-3xl font-bold mx-auto shadow-2xl">
-                  ✓
-                </div>
-                <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-xs font-bold border border-emerald-500/20">
-                    <span>⛓️</span> Transaction Mined into Blockchain Block
-                  </div>
-                  <h3 className="text-2xl font-extrabold text-white">
-                    Consultation Token Confirmed!
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Payment of ₹{confirmedAppointment.serviceFee}.00 verified. Confirmation email sent to <strong className="text-white">{confirmedAppointment.email}</strong>.
-                  </p>
-                </div>
-
-                <div className="bg-black/60 border-2 border-emerald-500/40 rounded-2xl p-6 shadow-2xl space-y-2">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    Your Official Appointment Token ID
-                  </div>
-                  <div className="font-mono text-3xl font-extrabold text-blue-400 tracking-wide select-all">
-                    {confirmedAppointment.id}
-                  </div>
-                  <div className="text-xs text-slate-300 pt-2 border-t border-white/10">
-                    Physician: <strong className="text-white">{confirmedAppointment.doctorName}</strong> ({confirmedAppointment.hospitalName})
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    Slot: <strong className="text-slate-200">{confirmedAppointment.appointmentDate}</strong> at <strong className="text-slate-200">{confirmedAppointment.timeSlot}</strong>
-                  </div>
-                </div>
-
-                {/* Looping Blockchain Seal Video Artifact */}
-                <div className="rounded-2xl overflow-hidden border border-emerald-500/30 max-w-sm mx-auto shadow-xl bg-black/60">
-                  <div className="aspect-video relative">
-                    <video
-                      src="/videos/blockchain-seal.mp4"
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute bottom-2 left-3 right-3 text-left">
-                      <div className="text-[11px] font-bold text-white flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        Ledger Proof Confirmed
-                      </div>
-                      <div className="text-[10px] font-mono text-slate-300 truncate">
-                        Block Ref: {confirmedAppointment.paymentTxRef}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEmailModalOpen(true)}
-                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>✉️</span>
-                    <span>Inspect Dispatched Email</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirmedAppointment(null);
-                      setBookingStep(1);
-                    }}
-                    className="px-5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-xs rounded-xl transition"
-                  >
-                    Book Another Appointment
-                  </button>
-                </div>
-              </div>
-            )}
-
           </div>
-
         </section>
 
         {/* =========================================================================
-            SECTION 4: TOKEN LOOKUP UTILITY
-        ========================================================================= */}
-        <section className="max-w-xl mx-auto px-4 sm:px-6 space-y-4 text-center">
-          <h3 className="text-base font-bold text-white">Already Booked? Lookup Your Token Status</h3>
-          <form onSubmit={handleLookupToken} className="flex gap-2">
-            <input
-              type="text"
-              value={searchToken}
-              onChange={(e) => setSearchToken(e.target.value)}
-              placeholder="e.g. APT-APO-2026-8812 or rahul@example.com"
-              className="flex-1 px-4 py-3 bg-slate-900 border border-white/15 rounded-xl text-xs font-mono text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
-            >
-              Search
-            </button>
-          </form>
-
-          {lookupError && (
-            <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs text-left">
-              {lookupError}
-            </div>
-          )}
-
-          {lookupResult && (
-            <div className="p-5 rounded-2xl bg-slate-900 border border-white/15 text-left text-xs space-y-3 shadow-xl">
-              <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                <span className="font-mono text-base font-bold text-blue-400">{lookupResult.id}</span>
-                <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                  lookupResult.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-                }`}>
-                  {lookupResult.status === 'COMPLETED' ? '✓ Consultation Complete' : '⏳ Ready for Doctor'}
-                </span>
-              </div>
-              <div>Patient: <strong>{lookupResult.patientName}</strong> ({lookupResult.bloodType})</div>
-              <div>Doctor: <strong>{lookupResult.doctorName}</strong> ({lookupResult.hospitalName})</div>
-              <div>Time: {lookupResult.appointmentDate} at {lookupResult.timeSlot}</div>
-            </div>
-          )}
-        </section>
-
-        {/* =========================================================================
-            SECTION 5: FAQ & ENTERPRISE COMPLIANCE
+            SECTION 4: FAQ & ENTERPRISE COMPLIANCE
         ========================================================================= */}
         <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="text-center space-y-2">

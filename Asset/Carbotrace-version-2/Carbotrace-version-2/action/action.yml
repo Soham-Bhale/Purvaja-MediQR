@@ -1,0 +1,125 @@
+name: 'Carbotrace PR Carbon Auditor'
+description: 'Analyze PR code changes and comment on the carbon delta across Code, CI, and Infrastructure layers.'
+inputs:
+  github-token:
+    description: 'GitHub Token for authentication'
+    required: true
+    default: ${{ github.token }}
+  carbotrace-url:
+    description: 'Carbotrace API endpoint (e.g. http://carbotrace.company.com/api)'
+    required: false
+    default: 'https://carbotrace-backend.onrender.com/api'
+  threshold:
+    description: 'Score delta threshold to warn user (e.g. 0.2)'
+    required: false
+    default: '0.1'
+runs:
+  using: 'composite'
+  steps:
+    - name: Audit PR Carbon Delta
+      shell: bash
+      run: |
+        echo "Starting Carbotrace carbon delta audit..."
+        
+        REPO_URL="https://github.com/${{ github.repository }}"
+        BASE_REF="${{ github.base_ref }}"
+        if [ -z "$BASE_REF" ]; then BASE_REF="main"; fi
+        HEAD_REF="${{ github.head_ref }}"
+        if [ -z "$HEAD_REF" ]; then HEAD_REF="${{ github.sha }}"; fi
+
+        echo "Auditing Base Branch ($BASE_REF)..."
+        BASE_RESPONSE=$(curl -s -X POST "${{ inputs.carbotrace-url }}/analyze-repo" \
+          -H "Content-Type: application/json" \
+          -d "{\"repo_url\": \"$REPO_URL\", \"branch\": \"$BASE_REF\", \"include_infra\": true, \"include_llm\": false}")
+
+        BASE_SCORE=$(echo "$BASE_RESPONSE" | jq -r '.total_score // 0.0')
+        BASE_CODE=$(echo "$BASE_RESPONSE" | jq -r '.code_carbon // 0.0')
+        BASE_CI=$(echo "$BASE_RESPONSE" | jq -r '.ci_carbon // 0.0')
+        BASE_INFRA=$(echo "$BASE_RESPONSE" | jq -r '.infra_carbon // 0.0')
+
+        echo "Auditing Head Branch ($HEAD_REF)..."
+        HEAD_RESPONSE=$(curl -s -X POST "${{ inputs.carbotrace-url }}/analyze-repo" \
+          -H "Content-Type: application/json" \
+          -d "{\"repo_url\": \"$REPO_URL\", \"branch\": \"$HEAD_REF\", \"include_infra\": true, \"include_llm\": true}")
+
+        HEAD_SCORE=$(echo "$HEAD_RESPONSE" | jq -r '.total_score // 0.0')
+        HEAD_CODE=$(echo "$HEAD_RESPONSE" | jq -r '.code_carbon // 0.0')
+        HEAD_CI=$(echo "$HEAD_RESPONSE" | jq -r '.ci_carbon // 0.0')
+        HEAD_INFRA=$(echo "$HEAD_RESPONSE" | jq -r '.infra_carbon // 0.0')
+
+        # Calculate Deltas using awk
+        DELTA_SCORE=$(awk "BEGIN {print $HEAD_SCORE - $BASE_SCORE}")
+        DELTA_CODE=$(awk "BEGIN {print $HEAD_CODE - $BASE_CODE}")
+        DELTA_CI=$(awk "BEGIN {print $HEAD_CI - $BASE_CI}")
+        DELTA_INFRA=$(awk "BEGIN {print $HEAD_INFRA - $BASE_INFRA}")
+
+        # Helper function for indicator
+        format_delta() {
+          val=$1
+          unit=$2
+          is_pos=$(awk "BEGIN {print ($val > 0.001) ? 1 : 0}")
+          is_neg=$(awk "BEGIN {print ($val < -0.001) ? 1 : 0}")
+          if [ "$is_pos" -eq 1 ]; then
+            echo "▲ +${val}${unit}"
+          elif [ "$is_neg" -eq 1 ]; then
+            echo "▼ ${val}${unit}"
+          else
+            echo "≈ 0${unit}"
+          fi
+        }
+
+        INDICATOR_SCORE=$(format_delta "$DELTA_SCORE" "")
+        INDICATOR_CODE=$(format_delta "$DELTA_CODE" " g")
+        INDICATOR_CI=$(format_delta "$DELTA_CI" " g")
+        INDICATOR_INFRA=$(format_delta "$DELTA_INFRA" " g")
+
+        # Threshold Warning Check
+        THRESHOLD="${{ inputs.threshold }}"
+        EXCEEDS=$(awk "BEGIN {print ($DELTA_SCORE > $THRESHOLD) ? 1 : 0}")
+
+        WARNING_BANNER=""
+        if [ "$EXCEEDS" -eq 1 ]; then
+          WARNING_BANNER="> ⚠️ **WARNING:** This PR increases carbon severity score by **+$DELTA_SCORE points**, exceeding configured threshold of **$THRESHOLD**!"
+        fi
+
+        COMMENT_BODY="## Carbotrace Carbon Audit Diff
+
+        $WARNING_BANNER
+
+        | Layer | Base ($BASE_REF) | Head ($HEAD_REF) | Delta |
+        |-------|------------------|------------------|-------|
+        | **Total Carbon Score** | **$BASE_SCORE / 10.0** | **$HEAD_SCORE / 10.0** | **$INDICATOR_SCORE** |
+        | **Code Layer** | $BASE_CODE g | $HEAD_CODE g | $INDICATOR_CODE |
+        | **CI/CD Layer** | $BASE_CI g | $HEAD_CI g | $INDICATOR_CI |
+        | **Infra Layer** | $BASE_INFRA g | $HEAD_INFRA g | $INDICATOR_INFRA |
+
+        ### Recommendations
+        "
+
+        INDEX=1
+        while read -r rec; do
+          if [ -z "$rec" ]; then continue; fi
+          ISSUE=$(echo "$rec" | jq -r '.issue')
+          DESC=$(echo "$rec" | jq -r '.description')
+          SAVINGS=$(echo "$rec" | jq -r '.savings_percent')
+          PRIORITY=$(echo "$rec" | jq -r '.priority')
+          
+          COMMENT_BODY="$COMMENT_BODY
+        $INDEX. **$ISSUE** (Est. Savings: **-$SAVINGS%**, Priority: **$PRIORITY**)
+           - $DESC"
+          INDEX=$((INDEX+1))
+        done <<< "$(echo "$HEAD_RESPONSE" | jq -c '.recommendations[]?')"
+
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+        if [ ! -z "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+          JSON_PAYLOAD=$(jq -n --arg body "$COMMENT_BODY" '{body: $body}')
+          
+          curl -s -X POST \
+            -H "Authorization: token ${{ inputs.github-token }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/comments \
+            -d "$JSON_PAYLOAD"
+        else
+          echo "No active PR number found. Skipping comment post."
+        fi

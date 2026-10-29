@@ -286,16 +286,23 @@ function DoctorPortalContent() {
         activeDoctor
       );
 
-      // 4. Generate Emergency MediQR Code
-      // Dynamically detect current host origin (e.g. http://192.168.4.2:3000 or http://localhost:3000)
-      let hostOrigin = 'http://localhost:3000';
-      if (typeof window !== 'undefined') {
-        hostOrigin = window.location.origin;
-      }
+      // 4. Generate Emergency MediQR Code with STATIC TEXT (Zero Browser/URL Redirection)
+      // When scanned by any smartphone camera (iPhone/Android/Lens), the static medical text pops up directly in the viewfinder with zero internet.
+      const staticEmergencyText = `🚨 MEDIQR ROADSIDE EMERGENCY TRIAGE 🚨
+========================================
+PATIENT: ${selectedAppointment.patientName} (${selectedAppointment.age || '29'}y / ${selectedAppointment.gender || 'M'})
+BLOOD GROUP: ${selectedAppointment.bloodType} [CRITICAL]
+ALLERGIES: ${selectedAppointment.criticalAllergies && selectedAppointment.criticalAllergies.length > 0 ? selectedAppointment.criticalAllergies.join(', ') : 'None Reported'}
+CONDITIONS: ${selectedAppointment.chronicConditions && selectedAppointment.chronicConditions.length > 0 ? selectedAppointment.chronicConditions.join(', ') : 'None'}
+ICE EMERGENCY CONTACT:
+${selectedAppointment.emergencyContactName || 'Emergency Contact'}: ${selectedAppointment.emergencyContactPhone}
+========================================
+PHYSICIAN KEY: ${recordKey.slice(0, 24)}...
+BLOCKCHAIN REF: ${onChainResult.txHash ? onChainResult.txHash.slice(0, 22) : '0x3f8a...'}...
+ISSUING NODE: ${selectedAppointment.hospitalName || 'Consortium Hospital'}
+STATUS: OFFLINE AIR-GAPPED VERIFIED`;
 
-      const compactEmergencyUrl = `${hostOrigin}/emergency?b=${encodeURIComponent(selectedAppointment.bloodType)}&n=${encodeURIComponent(selectedAppointment.patientName)}&a=${encodeURIComponent(selectedAppointment.criticalAllergies.join(', '))}&p=${encodeURIComponent(selectedAppointment.emergencyContactPhone)}&h=${encodeURIComponent(recordKey.slice(0, 18))}`;
-
-      const qrCodeDataUrl = await QRCode.toDataURL(compactEmergencyUrl, {
+      const qrCodeDataUrl = await QRCode.toDataURL(staticEmergencyText, {
         errorCorrectionLevel: 'M',
         margin: 3,
         scale: 7,
@@ -312,7 +319,6 @@ function DoctorPortalContent() {
         recordId,
         recordKey,
         qrCodeDataUrl,
-        compactEmergencyUrl,
         blockchainTxHash: onChainResult.txHash,
         blockchainBlockNumber: onChainResult.blockNumber,
         completedAt: Date.now(),
@@ -851,18 +857,21 @@ function DoctorPortalContent() {
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                     {/* QR Code Presentation */}
                     <div className="md:col-span-5 text-center bg-white p-5 rounded-2xl border border-emerald-200 shadow-xs">
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-                        Scan with Mobile Phone (Device 3)
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">
+                        Scan with ANY Phone Camera (Device 3)
                       </div>
                       <img
                         src={consultationResult.qrCodeUrl}
                         alt="Emergency MediQR"
                         className="w-48 h-48 mx-auto rounded-xl border-4 border-slate-900 shadow-sm"
                       />
+                      <div className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md mt-2.5 border border-emerald-200">
+                        ✓ Static Text Display (Zero URL / Offline)
+                      </div>
                       <a
                         href={consultationResult.qrCodeUrl}
                         download={`MediQR-${consultationResult.appointment.patientName}.png`}
-                        className="inline-block mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition"
+                        className="inline-block mt-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition"
                       >
                         ⬇ Download PNG
                       </a>

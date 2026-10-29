@@ -1,0 +1,19 @@
+name: Carbotrace Carbon Audit
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  carbon-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Audit PR Carbon Delta
+        uses: ./action
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          carbotrace-url: ''
+          threshold: '0.1'
