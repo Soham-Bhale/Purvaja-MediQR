@@ -1495,11 +1495,10 @@ export default function CarbotraceMediQRPage() {
                     : '/videos/blockchain-seal.mp4'
                 }
                 autoPlay
-                controls
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover pointer-events-none"
               />
             </div>
 
@@ -1522,51 +1521,6 @@ export default function CarbotraceMediQRPage() {
 
           </div>
 
-          {/* DEDICATED PROMPT CARD FOR DUAL-SIDED 3D VIDEO GENERATION */}
-          <div className="rounded-3xl bg-gradient-to-b from-indigo-950/40 to-slate-950 border border-indigo-500/30 p-8 sm:p-10 space-y-6">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-indigo-400">
-                  DEVELOPER &amp; DESIGN PROMPT
-                </span>
-                <h3 className="text-xl font-bold text-white">
-                  Generate Dual-Sided 3D Turntable Video (Runway Gen-3 / Sora / Kling / Luma)
-                </h3>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const promptText = `Hyper-realistic 8K macro product commercial of an aerospace-grade matte black titanium emergency medical smart card named 'MediQR'. The card floats weightlessly in dark studio volumetric rim lighting with subtle cyan neon reflections. Slow 360-degree rotational turntable orbit. SIDE 1 (FRONT): Shows a high-contrast ceramic laser-etched optical QR matrix with micro-engraved emergency vitals 'BLOOD: B+ • ALLERGY: PENICILLIN G • ICE: +91-98765-43211' and a glowing cyan crosshair insignia. The card smoothly flips 180 degrees to reveal SIDE 2 (BACK): A brushed titanium reverse surface featuring an exposed gold-plated microchip die, laser-etched 32-byte cryptographic hex physician hash 'KEY: 0x9f82c4...e10a', concentric copper NFC coil tracks visible beneath transparent sapphire glass, and consortium text 'CONSORTIUM HEALTHCARE LEDGER • ISO/IEC 14443A'. Photorealistic reflections, shallow depth of field, Apple industrial design aesthetics, 60fps, octane render, smooth cinematic motion blur.`;
-                  navigator.clipboard.writeText(promptText);
-                  alert('Video Generation Prompt copied to clipboard!');
-                }}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-indigo-600/30"
-              >
-                <span>📋</span>
-                <span>Copy 3D Video Prompt</span>
-              </button>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-black/60 border border-white/10 font-mono text-xs text-indigo-200 leading-relaxed select-all">
-              &quot;Hyper-realistic 8K macro product commercial of an aerospace-grade matte black titanium emergency medical smart card named &apos;MediQR&apos;. The card floats weightlessly in dark studio volumetric rim lighting with subtle cyan neon reflections. Slow 360-degree rotational turntable orbit. SIDE 1 (FRONT): Shows a high-contrast ceramic laser-etched optical QR matrix with micro-engraved emergency vitals &apos;BLOOD: B+ • ALLERGY: PENICILLIN G • ICE: +91-98765-43211&apos; and a glowing cyan crosshair insignia. The card smoothly flips 180 degrees to reveal SIDE 2 (BACK): A brushed titanium reverse surface featuring an exposed gold-plated microchip die, laser-etched 32-byte cryptographic hex physician hash &apos;KEY: 0x9f82c4...e10a&apos;, concentric copper NFC coil tracks visible beneath transparent sapphire glass, and consortium text &apos;CONSORTIUM HEALTHCARE LEDGER • ISO/IEC 14443A&apos;. Photorealistic reflections, shallow depth of field, Apple industrial design aesthetics, 60fps, octane render, smooth cinematic motion blur.&quot;
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-slate-400 pt-2 border-t border-white/10">
-              <div>
-                <strong className="text-white block">Compatible AI Models:</strong>
-                <span>Runway Gen-3 Alpha, OpenAI Sora, Kling AI, Luma Dream Machine</span>
-              </div>
-              <div>
-                <strong className="text-white block">Key Visual Details:</strong>
-                <span>Both sides rotating 360°, front QR matrix, reverse physician key</span>
-              </div>
-              <div>
-                <strong className="text-white block">Output Destination:</strong>
-                <span>Drop generated MP4 into <code className="text-cyan-300">public/videos/smart-card-mockup.mp4</code></span>
-              </div>
-            </div>
-          </div>
 
           {/* FINAL HIGH-IMPACT PRESENTATION CALL TO ACTION */}
           <div className="relative rounded-3xl bg-gradient-to-r from-cyan-950/60 via-slate-900 to-indigo-950/60 border border-cyan-500/30 p-8 sm:p-14 text-center overflow-hidden shadow-2xl">
@@ -1697,10 +1651,10 @@ export default function CarbotraceMediQRPage() {
                       : '/videos/hero.mp4'
                   }
                   autoPlay
-                  controls
                   loop
+                  muted
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               </div>
 
