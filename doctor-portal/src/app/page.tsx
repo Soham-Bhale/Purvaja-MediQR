@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import AssetPromptModal from '../components/AssetPromptModal';
 import EmailInboxModal from '../components/EmailInboxModal';
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MEDIQR CARBOTRACE-GRADE SCROLLYTELLING ENGINE v2.5
+   MEDIQR CARBOTRACE-GRADE SCROLLYTELLING ENGINE v2.6
    Zero-Trust Emergency Healthcare Consortium Architecture
    8 Interactive Chapters driven by native scroll progress & camera panning.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -62,7 +62,7 @@ const STORY: StoryChapter[] = [
       scope: 'unconscious patient · missing wallet · central server blackout',
       terms: ['Delay 43.5m', 'Conflict 100%', 'Identity 0%'],
     },
-    camera: { fx: -540, fy: -80, zoom: 1.35 },
+    camera: { fx: -540, fy: -80, zoom: 1.25 },
   },
   {
     id: '02',
@@ -89,7 +89,7 @@ const STORY: StoryChapter[] = [
       scope: 'air-gapped optical matrix · 1200 DPI ceramic laser etch',
       terms: ['Blood B+', 'Allergy Penicillin', 'ICE Active'],
     },
-    camera: { fx: -260, fy: -80, zoom: 1.35 },
+    camera: { fx: -260, fy: -80, zoom: 1.3 },
   },
   {
     id: '03',
@@ -116,7 +116,7 @@ const STORY: StoryChapter[] = [
       scope: 'tunnels · remote highways · air ambulance blackout zones',
       terms: ['HTTP 0', 'DNS 0', 'Cache Local'],
     },
-    camera: { fx: -260, fy: 120, zoom: 1.35 },
+    camera: { fx: -260, fy: 120, zoom: 1.3 },
   },
   {
     id: '04',
@@ -170,7 +170,7 @@ const STORY: StoryChapter[] = [
       scope: 'multi-hospital partition boundary · zero single point of failure',
       terms: ['Node A :5001', 'Node B :5002', 'IV 96-bit'],
     },
-    camera: { fx: 260, fy: 0, zoom: 1.25 },
+    camera: { fx: 260, fy: 0, zoom: 1.2 },
   },
   {
     id: '06',
@@ -339,7 +339,6 @@ function Box({
 
   return (
     <g opacity={opacity}>
-      {/* Front Y face */}
       <path
         d={pathOf([iso(x, y + d, z), c, iso(x + w, y + d, z + h), iso(x, y + d, z + h)])}
         fill={t[2]}
@@ -347,7 +346,6 @@ function Box({
         strokeWidth="0.8"
         strokeLinejoin="round"
       />
-      {/* Front X face */}
       <path
         d={pathOf([b, c, iso(x + w, y + d, z + h), top[1]])}
         fill={t[1]}
@@ -355,7 +353,6 @@ function Box({
         strokeWidth="0.8"
         strokeLinejoin="round"
       />
-      {/* Top face */}
       <path
         d={pathOf(top)}
         fill={t[0]}
@@ -430,7 +427,7 @@ function Led({ x, y, z, r = 2.5, color = '#38bdf8', pulse = false }: { x: number
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MAIN PAGE EXPORT WITH HIGH-SPEED CARBOTRACE ENGINE
+   MAIN PAGE COMPONENT
    ───────────────────────────────────────────────────────────────────────────── */
 export default function CarbotraceMediQRPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -438,7 +435,6 @@ export default function CarbotraceMediQRPage() {
   const counterRef = useRef<HTMLSpanElement>(null);
 
   const [active, setActive] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
 
   // Modals
   const [videoModalOpen, setVideoModalOpen] = useState(false);
@@ -446,7 +442,7 @@ export default function CarbotraceMediQRPage() {
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
 
-  // Scroll listener for 60fps camera interpolation
+  // Smooth 60fps scroll listener
   useEffect(() => {
     let rafId: number;
 
@@ -455,7 +451,6 @@ export default function CarbotraceMediQRPage() {
       const rect = containerRef.current.getBoundingClientRect();
       const total = containerRef.current.offsetHeight - window.innerHeight;
       const progress = clamp(-rect.top / (total || 1), 0, 1);
-      setScrollProgress(progress);
 
       const chapterIndex = clamp(Math.round(progress * (N - 1)), 0, N - 1);
       setActive(chapterIndex);
@@ -468,7 +463,6 @@ export default function CarbotraceMediQRPage() {
         );
       }
 
-      // Smooth metric counter display
       if (counterRef.current) {
         const curChap = STORY[chapterIndex];
         const val = curChap.metric.value;
@@ -502,23 +496,23 @@ export default function CarbotraceMediQRPage() {
   const curChapter = STORY[active];
 
   return (
-    <div className="relative min-h-screen bg-[#07090e] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white antialiased">
+    <div className="relative w-full min-h-screen bg-[#07090e] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white antialiased overflow-x-hidden m-0 p-0">
       
       {/* =========================================================================
           THE FULL-VIEWPORT SCROLLYTELLING TRACK (800vh TOTAL, PINNED AT 100svh)
       ========================================================================= */}
       <section
         ref={containerRef}
-        className="relative w-full"
+        className="relative w-full m-0 p-0"
         style={{ height: `${N * 100}vh` }}
         aria-label="MediQR Zero-Trust Healthcare Consortium Scrollytelling"
       >
-        <div className="sticky top-0 h-[100svh] w-full overflow-hidden flex flex-col justify-between bg-[#07090e]">
+        <div className="sticky top-0 h-[100svh] w-full overflow-hidden flex flex-col justify-between bg-[#07090e] m-0 p-0">
 
           {/* -----------------------------------------------------------------------
-              TOP CONSOLE NAVIGATION STRIP (CARBOTRACE-STYLE FLIGHT DECK)
+              TOP CONSOLE NAVIGATION STRIP (UNIFIED FLIGHT DECK)
           ----------------------------------------------------------------------- */}
-          <header className="relative z-30 shrink-0 border-b border-white/10 bg-[#0a0d14]/90 backdrop-blur-md px-4 py-2.5 sm:px-6 lg:px-8">
+          <header className="relative z-30 shrink-0 border-b border-white/10 bg-[#0a0d14]/95 backdrop-blur-md px-4 py-2.5 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between gap-4">
               
               {/* Brand Logo with Optical Shield */}
@@ -536,37 +530,55 @@ export default function CarbotraceMediQRPage() {
                 </div>
               </div>
 
-              {/* Central Architecture Pipeline Sequence */}
-              <div className="hidden xl:flex items-center gap-2 text-[9px] font-mono text-slate-400 tracking-[.14em]">
-                <span className={active === 0 ? 'text-rose-400 font-bold' : ''}>01 COLLISION</span>
-                <span className="text-white/20">→</span>
-                <span className={active === 1 ? 'text-cyan-400 font-bold' : ''}>02 GLYPH</span>
-                <span className="text-white/20">→</span>
-                <span className={active === 2 ? 'text-emerald-400 font-bold' : ''}>03 AIR-GAP</span>
-                <span className="text-white/20">→</span>
-                <span className={active === 3 ? 'text-blue-400 font-bold' : ''}>04 ESP32 MESH</span>
-                <span className="text-white/20">→</span>
-                <span className={active === 4 ? 'text-indigo-400 font-bold' : ''}>05 VAULTS</span>
-                <span className="text-white/20">→</span>
-                <span className={active === 5 ? 'text-amber-400 font-bold' : ''}>06 CONSENSUS</span>
-                <span className="text-white/20">→</span>
-                <span className={active === 6 ? 'text-teal-400 font-bold' : ''}>07 AUDIT</span>
-                <span className="text-white/20">→</span>
-                <span className={active === 7 ? 'text-cyan-300 font-bold' : ''}>08 3-DEVICE</span>
+              {/* Clickable Pipeline Chapter Flow */}
+              <div className="hidden xl:flex items-center gap-1 text-[9px] font-mono tracking-[.12em]">
+                {STORY.map((s, idx) => (
+                  <React.Fragment key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => goToChapter(idx)}
+                      className={`px-1.5 py-0.5 rounded transition cursor-pointer flex items-center gap-1 ${
+                        active === idx
+                          ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-400/40 shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <span className={active === idx ? 'text-cyan-400 font-bold' : 'text-slate-500'}>{s.id}</span>
+                      <span>{s.tag.replace('THE ', '')}</span>
+                    </button>
+                    {idx < N - 1 && <span className="text-white/20 text-[8px]">➔</span>}
+                  </React.Fragment>
+                ))}
               </div>
 
-              {/* Flight Deck Utility Controls */}
-              <div className="flex items-center gap-3 shrink-0">
+              {/* Utility Action Links */}
+              <div className="flex items-center gap-2.5 shrink-0">
                 
-                {/* Watch Incident Reconstruction Videos */}
+                {/* Watch Incident Videos Modal Button */}
                 <button
                   type="button"
                   onClick={() => setVideoModalOpen(true)}
-                  className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-slate-300 hover:text-white font-mono flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/50 border border-rose-500/40 text-xs text-rose-300 font-mono flex items-center gap-1.5 transition cursor-pointer"
                 >
-                  <span className="text-rose-400">🎬</span>
-                  <span className="hidden sm:inline">Incident Videos</span>
+                  <span>🎬</span>
+                  <span className="hidden sm:inline">Videos</span>
                 </button>
+
+                {/* Doctor Portal */}
+                <Link
+                  href="/doctor"
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-slate-300 hover:text-white font-mono transition hidden md:inline-block"
+                >
+                  Doctor EMR
+                </Link>
+
+                {/* Blockchain Explorer */}
+                <Link
+                  href="/blockchain"
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-amber-300 hover:text-amber-200 font-mono transition hidden lg:inline-block"
+                >
+                  Blockchain
+                </Link>
 
                 {/* Direct Patient Booking Link */}
                 <Link
@@ -580,7 +592,7 @@ export default function CarbotraceMediQRPage() {
                 <button
                   type="button"
                   onClick={() => goToChapter(0)}
-                  className="px-2.5 py-1 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[11px] font-mono transition cursor-pointer"
+                  className="px-2 py-1 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[11px] font-mono transition cursor-pointer"
                   title="Restart to Chapter 01"
                 >
                   ↺ 01
@@ -606,13 +618,13 @@ export default function CarbotraceMediQRPage() {
           </header>
 
           {/* -----------------------------------------------------------------------
-              MIDDLE STAGE: FULL-BLEED 3D ISOMETRIC ENGINE WITH CAMERA ZOOM & PAN
+              MIDDLE STAGE: FULL-BLEED 3D ISOMETRIC ENGINE WITH DIRECTIONAL ARROWS
           ----------------------------------------------------------------------- */}
           <div className="relative flex-1 min-h-0 w-full overflow-hidden">
             
             {/* Grid Pattern Floor */}
             <div
-              className="absolute inset-0 pointer-events-none opacity-20"
+              className="absolute inset-0 pointer-events-none opacity-25"
               style={{
                 backgroundImage: 'radial-gradient(circle, #38bdf8 0.8px, transparent 0.9px)',
                 backgroundSize: '24px 24px',
@@ -626,14 +638,37 @@ export default function CarbotraceMediQRPage() {
               preserveAspectRatio="xMidYMid meet"
             >
               <defs>
-                <linearGradient id="amberGlow" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
-                  <stop offset="1%" stopColor="#d97706" stopOpacity="0.2" />
-                </linearGradient>
-                <linearGradient id="cyanGlow" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
-                  <stop offset="1%" stopColor="#0284c7" stopOpacity="0.2" />
-                </linearGradient>
+                <style>{`
+                  @keyframes flowForward {
+                    from { stroke-dashoffset: 48; }
+                    to { stroke-dashoffset: 0; }
+                  }
+                  .flow-pipe {
+                    stroke-dasharray: 8 6;
+                    animation: flowForward 1.2s linear infinite;
+                  }
+                  .flow-pipe-fast {
+                    stroke-dasharray: 6 4;
+                    animation: flowForward 0.8s linear infinite;
+                  }
+                `}</style>
+                
+                {/* SVG Arrow Marker Heads */}
+                <marker id="arrow-cyan" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#06b6d4" />
+                </marker>
+                <marker id="arrow-emerald" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+                </marker>
+                <marker id="arrow-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b" />
+                </marker>
+                <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8" />
+                </marker>
+                <marker id="arrow-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#818cf8" />
+                </marker>
               </defs>
 
               {/* The Dynamically Panned & Zoomed Group */}
@@ -657,16 +692,12 @@ export default function CarbotraceMediQRPage() {
                     NODE 1: AMBULANCE TRIAGE VEHICLE (CH 01)
                 ------------------------------------------------------------- */}
                 <g id="node-ambulance">
-                  {/* Road Base Plate */}
                   <Box x={-660} y={-140} z={0} w={240} d={120} h={12} tone="base" />
                   <Screws x={-656} y={-136} z={12} w={232} d={112} inset={8} />
 
-                  {/* Ambulance Body */}
                   <Box x={-640} y={-120} z={12} w={200} d={80} h={110} tone="titanium" />
-                  {/* Ambulance Cab */}
                   <Box x={-640} y={-120} z={122} w={120} d={80} h={40} tone="white" />
 
-                  {/* Red Cross Emblem */}
                   <FaceText x={-580} y={-38} z={75} size={18} fill="#ef4444" weight={800} anchor="middle">
                     ✚
                   </FaceText>
@@ -674,7 +705,6 @@ export default function CarbotraceMediQRPage() {
                     AMBULANCE 04
                   </FaceText>
 
-                  {/* Side Telemetry HUD */}
                   <Box x={-510} y={-39} z={35} w={60} d={2} h={45} tone="cyan" />
                   <FaceText x={-480} y={-37} z={65} size={6.5} fill="#38bdf8" weight={700} anchor="middle">
                     UNCONSCIOUS
@@ -686,7 +716,6 @@ export default function CarbotraceMediQRPage() {
                     ER DELAY: 43.5m
                   </FaceText>
 
-                  {/* Emergency Flashing Siren Beacons */}
                   <Led x={-620} y={-80} z={166} color="#ef4444" pulse />
                   <Led x={-540} y={-80} z={166} color="#06b6d4" pulse />
                 </g>
@@ -695,16 +724,13 @@ export default function CarbotraceMediQRPage() {
                     NODE 2: MEDIQR TITANIUM KEYCARD & WRISTBAND (CH 02)
                 ------------------------------------------------------------- */}
                 <g id="node-keycard">
-                  {/* Base Pedestal */}
                   <Box x={-360} y={-140} z={0} w={200} d={120} h={12} tone="base" />
                   <Screws x={-356} y={-136} z={12} w={192} d={112} inset={8} />
 
-                  {/* Titanium Card Core */}
                   <Box x={-340} y={-120} z={12} w={160} d={80} h={100} tone="titanium" />
                   
-                  {/* Laser-Etched QR Optical Matrix on Front Face */}
+                  {/* Laser-Etched QR Optical Matrix */}
                   <Box x={-325} y={-39} z={25} w={70} d={2} h={70} tone="base" />
-                  {/* High-Density QR Pattern Simulation */}
                   {[-315, -300, -285, -270].map((qx, i) => (
                     <path
                       key={i}
@@ -714,7 +740,6 @@ export default function CarbotraceMediQRPage() {
                       strokeDasharray="4 3 6 2"
                     />
                   ))}
-                  {/* QR Alignment Corner Finders */}
                   <rect
                     x={iso(-320, -37, 85)[0] - 5}
                     y={iso(-320, -37, 85)[1] - 5}
@@ -734,7 +759,6 @@ export default function CarbotraceMediQRPage() {
                     strokeWidth="1.5"
                   />
 
-                  {/* Laser Silkscreen Typography */}
                   <FaceText x={-245} y={-38} z={82} size={7} fill="#ffffff" weight={700}>
                     MEDIQR TITANIUM
                   </FaceText>
@@ -748,7 +772,6 @@ export default function CarbotraceMediQRPage() {
                     ● PASSIVE ZERO-NET
                   </FaceText>
 
-                  {/* Microchip Die with Gold Traces */}
                   <Box x={-240} y={-80} z={114} w={35} d={35} h={6} tone="amber" />
                   <Led x={-222} y={-62} z={124} color="#10b981" />
                 </g>
@@ -760,7 +783,6 @@ export default function CarbotraceMediQRPage() {
                   <Box x={-340} y={60} z={0} w={160} d={120} h={12} tone="base" />
                   <Screws x={-336} y={64} z={12} w={152} d={112} inset={8} />
 
-                  {/* Phone Bevel Frame */}
                   <Box x={-320} y={80} z={12} w={120} d={80} h={140} tone="titanium" />
                   
                   {/* Phone Camera HUD Screen */}
@@ -794,10 +816,8 @@ export default function CarbotraceMediQRPage() {
                   <Box x={-100} y={-60} z={0} w={200} d={120} h={12} tone="base" />
                   <Screws x={-96} y={-56} z={12} w={192} d={112} inset={8} />
 
-                  {/* Green PCB Substrate */}
                   <Box x={-80} y={-40} z={12} w={160} d={80} h={20} tone="emerald" />
 
-                  {/* Gold Serpentine Antenna Trace */}
                   <path
                     d={lineOf([
                       iso(-70, -30, 33),
@@ -812,7 +832,6 @@ export default function CarbotraceMediQRPage() {
                     fill="none"
                   />
 
-                  {/* ESP32 Dual-Core Shielded Microchip */}
                   <Box x={0} y={-25} z={32} w={65} d={50} h={15} tone="base" />
                   <FaceText x={32} y={-27} z={42} size={6} fill="#ffffff" weight={700} anchor="middle">
                     ESP-WROOM-32
@@ -821,7 +840,6 @@ export default function CarbotraceMediQRPage() {
                     192.168.4.1 MESH
                   </FaceText>
 
-                  {/* Router Status LEDs */}
                   <Led x={-60} y={25} z={35} color="#38bdf8" pulse />
                   <Led x={-45} y={25} z={35} color="#10b981" />
                   <Led x={-30} y={25} z={35} color="#f59e0b" />
@@ -831,7 +849,6 @@ export default function CarbotraceMediQRPage() {
                     NODE 5: HOSPITAL SERVER VAULTS (APOLLO & FORTIS) (CH 05)
                 ------------------------------------------------------------- */}
                 <g id="node-vaults">
-                  {/* Shared Infrastructure Pedestal */}
                   <Box x={180} y={-160} z={0} w={180} d={320} h={12} tone="base" />
                   <Screws x={184} y={-156} z={12} w={172} d={312} inset={8} />
 
@@ -843,7 +860,6 @@ export default function CarbotraceMediQRPage() {
                   <FaceText x={270} y={-29} z={170} size={5.5} fill="#94a3b8" weight={600} anchor="middle">
                     AES-256-GCM ENCRYPTED
                   </FaceText>
-                  {/* Apollo Blade Drive Slots */}
                   {[140, 115, 90, 65, 40].map((bz, i) => (
                     <g key={i}>
                       <path
@@ -863,7 +879,6 @@ export default function CarbotraceMediQRPage() {
                   <FaceText x={270} y={131} z={170} size={5.5} fill="#94a3b8" weight={600} anchor="middle">
                     REDUNDANT SHARD PARTITION
                   </FaceText>
-                  {/* Fortis Blade Drive Slots */}
                   {[140, 115, 90, 65, 40].map((bz, i) => (
                     <g key={i}>
                       <path
@@ -883,7 +898,6 @@ export default function CarbotraceMediQRPage() {
                   <Box x={440} y={-80} z={0} w={200} d={160} h={12} tone="base" />
                   <Screws x={444} y={-76} z={12} w={192} d={152} inset={8} />
 
-                  {/* Cryptographic Block 104 (Payment Confirmation) */}
                   <Box x={460} y={-60} z={20} w={70} d={60} h={60} tone="amber" stroke="#f59e0b" />
                   <FaceText x={495} y={2} z={65} size={6.5} fill="#f59e0b" weight={800} anchor="middle">
                     BLOCK #104
@@ -895,7 +909,6 @@ export default function CarbotraceMediQRPage() {
                     APT-APO-2026
                   </FaceText>
 
-                  {/* Golden Consensus Chain Link */}
                   <path
                     d={lineOf([iso(530, -30, 50), iso(560, -30, 80)])}
                     stroke="#f59e0b"
@@ -903,7 +916,6 @@ export default function CarbotraceMediQRPage() {
                     strokeDasharray="3 2"
                   />
 
-                  {/* Cryptographic Block 105 (Medical Record Committed) */}
                   <Box x={550} y={0} z={50} w={80} d={70} h={70} tone="cyan" stroke="#38bdf8" />
                   <FaceText x={590} y={72} z={105} size={7} fill="#38bdf8" weight={800} anchor="middle">
                     BLOCK #105
@@ -919,50 +931,208 @@ export default function CarbotraceMediQRPage() {
                 </g>
 
                 {/* -------------------------------------------------------------
-                    INTER-NODE GLOWING DATA PACKET PIPES (ROUTED CHANNELS)
+                    ANIMATED DIRECTIONAL ARROWS & HIGH-SPEED LASER DATA PIPES
                 ------------------------------------------------------------- */}
                 <g id="pipes">
-                  {/* Ambulance -> Keycard */}
-                  <path
-                    d={lineOf([iso(-440, -80, 20), iso(-340, -80, 20)])}
-                    stroke="rgba(6, 182, 212, 0.4)"
-                    strokeWidth="3"
-                    strokeDasharray="6 4"
-                  />
-                  {/* Keycard -> ESP32 Router */}
-                  <path
-                    d={lineOf([iso(-180, -80, 20), iso(-80, 0, 20)])}
-                    stroke="rgba(6, 182, 212, 0.4)"
-                    strokeWidth="3"
-                    strokeDasharray="6 4"
-                  />
-                  {/* Phone -> ESP32 Router */}
-                  <path
-                    d={lineOf([iso(-180, 120, 20), iso(-80, 0, 20)])}
-                    stroke="rgba(16, 185, 129, 0.4)"
-                    strokeWidth="3"
-                    strokeDasharray="6 4"
-                  />
-                  {/* ESP32 -> Vaults */}
-                  <path
-                    d={lineOf([iso(80, 0, 20), iso(200, -80, 20)])}
-                    stroke="rgba(56, 189, 248, 0.4)"
-                    strokeWidth="3"
-                    strokeDasharray="6 4"
-                  />
-                  <path
-                    d={lineOf([iso(80, 0, 20), iso(200, 80, 20)])}
-                    stroke="rgba(129, 140, 248, 0.4)"
-                    strokeWidth="3"
-                    strokeDasharray="6 4"
-                  />
-                  {/* Vaults -> Blockchain */}
-                  <path
-                    d={lineOf([iso(340, -30, 50), iso(460, -30, 50)])}
-                    stroke="rgba(245, 158, 11, 0.6)"
-                    strokeWidth="3.5"
-                    strokeDasharray="4 3"
-                  />
+                  
+                  {/* PIPE 1: AMBULANCE ➔ KEYCARD (0.018s OPTICAL ACQUISITION) */}
+                  <g id="pipe-ambulance-keycard">
+                    <path
+                      d={lineOf([iso(-440, -80, 20), iso(-350, -80, 20)])}
+                      stroke="rgba(6, 182, 212, 0.15)"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d={lineOf([iso(-440, -80, 20), iso(-350, -80, 20)])}
+                      stroke="#06b6d4"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      markerEnd="url(#arrow-cyan)"
+                    />
+                    <path
+                      d={lineOf([iso(-440, -80, 20), iso(-350, -80, 20)])}
+                      stroke="#ffffff"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      className="flow-pipe"
+                    />
+                    <FaceText x={-395} y={-80} z={32} size={6} fill="#06b6d4" weight={700} anchor="middle">
+                      ▶ ▶ ▶ 0.018s SCAN ▶
+                    </FaceText>
+                  </g>
+
+                  {/* PIPE 2: KEYCARD ➔ PARAMEDIC PHONE (AIR-GAP CAMERA PARSE) */}
+                  <g id="pipe-keycard-phone">
+                    <path
+                      d={lineOf([iso(-260, -35, 20), iso(-260, 70, 20)])}
+                      stroke="rgba(16, 185, 129, 0.15)"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d={lineOf([iso(-260, -35, 20), iso(-260, 70, 20)])}
+                      stroke="#10b981"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      markerEnd="url(#arrow-emerald)"
+                    />
+                    <path
+                      d={lineOf([iso(-260, -35, 20), iso(-260, 70, 20)])}
+                      stroke="#ffffff"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      className="flow-pipe"
+                    />
+                    <FaceText x={-260} y={15} z={32} size={6} fill="#10b981" weight={700} anchor="middle">
+                      ▼ ▼ OFFLINE PARSE ▼
+                    </FaceText>
+                  </g>
+
+                  {/* PIPE 3: PHONE ➔ ESP32 ROUTER (192.168.4.1 WPA2-PSK MESH) */}
+                  <g id="pipe-phone-esp32">
+                    <path
+                      d={lineOf([iso(-200, 120, 20), iso(-120, 120, 20), iso(-85, 20, 20)])}
+                      stroke="rgba(6, 182, 212, 0.15)"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d={lineOf([iso(-200, 120, 20), iso(-120, 120, 20), iso(-85, 20, 20)])}
+                      stroke="#06b6d4"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      markerEnd="url(#arrow-cyan)"
+                    />
+                    <path
+                      d={lineOf([iso(-200, 120, 20), iso(-120, 120, 20), iso(-85, 20, 20)])}
+                      stroke="#ffffff"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="flow-pipe"
+                    />
+                    <FaceText x={-140} y={90} z={30} size={5.5} fill="#06b6d4" weight={700} anchor="middle">
+                      ▶ ▶ 192.168.4.1 MESH ▶
+                    </FaceText>
+                  </g>
+
+                  {/* PIPE 4: ESP32 ROUTER ➔ APOLLO VAULT A :5001 (AES-256-GCM) */}
+                  <g id="pipe-esp32-apollo">
+                    <path
+                      d={lineOf([iso(65, -15, 20), iso(130, -15, 20), iso(195, -85, 20)])}
+                      stroke="rgba(56, 189, 248, 0.15)"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d={lineOf([iso(65, -15, 20), iso(130, -15, 20), iso(195, -85, 20)])}
+                      stroke="#38bdf8"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      markerEnd="url(#arrow-blue)"
+                    />
+                    <path
+                      d={lineOf([iso(65, -15, 20), iso(130, -15, 20), iso(195, -85, 20)])}
+                      stroke="#ffffff"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="flow-pipe"
+                    />
+                    <FaceText x={145} y={-50} z={30} size={5.5} fill="#38bdf8" weight={700} anchor="middle">
+                      ▶ ▶ APOLLO :5001 SHARD ▶
+                    </FaceText>
+                  </g>
+
+                  {/* PIPE 5: ESP32 ROUTER ➔ FORTIS VAULT B :5002 (AES-256-GCM) */}
+                  <g id="pipe-esp32-fortis">
+                    <path
+                      d={lineOf([iso(65, 15, 20), iso(130, 15, 20), iso(195, 75, 20)])}
+                      stroke="rgba(129, 140, 248, 0.15)"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d={lineOf([iso(65, 15, 20), iso(130, 15, 20), iso(195, 75, 20)])}
+                      stroke="#818cf8"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      markerEnd="url(#arrow-purple)"
+                    />
+                    <path
+                      d={lineOf([iso(65, 15, 20), iso(130, 15, 20), iso(195, 75, 20)])}
+                      stroke="#ffffff"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="flow-pipe"
+                    />
+                    <FaceText x={145} y={50} z={30} size={5.5} fill="#818cf8" weight={700} anchor="middle">
+                      ▶ ▶ FORTIS :5002 SHARD ▶
+                    </FaceText>
+                  </g>
+
+                  {/* PIPE 6: HOSPITAL VAULTS ➔ ETHEREUM CONSORTIUM LEDGER (32-BYTE SHA-256) */}
+                  <g id="pipe-vaults-blockchain">
+                    <path
+                      d={lineOf([iso(340, -30, 50), iso(450, -30, 50)])}
+                      stroke="rgba(245, 158, 11, 0.2)"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d={lineOf([iso(340, -30, 50), iso(450, -30, 50)])}
+                      stroke="#f59e0b"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      markerEnd="url(#arrow-amber)"
+                    />
+                    <path
+                      d={lineOf([iso(340, -30, 50), iso(450, -30, 50)])}
+                      stroke="#ffffff"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className="flow-pipe-fast"
+                    />
+                    <FaceText x={395} y={-30} z={65} size={6} fill="#f59e0b" weight={800} anchor="middle">
+                      ▶ ▶ 32-BYTE SHA-256 PROOF ▶
+                    </FaceText>
+                  </g>
+
+                  {/* PIPE 7: BLOCKCHAIN PROOF ➔ TAMPER BARRIER (AUDIT VERIFICATION) */}
+                  <g id="pipe-blockchain-audit">
+                    <path
+                      d={lineOf([iso(550, 0, 125), iso(410, -60, 95)])}
+                      stroke="rgba(16, 185, 129, 0.2)"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d={lineOf([iso(550, 0, 125), iso(410, -60, 95)])}
+                      stroke="#10b981"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      markerEnd="url(#arrow-emerald)"
+                    />
+                    <path
+                      d={lineOf([iso(550, 0, 125), iso(410, -60, 95)])}
+                      stroke="#ffffff"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      className="flow-pipe"
+                    />
+                    <FaceText x={475} y={-30} z={115} size={5.5} fill="#10b981" weight={700} anchor="middle">
+                      ◀ ◀ AUDIT PASS (0 CLASH)
+                    </FaceText>
+                  </g>
+
                 </g>
 
               </g>
@@ -973,7 +1143,6 @@ export default function CarbotraceMediQRPage() {
             ------------------------------------------------------------------- */}
             <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex flex-col justify-center px-4 sm:px-8 lg:px-12 max-w-lg lg:max-w-xl">
               
-              {/* Soft Gradient Mask for readability */}
               <div
                 className="pointer-events-none absolute inset-y-0 left-0 w-[140%] -z-10"
                 style={{
@@ -1077,7 +1246,6 @@ export default function CarbotraceMediQRPage() {
                   {curChapter.metric.sub}
                 </div>
 
-                {/* Live Node Redundancy Status */}
                 <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[9px] font-mono text-emerald-400">
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -1125,7 +1293,6 @@ export default function CarbotraceMediQRPage() {
           <footer className="relative z-30 shrink-0 border-t border-white/10 bg-[#0a0d14]/90 backdrop-blur-md px-4 py-2 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono">
               
-              {/* Scientific Formula Definition */}
               <div className="flex items-center gap-2">
                 <span className="text-slate-500 tracking-wider">EQUATION:</span>
                 <span className="text-white font-semibold truncate">
@@ -1133,7 +1300,6 @@ export default function CarbotraceMediQRPage() {
                 </span>
               </div>
 
-              {/* Live Evaluated Term */}
               <div className="flex items-center gap-3">
                 <div className="text-cyan-400 font-bold">
                   = {curChapter.formula.value}
@@ -1156,7 +1322,6 @@ export default function CarbotraceMediQRPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg">
           <div className="relative w-full max-w-4xl bg-[#0a0d14] border border-white/20 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10">
               <div className="flex items-center gap-2 font-mono text-sm font-bold text-white">
                 <span className="text-rose-400">🎬</span>
@@ -1171,7 +1336,6 @@ export default function CarbotraceMediQRPage() {
               </button>
             </div>
 
-            {/* Video Selector Tabs */}
             <div className="flex overflow-x-auto p-3 gap-2 border-b border-white/10 bg-slate-950/60 font-mono text-xs">
               <button
                 type="button"
@@ -1220,7 +1384,6 @@ export default function CarbotraceMediQRPage() {
               </button>
             </div>
 
-            {/* Active Video Player Screen */}
             <div className="p-6 flex-1 overflow-y-auto space-y-4">
               <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl">
                 <video
@@ -1244,7 +1407,6 @@ export default function CarbotraceMediQRPage() {
                 />
               </div>
 
-              {/* Video Technical Annotation */}
               <div className="p-4 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-slate-300 space-y-1 font-mono">
                 {selectedVideo === 'crisis' && (
                   <>
@@ -1279,9 +1441,8 @@ export default function CarbotraceMediQRPage() {
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="p-4 border-t border-white/10 bg-slate-950 flex justify-between items-center text-xs font-mono">
-              <span className="text-slate-400">MediQR Video Telemetry Suite v2.5</span>
+              <span className="text-slate-400">MediQR Video Telemetry Suite v2.6</span>
               <button
                 type="button"
                 onClick={() => setVideoModalOpen(false)}
