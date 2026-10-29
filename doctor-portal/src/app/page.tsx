@@ -1316,6 +1316,297 @@ export default function CarbotraceMediQRPage() {
       </section>
 
       {/* =========================================================================
+          SECTION 2: DUAL-SIDED PHYSICAL ARTIFACT & VIDEO SHOWCASE CARD
+          (Directly follows Chapter 08 with video playback & generation prompt)
+      ========================================================================= */}
+      <section id="hardware-video-showcase" className="relative z-20 w-full bg-[#0a0d14] border-t border-white/10 py-24 px-4 sm:px-6 lg:px-8">
+        
+        <div className="max-w-6xl mx-auto space-y-16">
+          
+          {/* Section Header */}
+          <div className="text-center space-y-4 max-w-3xl mx-auto">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-mono font-semibold text-cyan-400">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              PHYSICAL-TO-DIGITAL ARTIFACT • v2.6
+            </span>
+
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+              Dual-Sided Hardware Architecture.
+              <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300">
+                The Optical Glyph and The Physician Key.
+              </span>
+            </h2>
+
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+              Laser-etched aerospace titanium keycard and passive silicone wristband engineered to survive 850°C trauma without battery power or cellular connectivity.
+            </p>
+          </div>
+
+          {/* Side-by-Side Dual-Surface Architecture Explanation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* SIDE A: FRONT FACE */}
+            <div className="p-8 rounded-3xl bg-slate-900/80 border border-cyan-500/30 relative overflow-hidden space-y-5 shadow-2xl">
+              <div className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl bg-cyan-500/10 border-b border-l border-cyan-500/20 font-mono text-[10px] text-cyan-300 font-bold uppercase">
+                SIDE A • FRONT FACE
+              </div>
+
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xl font-bold">
+                📱
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white">Roadside Emergency Optical Matrix</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  High-density 1200 DPI ceramic laser-etched QR matrix readable by <strong>ANY smartphone camera in 0.018s</strong> with zero internet, zero apps, and zero cloud redirection.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-2 font-mono text-xs">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">ENCODED EMERGENCY TRIAGE DATA:</div>
+                <div className="text-white font-bold flex items-center justify-between">
+                  <span>Patient: Rahul Sharma (29M)</span>
+                  <span className="text-rose-400">BLOOD: B+</span>
+                </div>
+                <div className="text-amber-300 text-[11px]">
+                  Allergies: Penicillin G, Aspirin [CRITICAL]
+                </div>
+                <div className="text-slate-400 text-[11px]">
+                  ICE Contact: Pooja Sharma (+91-98765-43211)
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-cyan-400">
+                <span>● 100% Offline Viewfinder HUD</span>
+                <span className="text-emerald-400">Zero Cloud Dependency</span>
+              </div>
+            </div>
+
+            {/* SIDE B: REVERSE FACE */}
+            <div className="p-8 rounded-3xl bg-slate-900/80 border border-indigo-500/30 relative overflow-hidden space-y-5 shadow-2xl">
+              <div className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-2xl bg-indigo-500/10 border-b border-l border-indigo-500/20 font-mono text-[10px] text-indigo-300 font-bold uppercase">
+                SIDE B • REVERSE FACE
+              </div>
+
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl font-bold">
+                ⛓️
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white">Cryptographic Physician Key &amp; NFC</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Exposed gold-plated microchip die and laser-engraved 32-byte salted HMAC token used by authorized doctors to decrypt clinical records across hospital consortium nodes.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-2 font-mono text-xs">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">PHYSICIAN ACCESS &amp; CONSORTIUM PROOF:</div>
+                <div className="text-indigo-300 text-[11px] truncate">
+                  Key: 0x9f82c448a091...e10a (AES-256-GCM)
+                </div>
+                <div className="text-slate-300 text-[11px] truncate">
+                  Block Ref: 0x3f8a0912...77bb (Ethereum Anchor)
+                </div>
+                <div className="text-emerald-400 text-[11px]">
+                  NFC Protocol: ISO/IEC 14443 Type A (Passive)
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-indigo-400">
+                <span>● 32-Byte SHA-256 Anchor</span>
+                <span className="text-emerald-400">Zero PII On-Chain</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* THE EMBEDDED VIDEO SHOWING CARD */}
+          <div className="rounded-3xl bg-slate-950 border border-white/15 p-6 sm:p-10 shadow-2xl space-y-6">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">
+                  CINEMATIC PRODUCT RECONSTRUCTION
+                </span>
+                <h3 className="text-2xl font-bold text-white mt-1">
+                  Watch MediQR Hardware &amp; Consortium Protocol in Action
+                </h3>
+              </div>
+
+              {/* Video Selector Tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto font-mono text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedVideo('card')}
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
+                    selectedVideo === 'card' ? 'bg-cyan-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                  }`}
+                >
+                  Dual-Sided Card
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVideo('solution')}
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
+                    selectedVideo === 'solution' ? 'bg-emerald-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                  }`}
+                >
+                  0.018s Scan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVideo('crisis')}
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
+                    selectedVideo === 'crisis' ? 'bg-rose-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                  }`}
+                >
+                  The Crisis
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVideo('blockchain')}
+                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
+                    selectedVideo === 'blockchain' ? 'bg-amber-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                  }`}
+                >
+                  Blockchain Seal
+                </button>
+              </div>
+            </div>
+
+            {/* Embedded Active Video Player */}
+            <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl">
+              <video
+                key={selectedVideo}
+                src={
+                  selectedVideo === 'card'
+                    ? '/videos/smart-card-mockup.mp4'
+                    : selectedVideo === 'solution'
+                    ? '/videos/the-solution.mp4'
+                    : selectedVideo === 'crisis'
+                    ? '/videos/the-crisis.mp4'
+                    : '/videos/blockchain-seal.mp4'
+                }
+                autoPlay
+                controls
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs font-mono text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Format: 1080p 60fps Macro Render</span>
+                <span>•</span>
+                <span>Dual-Segment Visual Encoding</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(true)}
+                className="text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Expand Full Video Showcase Modal</span>
+                <span>→</span>
+              </button>
+            </div>
+
+          </div>
+
+          {/* DEDICATED PROMPT CARD FOR DUAL-SIDED 3D VIDEO GENERATION */}
+          <div className="rounded-3xl bg-gradient-to-b from-indigo-950/40 to-slate-950 border border-indigo-500/30 p-8 sm:p-10 space-y-6">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-indigo-400">
+                  DEVELOPER &amp; DESIGN PROMPT
+                </span>
+                <h3 className="text-xl font-bold text-white">
+                  Generate Dual-Sided 3D Turntable Video (Runway Gen-3 / Sora / Kling / Luma)
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const promptText = `Hyper-realistic 8K macro product commercial of an aerospace-grade matte black titanium emergency medical smart card named 'MediQR'. The card floats weightlessly in dark studio volumetric rim lighting with subtle cyan neon reflections. Slow 360-degree rotational turntable orbit. SIDE 1 (FRONT): Shows a high-contrast ceramic laser-etched optical QR matrix with micro-engraved emergency vitals 'BLOOD: B+ • ALLERGY: PENICILLIN G • ICE: +91-98765-43211' and a glowing cyan crosshair insignia. The card smoothly flips 180 degrees to reveal SIDE 2 (BACK): A brushed titanium reverse surface featuring an exposed gold-plated microchip die, laser-etched 32-byte cryptographic hex physician hash 'KEY: 0x9f82c4...e10a', concentric copper NFC coil tracks visible beneath transparent sapphire glass, and consortium text 'CONSORTIUM HEALTHCARE LEDGER • ISO/IEC 14443A'. Photorealistic reflections, shallow depth of field, Apple industrial design aesthetics, 60fps, octane render, smooth cinematic motion blur.`;
+                  navigator.clipboard.writeText(promptText);
+                  alert('Video Generation Prompt copied to clipboard!');
+                }}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-indigo-600/30"
+              >
+                <span>📋</span>
+                <span>Copy 3D Video Prompt</span>
+              </button>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-black/60 border border-white/10 font-mono text-xs text-indigo-200 leading-relaxed select-all">
+              &quot;Hyper-realistic 8K macro product commercial of an aerospace-grade matte black titanium emergency medical smart card named &apos;MediQR&apos;. The card floats weightlessly in dark studio volumetric rim lighting with subtle cyan neon reflections. Slow 360-degree rotational turntable orbit. SIDE 1 (FRONT): Shows a high-contrast ceramic laser-etched optical QR matrix with micro-engraved emergency vitals &apos;BLOOD: B+ • ALLERGY: PENICILLIN G • ICE: +91-98765-43211&apos; and a glowing cyan crosshair insignia. The card smoothly flips 180 degrees to reveal SIDE 2 (BACK): A brushed titanium reverse surface featuring an exposed gold-plated microchip die, laser-etched 32-byte cryptographic hex physician hash &apos;KEY: 0x9f82c4...e10a&apos;, concentric copper NFC coil tracks visible beneath transparent sapphire glass, and consortium text &apos;CONSORTIUM HEALTHCARE LEDGER • ISO/IEC 14443A&apos;. Photorealistic reflections, shallow depth of field, Apple industrial design aesthetics, 60fps, octane render, smooth cinematic motion blur.&quot;
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-slate-400 pt-2 border-t border-white/10">
+              <div>
+                <strong className="text-white block">Compatible AI Models:</strong>
+                <span>Runway Gen-3 Alpha, OpenAI Sora, Kling AI, Luma Dream Machine</span>
+              </div>
+              <div>
+                <strong className="text-white block">Key Visual Details:</strong>
+                <span>Both sides rotating 360°, front QR matrix, reverse physician key</span>
+              </div>
+              <div>
+                <strong className="text-white block">Output Destination:</strong>
+                <span>Drop generated MP4 into <code className="text-cyan-300">public/videos/smart-card-mockup.mp4</code></span>
+              </div>
+            </div>
+          </div>
+
+          {/* FINAL HIGH-IMPACT PRESENTATION CALL TO ACTION */}
+          <div className="relative rounded-3xl bg-gradient-to-r from-cyan-950/60 via-slate-900 to-indigo-950/60 border border-cyan-500/30 p-8 sm:p-14 text-center overflow-hidden shadow-2xl">
+            <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+              <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                EVALUATION READY • 3-DEVICE SUITE
+              </span>
+
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Ready for the Academic &amp; Clinical Demonstration?
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                Reserve patient vitals, mint identity tokens anchored on-chain, conduct doctor EMR consultations, and verify air-gapped roadside triage on mobile phone cameras.
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-2 font-mono">
+                <Link
+                  href="/book"
+                  className="px-7 py-3.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-xl shadow-cyan-600/30 transition transform hover:-translate-y-0.5"
+                >
+                  Book Patient Care (₹500) →
+                </Link>
+
+                <Link
+                  href="/doctor"
+                  className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-xs transition"
+                >
+                  Doctor EMR Portal →
+                </Link>
+
+                <Link
+                  href="/blockchain"
+                  className="px-6 py-3.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 font-semibold text-xs transition"
+                >
+                  Live Blockchain Activity →
+                </Link>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* =========================================================================
           VIDEO SHOWCASE MODAL (INSPECT ALL 5 INCIDENT RECONSTRUCTION VIDEOS)
       ========================================================================= */}
       {videoModalOpen && (
