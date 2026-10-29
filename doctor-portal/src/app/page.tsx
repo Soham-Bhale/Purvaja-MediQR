@@ -62,7 +62,7 @@ const STORY: StoryChapter[] = [
       scope: 'unconscious patient · missing wallet · central server blackout',
       terms: ['Delay 43.5m', 'Conflict 100%', 'Identity 0%'],
     },
-    camera: { fx: -540, fy: -80, zoom: 1.25 },
+    camera: { fx: 202, fy: 110, zoom: 1.25 },
   },
   {
     id: '02',
@@ -89,7 +89,7 @@ const STORY: StoryChapter[] = [
       scope: 'air-gapped optical matrix · 1200 DPI ceramic laser etch',
       terms: ['Blood B+', 'Allergy Penicillin', 'ICE Active'],
     },
-    camera: { fx: -260, fy: -80, zoom: 1.3 },
+    camera: { fx: 444, fy: 260, zoom: 1.30 },
   },
   {
     id: '03',
@@ -116,7 +116,7 @@ const STORY: StoryChapter[] = [
       scope: 'tunnels · remote highways · air ambulance blackout zones',
       terms: ['HTTP 0', 'DNS 0', 'Cache Local'],
     },
-    camera: { fx: -260, fy: 120, zoom: 1.3 },
+    camera: { fx: 271, fy: 340, zoom: 1.30 },
   },
   {
     id: '04',
@@ -143,7 +143,7 @@ const STORY: StoryChapter[] = [
       scope: 'hardware access point · blue link LED indicator · zero cloud',
       terms: ['Freq 2.4GHz', 'Clients 3/4', 'Loss 0.0%'],
     },
-    camera: { fx: 0, fy: 0, zoom: 1.3 },
+    camera: { fx: 600, fy: 455, zoom: 1.30 },
   },
   {
     id: '05',
@@ -170,7 +170,7 @@ const STORY: StoryChapter[] = [
       scope: 'multi-hospital partition boundary · zero single point of failure',
       terms: ['Node A :5001', 'Node B :5002', 'IV 96-bit'],
     },
-    camera: { fx: 260, fy: 0, zoom: 1.2 },
+    camera: { fx: 834, fy: 520, zoom: 1.20 },
   },
   {
     id: '06',
@@ -197,7 +197,7 @@ const STORY: StoryChapter[] = [
       scope: 'zero personal health information on-chain · immutable EVM state',
       terms: ['SHA-256', 'Gas 48,201', 'Proof Immutable'],
     },
-    camera: { fx: 540, fy: 0, zoom: 1.25 },
+    camera: { fx: 1068, fy: 690, zoom: 1.25 },
   },
   {
     id: '07',
@@ -224,7 +224,7 @@ const STORY: StoryChapter[] = [
       scope: 'instant bit-flip rejection · mathematical proof of authenticity',
       terms: ['Clash 0', 'Audit Pass', 'Tamper Blocked'],
     },
-    camera: { fx: 400, fy: -50, zoom: 1.2 },
+    camera: { fx: 990, fy: 615, zoom: 1.20 },
   },
   {
     id: '08',
@@ -251,7 +251,7 @@ const STORY: StoryChapter[] = [
       scope: 'zero-cloud sovereignty · live academic presentation setup',
       terms: ['Demo Port 3000', 'Ports 5001/5002', 'ESP32 192.168.4.1'],
     },
-    camera: { fx: 0, fy: 0, zoom: 0.95 },
+    camera: { fx: 600, fy: 430, zoom: 0.85 },
     cta: true,
   },
 ];
@@ -302,7 +302,8 @@ function cameraAt(progress: number) {
   const t = clamp(progress, 0, 1) * (N - 1);
   const i = clamp(Math.floor(t), 0, N - 2);
   const f = t - i;
-  const k = smooth(f);
+  // Keep camera locked on active node for first 35% of each chapter, then smoothly glide to next
+  const k = smooth(clamp((f - 0.35) / 0.55, 0, 1));
   const a = STORY[i].camera;
   const b = STORY[Math.min(i + 1, N - 1)].camera;
   return {
@@ -438,7 +439,7 @@ export default function CarbotraceMediQRPage() {
 
   // Modals
   const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<'crisis' | 'solution' | 'card' | 'blockchain' | 'hero'>('crisis');
+  const [selectedVideo, setSelectedVideo] = useState<'crisis' | 'solution' | 'card' | 'blockchain' | 'hero'>('card');
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
 
@@ -457,9 +458,14 @@ export default function CarbotraceMediQRPage() {
 
       const cam = cameraAt(progress);
       if (cameraRef.current) {
+        // Position node cleanly in center-right viewing area on desktop (720px)
+        // Transition to center (600px) when on Chapter 8 overview
+        const targetX = lerp(720, 600, smooth(clamp((progress - 0.85) / 0.15, 0, 1)));
+        const targetY = 450;
+        const z = cam.zoom;
         cameraRef.current.setAttribute(
           'transform',
-          `translate(${(-cam.fx * cam.zoom + 600).toFixed(1)} ${(-cam.fy * cam.zoom + 450).toFixed(1)}) scale(${cam.zoom.toFixed(3)})`
+          `translate(${(targetX - cam.fx * z).toFixed(2)} ${(targetY - cam.fy * z).toFixed(2)}) scale(${z.toFixed(4)})`
         );
       }
 
@@ -496,7 +502,7 @@ export default function CarbotraceMediQRPage() {
   const curChapter = STORY[active];
 
   return (
-    <div className="relative w-full min-h-screen bg-[#07090e] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white antialiased overflow-x-hidden m-0 p-0">
+    <div className="relative w-full min-h-screen bg-[#07090e] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white antialiased m-0 p-0">
       
       {/* =========================================================================
           THE FULL-VIEWPORT SCROLLYTELLING TRACK (800vh TOTAL, PINNED AT 100svh)

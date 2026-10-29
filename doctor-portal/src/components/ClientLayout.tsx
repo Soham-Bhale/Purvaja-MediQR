@@ -20,7 +20,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   // For the homepage, render completely full-bleed without outer margins, white bars, or duplicate navbar
   if (isHome) {
     return (
-      <main className="w-full min-h-screen bg-[#07090e] text-slate-100 overflow-x-hidden">
+      <main className="w-full min-h-screen bg-[#07090e] text-slate-100">
         {children}
       </main>
     );
