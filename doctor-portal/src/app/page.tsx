@@ -11,6 +11,7 @@ import { mineNewBlock } from '../lib/blockchain-blocks';
 import { sendAppointmentConfirmationEmail } from '../lib/email-service';
 import CinematicBackground from '../components/CinematicBackground';
 import AppleVideoCard from '../components/AppleVideoCard';
+import IsometricStage from '../components/IsometricStage';
 import AssetPromptModal from '../components/AssetPromptModal';
 import EmailInboxModal from '../components/EmailInboxModal';
 
@@ -215,6 +216,13 @@ export default function PatientPortalHomePage() {
           {/* Action CTAs */}
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <a
+              href="#interactive-stage"
+              className="px-7 py-4 rounded-2xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-400/50 text-cyan-200 font-bold text-sm sm:text-base backdrop-blur-md transition flex items-center gap-2 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-600/20"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span>🎮 3D Architecture Tour (01–08)</span>
+            </a>
+            <a
               href="#booking-portal"
               className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transition-all transform hover:-translate-y-0.5"
             >
@@ -222,17 +230,17 @@ export default function PatientPortalHomePage() {
             </a>
             <a
               href="#the-crisis"
-              className="px-7 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-bold text-sm sm:text-base backdrop-blur-md transition"
+              className="px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-bold text-sm sm:text-base backdrop-blur-md transition"
             >
-              🎬 Watch The Crisis &amp; Solution
+              🎬 Watch Video Showcases
             </a>
             <button
               type="button"
               onClick={() => setPromptModalOpen(true)}
-              className="px-6 py-4 rounded-2xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-200 font-bold text-xs sm:text-sm backdrop-blur-md transition flex items-center gap-2 cursor-pointer"
+              className="px-5 py-4 rounded-2xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-200 font-bold text-xs sm:text-sm backdrop-blur-md transition flex items-center gap-2 cursor-pointer"
             >
               <span>✨</span>
-              <span>AI Video Prompts</span>
+              <span>AI Prompts</span>
             </button>
           </div>
 
@@ -257,6 +265,13 @@ export default function PatientPortalHomePage() {
             </div>
           </div>
         </section>
+
+        {/* =========================================================================
+            INTERACTIVE 3D ISOMETRIC CYBER-PHYSICAL STAGE (CARBO-TRACE STYLE ENGINE)
+        ========================================================================= */}
+        <div id="interactive-stage" className="scroll-mt-20">
+          <IsometricStage />
+        </div>
 
         {/* =========================================================================
             SECTION 1: THE CRISIS (THE PROBLEM WE SOLVE)

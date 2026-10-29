@@ -149,11 +149,14 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               </Link>
 
               {/* Apple-style Smooth Scroll Navigation */}
-              <nav className="hidden lg:flex items-center gap-8 text-xs font-semibold text-slate-300">
+              <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-slate-300">
+                <a href="#interactive-stage" className="text-cyan-300 hover:text-white font-bold transition flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  3D Architecture
+                </a>
                 <a href="#the-crisis" className="hover:text-white transition">The Crisis</a>
                 <a href="#the-breakthrough" className="hover:text-white transition">The Breakthrough</a>
                 <a href="#hardware-showcase" className="hover:text-white transition">Hardware &amp; Card</a>
-                <a href="#blockchain-ledger" className="hover:text-white transition">Blockchain Security</a>
                 <a href="#booking-portal" className="hover:text-white transition">Book Consultation</a>
                 <a href="#faq" className="hover:text-white transition">FAQ</a>
               </nav>
