@@ -77,9 +77,9 @@ export interface Appointment {
   completedAt?: number;
 }
 
-export const APPOINTMENTS_STORAGE_KEY = 'mediqr_consortium_appointments_v1';
+export const APPOINTMENTS_STORAGE_KEY = 'mediqr_consortium_appointments_v2';
 
-// Initial pre-seeded appointments for instant academic demo
+// Initial pre-seeded appointments (Single clean baseline appointment)
 export const INITIAL_APPOINTMENTS: Appointment[] = [
   {
     id: 'APT-APO-2026-8812',
@@ -128,37 +128,6 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     blockchainTxHash: '0x7f48a129d4901923e4f71a0b38c2918471b02934810293847192837491028374',
     blockchainBlockNumber: 1,
     completedAt: Date.now() - 3600000 * 2,
-  },
-  {
-    id: 'APT-FOR-2026-9431',
-    patientId: 'PAT-ROBERT-FOX-002',
-    patientName: 'Robert Fox',
-    email: 'robert.fox@globalnet.org',
-    phone: '+1-555-4821',
-    age: 58,
-    gender: 'Male',
-    bloodType: 'AB+',
-    criticalAllergies: ['Contrast Dye (Iodine)', 'Sulfa'],
-    chronicConditions: ['Coronary Artery Disease', 'Type 2 Diabetes'],
-    emergencyContactName: 'Sarah Fox (Daughter)',
-    emergencyContactPhone: '+1-555-4821',
-    nationalId: 'IN-AADHAAR-4821-9921-3841',
-    patientHash: '0x88f4b23d91ca042781bcf704e6c927481237a912bb0e55597178eae3bc56872',
-    hospitalId: 'HOSPITAL-NODE-B',
-    hospitalName: 'Fortis Healthcare Network',
-    hospitalNodeUrl: 'http://localhost:5002',
-    doctorId: '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc',
-    doctorName: 'Dr. Ananya Sharma',
-    department: 'Chief Pathology & Diagnostics',
-    appointmentDate: new Date().toISOString().split('T')[0],
-    timeSlot: '11:30 AM - 12:00 PM',
-    consultationReason: 'Bi-annual lipid profile and cardiovascular diagnostic assessment',
-    serviceFee: 500,
-    paymentStatus: 'PAID',
-    paymentMethod: 'Credit Card (Visa)',
-    paymentTxRef: 'TXN-CARD-99201481',
-    status: 'PENDING_EXAMINATION',
-    bookedAt: Date.now() - 3600000 * 3,
   },
 ];
 

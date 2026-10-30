@@ -904,36 +904,22 @@ export default function CarbotraceMediQRPage() {
                   <Box x={440} y={-80} z={0} w={200} d={160} h={12} tone="base" />
                   <Screws x={444} y={-76} z={12} w={192} d={152} inset={8} />
 
-                  <Box x={460} y={-60} z={20} w={70} d={60} h={60} tone="amber" stroke="#f59e0b" />
-                  <FaceText x={495} y={2} z={65} size={6.5} fill="#f59e0b" weight={800} anchor="middle">
-                    BLOCK #104
+                  {/* Single Pristine Consortium Block (Block #001) */}
+                  <Box x={480} y={-40} z={15} w={100} d={90} h={85} tone="cyan" stroke="#38bdf8" />
+                  <FaceText x={530} y={51} z={82} size={7.5} fill="#38bdf8" weight={800} anchor="middle">
+                    BLOCK #001
                   </FaceText>
-                  <FaceText x={495} y={2} z={50} size={5} fill="#ffffff" weight={600} anchor="middle">
-                    ₹500 FEE MINED
+                  <FaceText x={530} y={51} z={66} size={6} fill="#ffffff" weight={700} anchor="middle">
+                    CONSORTIUM ROOT
                   </FaceText>
-                  <FaceText x={495} y={2} z={35} size={4.5} fill="#fbbf24" weight={500} anchor="middle">
-                    APT-APO-2026
+                  <FaceText x={530} y={51} z={50} size={5} fill="#94a3b8" weight={500} anchor="middle">
+                    0x3a4b9c... SHA-256
                   </FaceText>
-
-                  <path
-                    d={lineOf([iso(530, -30, 50), iso(560, -30, 80)])}
-                    stroke="#f59e0b"
-                    strokeWidth="3.5"
-                    strokeDasharray="3 2"
-                  />
-
-                  <Box x={550} y={0} z={50} w={80} d={70} h={70} tone="cyan" stroke="#38bdf8" />
-                  <FaceText x={590} y={72} z={105} size={7} fill="#38bdf8" weight={800} anchor="middle">
-                    BLOCK #105
-                  </FaceText>
-                  <FaceText x={590} y={72} z={88} size={5} fill="#ffffff" weight={700} anchor="middle">
-                    REC-APOLLO-001
-                  </FaceText>
-                  <FaceText x={590} y={72} z={72} size={4.5} fill="#94a3b8" weight={500} anchor="middle">
-                    0xf305f9e0... SHA-256
+                  <FaceText x={530} y={51} z={34} size={5} fill="#10b981" weight={600} anchor="middle">
+                    ● IMMUTABLE ANCHOR
                   </FaceText>
 
-                  <Led x={590} y={72} z={115} color="#10b981" pulse />
+                  <Led x={530} y={51} z={95} color="#10b981" pulse />
                 </g>
 
                 {/* -------------------------------------------------------------
@@ -1088,26 +1074,26 @@ export default function CarbotraceMediQRPage() {
                   {/* PIPE 6: HOSPITAL VAULTS ➔ ETHEREUM CONSORTIUM LEDGER (32-BYTE SHA-256) */}
                   <g id="pipe-vaults-blockchain">
                     <path
-                      d={lineOf([iso(340, -30, 50), iso(450, -30, 50)])}
+                      d={lineOf([iso(340, -30, 50), iso(480, -30, 50)])}
                       stroke="rgba(245, 158, 11, 0.2)"
                       strokeWidth="10"
                       strokeLinecap="round"
                     />
                     <path
-                      d={lineOf([iso(340, -30, 50), iso(450, -30, 50)])}
+                      d={lineOf([iso(340, -30, 50), iso(480, -30, 50)])}
                       stroke="#f59e0b"
                       strokeWidth="3"
                       strokeLinecap="round"
                       markerEnd="url(#arrow-amber)"
                     />
                     <path
-                      d={lineOf([iso(340, -30, 50), iso(450, -30, 50)])}
+                      d={lineOf([iso(340, -30, 50), iso(480, -30, 50)])}
                       stroke="#ffffff"
                       strokeWidth="2"
                       strokeLinecap="round"
                       className="flow-pipe-fast"
                     />
-                    <FaceText x={395} y={-30} z={65} size={6} fill="#f59e0b" weight={800} anchor="middle">
+                    <FaceText x={410} y={-30} z={65} size={6} fill="#f59e0b" weight={800} anchor="middle">
                       ▶ ▶ 32-BYTE SHA-256 PROOF ▶
                     </FaceText>
                   </g>
@@ -1115,26 +1101,26 @@ export default function CarbotraceMediQRPage() {
                   {/* PIPE 7: BLOCKCHAIN PROOF ➔ TAMPER BARRIER (AUDIT VERIFICATION) */}
                   <g id="pipe-blockchain-audit">
                     <path
-                      d={lineOf([iso(550, 0, 125), iso(410, -60, 95)])}
+                      d={lineOf([iso(530, -10, 100), iso(410, -60, 95)])}
                       stroke="rgba(16, 185, 129, 0.2)"
                       strokeWidth="9"
                       strokeLinecap="round"
                     />
                     <path
-                      d={lineOf([iso(550, 0, 125), iso(410, -60, 95)])}
+                      d={lineOf([iso(530, -10, 100), iso(410, -60, 95)])}
                       stroke="#10b981"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       markerEnd="url(#arrow-emerald)"
                     />
                     <path
-                      d={lineOf([iso(550, 0, 125), iso(410, -60, 95)])}
+                      d={lineOf([iso(530, -10, 100), iso(410, -60, 95)])}
                       stroke="#ffffff"
                       strokeWidth="1.8"
                       strokeLinecap="round"
                       className="flow-pipe"
                     />
-                    <FaceText x={475} y={-30} z={115} size={5.5} fill="#10b981" weight={700} anchor="middle">
+                    <FaceText x={470} y={-35} z={112} size={5.5} fill="#10b981" weight={700} anchor="middle">
                       ◀ ◀ AUDIT PASS (0 CLASH)
                     </FaceText>
                   </g>

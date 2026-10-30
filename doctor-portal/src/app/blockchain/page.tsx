@@ -53,9 +53,9 @@ export default function BlockchainDashboardPage() {
   async function handleTamperClick() {
     setIsTampering(true);
     try {
-      // Tamper with Block #1 if exists, else Block #0
-      const targetIdx = blocks.length > 1 ? 1 : 0;
-      await simulateBlockTamper(targetIdx, 'Malicious fee altered to ₹0 / Falsified Prescription');
+      // Tamper with latest block or Block #0
+      const targetIdx = blocks.length > 1 ? blocks.length - 1 : 0;
+      await simulateBlockTamper(targetIdx, 'Malicious fee altered to ₹0 / Falsified Root Record');
       await refresh();
     } finally {
       setIsTampering(false);

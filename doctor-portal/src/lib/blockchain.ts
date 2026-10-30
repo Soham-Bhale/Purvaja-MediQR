@@ -32,11 +32,11 @@ export interface ConsortiumDoctor {
 export const ROOT_ADMIN_ADDRESS = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
 export const DEFAULT_CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 export const HARDHAT_RPC_URL = 'http://127.0.0.1:8545';
-export const LEDGER_STORAGE_KEY = 'mediqr_federation_ledger_v5';
+export const LEDGER_STORAGE_KEY = 'mediqr_federation_ledger_v6';
 export const HOSPITALS_STORAGE_KEY = 'mediqr_consortium_hospitals_v1';
 export const DOCTORS_STORAGE_KEY = 'mediqr_consortium_doctors_v1';
 
-// Default pre-seeded records (matching exact clean off-chain files)
+// Default pre-seeded records (Single clean baseline consultation record)
 const INITIAL_FEDERATION_LEDGER: Record<string, BlockchainRecord[]> = {
   '0x69c2fcaeb8ca20eefe591027426a4863b22f29312bb0e55597178eae3bc56872': [
     {
@@ -45,14 +45,6 @@ const INITIAL_FEDERATION_LEDGER: Record<string, BlockchainRecord[]> = {
       practitionerAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
       timestamp: Math.floor(Date.now() / 1000) - 86400 * 5,
       recordType: 'CONSULTATION',
-      isLocked: true,
-    },
-    {
-      fileHash: '0x5e72612cee1e7204306c8bf2d6bc88f16b2ea822453260022812895f0b856ec6',
-      storageURI: 'http://localhost:5002/api/records/REC-FORTIS-002',
-      practitionerAddress: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-      timestamp: Math.floor(Date.now() / 1000) - 86400 * 2,
-      recordType: 'LAB_RESULT',
       isLocked: true,
     },
   ],

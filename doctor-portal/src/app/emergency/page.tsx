@@ -30,30 +30,6 @@ const PRESETS = [
       issuedAt: 1726358400000,
       issuerNodeId: 'HOSPITAL-NODE-A'
     }, null, 2)
-  },
-  {
-    id: 'robert-fox',
-    label: 'Robert Fox (AB+ | Contrast Dye & Cardiac Alert)',
-    shortName: 'Robert Fox',
-    bloodType: 'AB+',
-    alertBadge: 'Cardiac Alert & Contrast Allergy',
-    payload: JSON.stringify({
-      v: '2.0',
-      triage: {
-        fullName: 'Robert Fox',
-        bloodType: 'AB+',
-        criticalAllergies: ['Contrast Dye (Iodine)', 'Sulfa'],
-        chronicConditions: ['Coronary Artery Disease', 'Type 2 Diabetes'],
-        emergencyContacts: [
-          { name: 'Sarah Fox', relationship: 'Daughter', phone: '+1-555-4821' }
-        ],
-        donorStatus: false,
-        resuscitationPreference: 'LIMITED'
-      },
-      patientHash: '0x88f4b23d91ca042781bcf704e6c927481237a912bb0e55597178eae3bc56872',
-      issuedAt: 1726358400000,
-      issuerNodeId: 'HOSPITAL-NODE-B'
-    }, null, 2)
   }
 ];
 

@@ -25,7 +25,7 @@ export interface Block {
   isTampered?: boolean;
 }
 
-export const BLOCKS_STORAGE_KEY = 'mediqr_consortium_blockchain_blocks_v2';
+export const BLOCKS_STORAGE_KEY = 'mediqr_consortium_blockchain_blocks_v3';
 
 // Simple deterministic SHA-256 for browser client
 async function computeSha256(message: string): Promise<string> {
@@ -64,7 +64,7 @@ export async function calculateBlockHash(
   return computeSha256(`${index}-${previousHash}-${timestamp}-${merkleRoot}-${nonce}`);
 }
 
-// Baseline Initial Blocks (Genesis + Historical Seed)
+// Baseline Initial Blocks (Genesis Anchor - Single Pristine Root Block)
 export const INITIAL_BLOCKS: Block[] = [
   {
     index: 0,
@@ -87,41 +87,6 @@ export const INITIAL_BLOCKS: Block[] = [
         type: 'HOSPITAL_ONBOARDED',
         timestamp: 1726358405000,
         details: 'Hospital Onboarded: Apollo Speciality (Node A) & Fortis Healthcare (Node B)',
-        status: 'MINED',
-      },
-    ],
-  },
-  {
-    index: 1,
-    timestamp: 1726358500000,
-    previousHash: '0x3a4b9c1d8e2f0178b9f5324b032b50bf90c8bfb607d83d72a819028374619283',
-    hash: '0x9e120f3a8b2910c7d01b50e0d17dc79c8f305f9e03ccdcfc6818534fd272f017',
-    merkleRoot: '0x12a9bc8374918237491823749182374918237491823749182374918237491823',
-    nonce: 2841,
-    difficulty: 2,
-    transactions: [
-      {
-        txId: '0x7f48a129d4901923e4f71a0b38c2918471b02934810293847192837491028374',
-        type: 'APPOINTMENT_PAYMENT_CONFIRMED',
-        timestamp: 1726358450000,
-        patientHash: '0x69c2fcaeb8ca20eefe591027426a4863b22f29312bb0e55597178eae3bc56872',
-        patientName: 'Jane Doe',
-        details: 'Service Fee Paid (₹500) | Token APT-APO-2026-8812 Assigned to Dr. Ramesh Gupta',
-        amount: '₹500.00',
-        doctor: 'Dr. Ramesh Gupta',
-        status: 'MINED',
-      },
-      {
-        txId: '0x5b3901a827461928374918237491823749182374918237491823749182374918',
-        type: 'MEDICAL_RECORD_COMMITTED',
-        timestamp: 1726358500000,
-        patientHash: '0x69c2fcaeb8ca20eefe591027426a4863b22f29312bb0e55597178eae3bc56872',
-        patientName: 'Jane Doe',
-        details: 'Record REC-APOLLO-001 Anchored on-chain | AES-256-GCM Encrypted on Node A',
-        recordId: 'REC-APOLLO-001',
-        doctor: 'Dr. Ramesh Gupta',
-        hospitalNode: 'HOSPITAL-NODE-A',
-        fileHash: '0xf305f9e03ccdcfc6818534fd272f0178b9f5324b032b50bf90c8bfb607d83d72',
         status: 'MINED',
       },
     ],
