@@ -16,7 +16,7 @@ export interface SentEmail {
   bodyHtml: string;
 }
 
-export const EMAILS_STORAGE_KEY = 'mediqr_consortium_sent_emails_v1';
+export const EMAILS_STORAGE_KEY = 'mediqr_consortium_sent_emails_v3';
 
 let inMemoryEmails: SentEmail[] = [
   {
@@ -197,4 +197,16 @@ export function sendMediQRRecordDeliveryEmail(
   all.unshift(newEmail);
   persistEmails(all);
   return newEmail;
+}
+
+export function clearAllEmails(): void {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(EMAILS_STORAGE_KEY);
+    } catch (err) {
+      console.error('Failed clearing emails storage:', err);
+    }
+  }
+  inMemoryEmails = [];
+  persistEmails([]);
 }

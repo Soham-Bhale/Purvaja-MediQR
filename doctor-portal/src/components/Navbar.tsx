@@ -386,7 +386,50 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   }
 
   // =========================================================================
-  // VIEW 5: ESP32 SETUP / GENERAL FALLBACK HEADER
+  // VIEW 5: DEDICATED EMAIL DISPATCH MONITOR (SEPARATED DEMONSTRATION WINDOW)
+  // =========================================================================
+  if (pathname === '/emails') {
+    return (
+      <header className="bg-slate-950 border-b border-cyan-900/40 text-white sticky top-0 z-40 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-cyan-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                ✉️
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-white">MediQR Email Dispatch Gateway</span>
+                  <span className="text-[10px] font-bold uppercase bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/40">
+                    Live Demo Monitor
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">Automated Patient Tokens &amp; Emergency QR Delivery</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/book"
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-mono border border-slate-700 transition"
+              >
+                + Book Patient (₹500)
+              </Link>
+              <Link
+                href="/"
+                className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition shadow-sm"
+              >
+                Homepage →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 6: ESP32 SETUP / GENERAL FALLBACK HEADER
   // =========================================================================
   return (
     <header className="bg-slate-950 border-b border-slate-800 text-white sticky top-0 z-40 shadow-xs">

@@ -570,14 +570,6 @@ export default function CarbotraceMediQRPage() {
                   <span className="hidden sm:inline">Videos</span>
                 </button>
 
-                {/* Doctor Portal */}
-                <Link
-                  href="/doctor"
-                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-slate-300 hover:text-white font-mono transition hidden md:inline-block"
-                >
-                  Doctor EMR
-                </Link>
-
                 {/* Blockchain Explorer */}
                 <Link
                   href="/blockchain"
@@ -1193,13 +1185,6 @@ export default function CarbotraceMediQRPage() {
                     </Link>
 
                     <Link
-                      href="/doctor"
-                      className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-xs transition"
-                    >
-                      Doctor EMR Workstation →
-                    </Link>
-
-                    <Link
                       href="/blockchain"
                       className="px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 font-semibold text-xs transition"
                     >
@@ -1505,47 +1490,6 @@ export default function CarbotraceMediQRPage() {
               </button>
             </div>
 
-          </div>
-
-
-          {/* FINAL HIGH-IMPACT PRESENTATION CALL TO ACTION */}
-          <div className="relative rounded-3xl bg-gradient-to-r from-cyan-950/60 via-slate-900 to-indigo-950/60 border border-cyan-500/30 p-8 sm:p-14 text-center overflow-hidden shadow-2xl">
-            <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-              <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                EVALUATION READY • 3-DEVICE SUITE
-              </span>
-
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Ready for the Academic &amp; Clinical Demonstration?
-              </h2>
-
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                Reserve patient vitals, mint identity tokens anchored on-chain, conduct doctor EMR consultations, and verify air-gapped roadside triage on mobile phone cameras.
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-2 font-mono">
-                <Link
-                  href="/book"
-                  className="px-7 py-3.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-xl shadow-cyan-600/30 transition transform hover:-translate-y-0.5"
-                >
-                  Book Patient Care (₹500) →
-                </Link>
-
-                <Link
-                  href="/doctor"
-                  className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-xs transition"
-                >
-                  Doctor EMR Portal →
-                </Link>
-
-                <Link
-                  href="/blockchain"
-                  className="px-6 py-3.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 font-semibold text-xs transition"
-                >
-                  Live Blockchain Activity →
-                </Link>
-              </div>
-            </div>
           </div>
 
         </div>

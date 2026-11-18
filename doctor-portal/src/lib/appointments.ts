@@ -77,7 +77,7 @@ export interface Appointment {
   completedAt?: number;
 }
 
-export const APPOINTMENTS_STORAGE_KEY = 'mediqr_consortium_appointments_v2';
+export const APPOINTMENTS_STORAGE_KEY = 'mediqr_consortium_appointments_v5';
 
 // Initial pre-seeded appointments (Single clean baseline appointment)
 export const INITIAL_APPOINTMENTS: Appointment[] = [
@@ -132,6 +132,18 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
 ];
 
 let inMemoryAppointments: Appointment[] = [...INITIAL_APPOINTMENTS];
+
+export function clearAllTestAppointments(): void {
+  inMemoryAppointments = [...INITIAL_APPOINTMENTS];
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(inMemoryAppointments));
+      window.dispatchEvent(new CustomEvent('mediqr_appointment_updated', { detail: inMemoryAppointments }));
+    } catch (err) {
+      console.error('Failed clearing appointments:', err);
+    }
+  }
+}
 
 export function getStoredAppointments(): Appointment[] {
   if (typeof window === 'undefined') return inMemoryAppointments;

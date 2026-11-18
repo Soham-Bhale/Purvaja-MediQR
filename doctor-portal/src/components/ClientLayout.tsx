@@ -9,7 +9,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const { activeDoctor, setActiveDoctor } = useDoctor();
   const [clock, setClock] = useState<string>('');
   const pathname = usePathname();
-  const isHome = pathname === '/';
+  const isFullBleed = pathname === '/';
 
   useEffect(() => {
     setClock(new Date().toLocaleTimeString());
@@ -17,8 +17,8 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  // For the homepage, render completely full-bleed without outer margins, white bars, or duplicate navbar
-  if (isHome) {
+  // For the homepage, render completely full-bleed without outer margins or duplicate navbar
+  if (isFullBleed) {
     return (
       <main className="w-full min-h-screen bg-[#07090e] text-slate-100">
         {children}
