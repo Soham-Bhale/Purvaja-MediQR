@@ -71,15 +71,11 @@ function DoctorPortalContent() {
   const [tamperingRecordId, setTamperingRecordId] = useState<string | null>(null);
 
   // Biometrics
-  const [isBiometricUnlocked, setIsBiometricUnlocked] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return hasActiveBiometricSession(activeDoctor);
-    }
-    return false;
-  });
-  const [enrolledBiometric, setEnrolledBiometric] = useState<ReturnType<typeof getBiometricForDoctor>>(() =>
-    getBiometricForDoctor(activeDoctor)
-  );
+  const [mounted, setMounted] = useState<boolean>(false);
+  const [appointmentFilter, setAppointmentFilter] = useState<'ALL' | 'ASSIGNED'>('ALL');
+  const [allConsortiumAppointments, setAllConsortiumAppointments] = useState<Appointment[]>([]);
+  const [isBiometricUnlocked, setIsBiometricUnlocked] = useState<boolean>(false);
+  const [enrolledBiometric, setEnrolledBiometric] = useState<ReturnType<typeof getBiometricForDoctor>>(undefined);
 
   const [queryStatus, setQueryStatus] = useState<{
     type: 'success' | 'empty' | 'error' | 'loading';
@@ -87,17 +83,24 @@ function DoctorPortalContent() {
     timestamp: string;
   } | null>(null);
 
-  // Refresh appointments for active doctor
+  // Refresh appointments for active doctor and all consortium
   function refreshAppointments() {
+    const all = getStoredAppointments();
+    setAllConsortiumAppointments(all);
     const list = getAppointmentsForDoctor(activeDoctor);
     setDoctorAppointments(list);
   }
 
   useEffect(() => {
+    setMounted(true);
     refreshAppointments();
+
+    // Auto-sync polling every 1.5s guarantees real-time updates when an applicant books on /book
+    const pollInterval = setInterval(refreshAppointments, 1500);
     window.addEventListener('mediqr_appointment_updated', refreshAppointments);
     window.addEventListener('storage', refreshAppointments);
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener('mediqr_appointment_updated', refreshAppointments);
       window.removeEventListener('storage', refreshAppointments);
     };
@@ -112,7 +115,9 @@ function DoctorPortalContent() {
         setEnrolledBiometric(getBiometricForDoctor(activeDoctor));
       }
     }
-    updateBio();
+    if (mounted) {
+      updateBio();
+    }
     window.addEventListener('mediqr_biometric_session_change', updateBio);
     window.addEventListener('mediqr_enrolled_biometrics_change', updateBio);
     window.addEventListener('storage', updateBio);
@@ -121,7 +126,7 @@ function DoctorPortalContent() {
       window.removeEventListener('mediqr_enrolled_biometrics_change', updateBio);
       window.removeEventListener('storage', updateBio);
     };
-  }, [activeDoctor]);
+  }, [activeDoctor, mounted]);
 
   // Load records whenever patientHash changes and biometric unlocked
   async function loadAndVerifyRecords(hashToQuery: string) {
@@ -433,8 +438,8 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
         </div>
       </div>
 
-      {/* Biometric Gatekeeper Status Notice */}
-      {!isBiometricUnlocked && (
+      {/* Biometric Gatekeeper Status Notice - rendered post-mount to eliminate hydration error */}
+      {mounted && !isBiometricUnlocked && (
         <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="font-bold text-sm text-amber-950 flex items-center gap-2">
@@ -503,33 +508,84 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
       {/* TAB 1: SCHEDULED APPOINTMENTS QUEUE */}
       {activeTab === 'appointments' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span>📋</span>
-              <span>Patient Appointments Assigned to {doctorDetails?.name || 'You'}</span>
-            </h2>
-            <span className="text-xs text-slate-500 font-mono">
-              Auto-syncs across private network upon patient payment
-            </span>
+          
+          {/* Queue Filter & Auto-Sync Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-100 p-2.5 rounded-2xl border border-slate-200">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setAppointmentFilter('ALL')}
+                className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                  appointmentFilter === 'ALL'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                }`}
+              >
+                <span>🌐</span>
+                <span>All Consortium Queue ({allConsortiumAppointments.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAppointmentFilter('ASSIGNED')}
+                className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                  appointmentFilter === 'ASSIGNED'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                }`}
+              >
+                <span>🩺</span>
+                <span>Assigned to {doctorDetails?.name ? doctorDetails.name.split(' ')[1] || 'You' : 'You'} ({doctorAppointments.length})</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={refreshAppointments}
+                className="px-3 py-1.5 text-xs font-mono text-slate-700 hover:text-blue-600 bg-white border border-slate-200 rounded-xl hover:border-blue-400 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Force refresh queue from local storage"
+              >
+                <span>↻</span>
+                <span>Refresh</span>
+              </button>
+              <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live Sync Active</span>
+              </span>
+            </div>
           </div>
 
-          {doctorAppointments.length === 0 ? (
+          {(appointmentFilter === 'ALL' ? allConsortiumAppointments : doctorAppointments).length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
               <div className="text-3xl">📭</div>
               <h3 className="font-bold text-slate-800 text-sm">No Appointments in Queue</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                No patients are currently scheduled for this doctor. Book a paid appointment on Laptop 1 (or the home page) to see it appear here immediately!
+                {appointmentFilter === 'ASSIGNED' && allConsortiumAppointments.length > 0
+                  ? `There are ${allConsortiumAppointments.length} appointment(s) in the Consortium queue assigned to other doctors. Switch to 'All Consortium Queue' above to view and examine them.`
+                  : 'No patients are currently scheduled. Book a paid consultation from the Applicant Booking portal (/book) to see it appear here immediately!'}
               </p>
-              <Link
-                href="/"
-                className="inline-block mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition"
-              >
-                Go to Patient Booking →
-              </Link>
+              <div className="pt-2 flex items-center justify-center gap-2">
+                {appointmentFilter === 'ASSIGNED' && allConsortiumAppointments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAppointmentFilter('ALL')}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    View All Consortium Queue ({allConsortiumAppointments.length}) →
+                  </button>
+                )}
+                <Link
+                  href="/book"
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition"
+                >
+                  Go to Applicant Booking (/book) →
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {doctorAppointments.map((apt) => {
+              {(appointmentFilter === 'ALL' ? allConsortiumAppointments : doctorAppointments).map((apt) => {
                 const isCompleted = apt.status === 'COMPLETED';
 
                 return (
@@ -543,6 +599,9 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Token ID</span>
                         <div className="font-mono text-base font-extrabold text-blue-700">{apt.id}</div>
+                        <span className="text-[10px] font-mono text-slate-500 block">
+                          Doctor: {apt.doctorName}
+                        </span>
                       </div>
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                         isCompleted
@@ -599,7 +658,12 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
 
                       <button
                         type="button"
-                        onClick={() => handleStartConsultation(apt)}
+                        onClick={() => {
+                          if (apt.doctorId && apt.doctorId.toLowerCase() !== activeDoctor.toLowerCase()) {
+                            setActiveDoctor(apt.doctorId);
+                          }
+                          handleStartConsultation(apt);
+                        }}
                         className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
                           isCompleted
                             ? 'bg-slate-100 hover:bg-slate-200 text-slate-800'

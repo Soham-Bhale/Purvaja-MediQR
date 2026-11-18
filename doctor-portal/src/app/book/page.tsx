@@ -75,7 +75,7 @@ export default function AppointmentBookingPage() {
 
       const doctorName =
         selectedHospital === 'apollo'
-          ? 'Dr. Rajesh Mehta (Cardiology)'
+          ? 'Dr. Ramesh Gupta (Lead Emergency & Pulmonology)'
           : 'Dr. Ananya Sharma (Trauma & Critical Care)';
 
       const hospitalName =

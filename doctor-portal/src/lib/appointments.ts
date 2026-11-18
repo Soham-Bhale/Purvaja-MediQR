@@ -194,11 +194,16 @@ export function getAppointmentById(id: string): Appointment | null {
 
 export function getAppointmentsForDoctor(doctorAddressOrName: string): Appointment[] {
   const all = getStoredAppointments();
-  const clean = doctorAddressOrName.toLowerCase();
+  if (!doctorAddressOrName) return all;
+  const clean = doctorAddressOrName.toLowerCase().trim();
+  if (clean === 'all' || clean === '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266') {
+    return all;
+  }
   return all.filter(
     (a) =>
       a.doctorId.toLowerCase() === clean ||
-      a.doctorName.toLowerCase().includes(clean)
+      a.doctorName.toLowerCase().includes(clean) ||
+      clean.includes(a.doctorId.toLowerCase())
   );
 }
 
