@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { DoctorProvider, useDoctor } from '../lib/doctor-context';
 import Navbar from './Navbar';
@@ -48,6 +49,11 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
             <span>Cipher: <strong className="text-white">AES-256-GCM (Zero-PII)</strong></span>
             <span className="text-white/20">|</span>
             <span className="text-indigo-400 font-semibold">HIPAA &amp; DPDP Act Compliant</span>
+            <span className="text-white/20">|</span>
+            <Link href="/clean-slate" className="text-emerald-400 hover:text-emerald-300 font-bold transition flex items-center gap-1">
+              <span>✨</span>
+              <span>Clean Slate</span>
+            </Link>
           </div>
           <div className="font-mono text-slate-500 text-[11px]">
             {clock || '00:00:00'}

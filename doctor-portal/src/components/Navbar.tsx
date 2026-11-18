@@ -429,6 +429,43 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   }
 
   // =========================================================================
+  // VIEW 6: CLEAN SLATE PROTOCOL HEADER (PRE-DEMO RESET)
+  // =========================================================================
+  if (pathname === '/clean-slate') {
+    return (
+      <header className="bg-slate-950 border-b border-emerald-900/50 text-white sticky top-0 z-40 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                ✨
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-white">MediQR Clean Slate Protocol</span>
+                  <span className="text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40">
+                    Presentation Ready
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">System Reset • Dummy Data Purged • Single Genesis Block</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition shadow-sm"
+              >
+                Launch Homepage →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // =========================================================================
   // VIEW 6: ESP32 SETUP / GENERAL FALLBACK HEADER
   // =========================================================================
   return (

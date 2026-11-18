@@ -37,7 +37,7 @@ export const HOSPITALS_STORAGE_KEY = 'mediqr_consortium_hospitals_v1';
 export const DOCTORS_STORAGE_KEY = 'mediqr_consortium_doctors_v1';
 
 // Default pre-seeded records (Single clean baseline consultation record)
-const INITIAL_FEDERATION_LEDGER: Record<string, BlockchainRecord[]> = {
+export const INITIAL_FEDERATION_LEDGER: Record<string, BlockchainRecord[]> = {
   '0x69c2fcaeb8ca20eefe591027426a4863b22f29312bb0e55597178eae3bc56872': [
     {
       fileHash: '0xf305f9e03ccdcfc6818534fd272f0178b9f5324b032b50bf90c8bfb607d83d72',

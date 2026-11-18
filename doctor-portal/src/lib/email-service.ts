@@ -18,7 +18,7 @@ export interface SentEmail {
 
 export const EMAILS_STORAGE_KEY = 'mediqr_consortium_sent_emails_v3';
 
-let inMemoryEmails: SentEmail[] = [
+export const INITIAL_EMAILS: SentEmail[] = [
   {
     id: 'EML-2026-001',
     to: 'jane.doe@healthmail.com',
@@ -46,6 +46,8 @@ let inMemoryEmails: SentEmail[] = [
     `,
   },
 ];
+
+let inMemoryEmails: SentEmail[] = [...INITIAL_EMAILS];
 
 export function getStoredEmails(): SentEmail[] {
   if (typeof window === 'undefined') return inMemoryEmails;
