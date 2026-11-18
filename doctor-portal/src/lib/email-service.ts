@@ -16,7 +16,7 @@ export interface SentEmail {
   bodyHtml: string;
 }
 
-export const EMAILS_STORAGE_KEY = 'mediqr_consortium_sent_emails_v3';
+export const EMAILS_STORAGE_KEY = 'mediqr_consortium_sent_emails_v10';
 
 export const INITIAL_EMAILS: SentEmail[] = [
   {

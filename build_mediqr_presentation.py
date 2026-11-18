@@ -594,7 +594,7 @@ def build_presentation(output_pptx_path="MediQR_Project_Presentation.pptx"):
             ("Economic Efficiency: ", "Stops redundant blood typing and repeated diagnostics during emergency transfers.")
         ]),
         ("Future Engineering Scope", COLOR_AMBER, [
-            ("ESP32 IoT Kiosks: ", "Hardware triage terminals with thermal mini-printers for ambulances and rural health centers."),
+            ("Air-Gapped Sovereign Kiosks: ", "Hardware triage terminals with thermal mini-printers for ambulances and rural health centers."),
             ("ABDM / ABHA Integration: ", "Native alignment with India's Ayushman Bharat Digital Mission healthcare exchange protocols."),
             ("Zero-Knowledge Proofs: ", "zk-SNARKs enabling insurance claim verification without exposing clinical records."),
             ("Federated Privacy AI: ", "Decentralized machine learning across encrypted hospital nodes for epidemiology alerts.")

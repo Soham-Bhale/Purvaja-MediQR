@@ -32,7 +32,7 @@ export interface ConsortiumDoctor {
 export const ROOT_ADMIN_ADDRESS = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
 export const DEFAULT_CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 export const HARDHAT_RPC_URL = 'http://127.0.0.1:8545';
-export const LEDGER_STORAGE_KEY = 'mediqr_federation_ledger_v8';
+export const LEDGER_STORAGE_KEY = 'mediqr_federation_ledger_v10';
 export const HOSPITALS_STORAGE_KEY = 'mediqr_consortium_hospitals_v1';
 export const DOCTORS_STORAGE_KEY = 'mediqr_consortium_doctors_v1';
 

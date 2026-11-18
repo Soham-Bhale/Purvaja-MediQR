@@ -25,7 +25,7 @@ export interface Block {
   isTampered?: boolean;
 }
 
-export const BLOCKS_STORAGE_KEY = 'mediqr_consortium_blockchain_blocks_v5';
+export const BLOCKS_STORAGE_KEY = 'mediqr_consortium_blockchain_blocks_v10';
 
 // Simple deterministic SHA-256 for browser client
 async function computeSha256(message: string): Promise<string> {

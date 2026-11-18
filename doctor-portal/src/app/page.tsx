@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import Link from 'next/link';
 import AssetPromptModal from '../components/AssetPromptModal';
 import EmailInboxModal from '../components/EmailInboxModal';
+import PatientAccountModal from '../components/PatientAccountModal';
+import { PatientUser, getCurrentPatientUser } from '../lib/patient-auth';
 
 /* ─────────────────────────────────────────────────────────────────────────────
    MEDIQR CARBOTRACE-GRADE SCROLLYTELLING ENGINE v2.6
@@ -120,14 +122,14 @@ const STORY: StoryChapter[] = [
   },
   {
     id: '04',
-    tag: 'THE HARDWARE MESH',
-    kicker: 'ESP32 ACCESS POINT · 192.168.4.1',
+    tag: 'THE SOVEREIGN MESH',
+    kicker: 'AIR-GAPPED CONSORTIUM RELAY · LOCAL NETWORK',
     title: ['Sovereign private network.', 'Zero cloud dependencies.'],
-    body: 'When hospital ambulances and mobile stations exchange clinical data, an air-gapped ESP32 hardware router creates a dedicated WPA2-PSK mesh. Blue hardware status LEDs confirm secure peer discovery with zero packet leaks.',
+    body: 'When hospital ambulances and mobile stations exchange clinical data, an air-gapped sovereign mesh relays payloads over dedicated local channels. Secure peer discovery handshakes guarantee zero packet leaks to external networks.',
     facts: [
-      ['CHIPSET', 'ESP32 Dual-Core Xtensa'],
-      ['AP SUBNET', '192.168.4.1/24'],
-      ['ENCRYPTION', 'WPA2-PSK (Air-Gapped)'],
+      ['PROTOCOL', 'Isolated TLS Relay'],
+      ['NETWORK', 'MediQR Sovereign Mesh'],
+      ['ENCRYPTION', 'Zero-Trust AES-256-GCM'],
     ],
     metric: {
       label: 'mesh throughput',
@@ -138,10 +140,10 @@ const STORY: StoryChapter[] = [
       sub: 'Isolated local routing',
     },
     formula: {
-      equation: 'SOVEREIGN_MESH = ESP32_AP(192.168.4.1, WPA2_PSK, Channel_6)',
+      equation: 'SOVEREIGN_MESH = RelayNode(AirGapped, ZeroCloud, EndToEnd)',
       value: '54.0 Mbps',
-      scope: 'hardware access point · blue link LED indicator · zero cloud',
-      terms: ['Freq 2.4GHz', 'Clients 3/4', 'Loss 0.0%'],
+      scope: 'air-gapped consortium relay · zero cloud dependencies',
+      terms: ['LAN Isolation', 'Clients 3/4', 'Loss 0.0%'],
     },
     camera: { fx: 600, fy: 455, zoom: 1.30 },
   },
@@ -231,7 +233,7 @@ const STORY: StoryChapter[] = [
     tag: 'THE 3-DEVICE ECOSYSTEM',
     kicker: '3-DEVICE DEMO · LAPTOP 1 + LAPTOP 2 + MOBILE',
     title: ['The complete live system.', 'Ready for evaluation.'],
-    body: 'Laptop 1 runs Patient Booking & Token Generation. Laptop 2 runs Doctor EMR Consultations & Live Blockchain Monitoring. Device 3 simulates Mobile Paramedic Triage over the private ESP32 Access Point.',
+    body: 'Laptop 1 runs Patient Booking & Token Generation. Laptop 2 runs Doctor EMR Consultations & Live Blockchain Monitoring. Device 3 simulates Mobile Paramedic Triage with zero internet connectivity.',
     facts: [
       ['LAPTOP 1', 'Patient Booking (/book)'],
       ['LAPTOP 2', 'Doctor EMR & Blockchain'],
@@ -246,10 +248,10 @@ const STORY: StoryChapter[] = [
       sub: 'Full consortium online',
     },
     formula: {
-      equation: 'SYSTEM_STATUS = (HospitalA + HospitalB + Blockchain + ESP32)',
+      equation: 'SYSTEM_STATUS = (HospitalA + HospitalB + Blockchain + OpticalRelay)',
       value: 'ONLINE',
       scope: 'zero-cloud sovereignty · live academic presentation setup',
-      terms: ['Demo Port 3000', 'Ports 5001/5002', 'ESP32 192.168.4.1'],
+      terms: ['Demo Port 3000', 'Ports 5001/5002', 'Air-Gapped Paramedic Node'],
     },
     camera: { fx: 600, fy: 430, zoom: 0.85 },
     cta: true,
@@ -442,6 +444,24 @@ export default function CarbotraceMediQRPage() {
   const [selectedVideo, setSelectedVideo] = useState<'crisis' | 'solution' | 'card' | 'blockchain' | 'hero'>('card');
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [patientUser, setPatientUser] = useState<PatientUser | null>(null);
+  const [patientModalOpen, setPatientModalOpen] = useState(false);
+
+  // Sync patient auth state
+  useEffect(() => {
+    function syncPatient() {
+      if (typeof window !== 'undefined') {
+        setPatientUser(getCurrentPatientUser());
+      }
+    }
+    syncPatient();
+    window.addEventListener('mediqr_patient_auth_change', syncPatient);
+    window.addEventListener('storage', syncPatient);
+    return () => {
+      window.removeEventListener('mediqr_patient_auth_change', syncPatient);
+      window.removeEventListener('storage', syncPatient);
+    };
+  }, []);
 
   // Smooth 60fps scroll listener
   useEffect(() => {
@@ -570,6 +590,19 @@ export default function CarbotraceMediQRPage() {
                   <span className="hidden sm:inline">Videos</span>
                 </button>
 
+                {/* Patient Hub Notification Button (Visible strictly when patient is logged in) */}
+                {patientUser && (
+                  <button
+                    type="button"
+                    onClick={() => setPatientModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/40 text-xs text-cyan-300 font-mono flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                    title="Patient Hub & Status (Click to view membership, stages, reschedule)"
+                  >
+                    <span>🔔</span>
+                    <span className="hidden sm:inline font-bold">{patientUser.displayName.split(' ')[0]}</span>
+                  </button>
+                )}
+
                 {/* Blockchain Explorer */}
                 <Link
                   href="/blockchain"
@@ -578,9 +611,9 @@ export default function CarbotraceMediQRPage() {
                   Blockchain
                 </Link>
 
-                {/* Direct Patient Booking Link */}
+                {/* Direct Patient Booking Link (Redirects to Login if unauthenticated) */}
                 <Link
-                  href="/book"
+                  href={patientUser ? '/book' : '/login?redirect=/book'}
                   className="px-3.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition shadow-sm"
                 >
                   Book Care (₹500)
@@ -808,9 +841,9 @@ export default function CarbotraceMediQRPage() {
                 </g>
 
                 {/* -------------------------------------------------------------
-                    NODE 4: ESP32 AIR-GAPPED HARDWARE ROUTER (CH 04)
+                    NODE 4: AIR-GAPPED CONSORTIUM RELAY NODE (CH 04)
                 ------------------------------------------------------------- */}
-                <g id="node-esp32">
+                <g id="node-relay">
                   <Box x={-100} y={-60} z={0} w={200} d={120} h={12} tone="base" />
                   <Screws x={-96} y={-56} z={12} w={192} d={112} inset={8} />
 
@@ -832,10 +865,10 @@ export default function CarbotraceMediQRPage() {
 
                   <Box x={0} y={-25} z={32} w={65} d={50} h={15} tone="base" />
                   <FaceText x={32} y={-27} z={42} size={6} fill="#ffffff" weight={700} anchor="middle">
-                    ESP-WROOM-32
+                    PEER-RELAY
                   </FaceText>
                   <FaceText x={32} y={26} z={42} size={5} fill="#38bdf8" weight={600} anchor="middle">
-                    192.168.4.1 MESH
+                    ISOLATED MESH
                   </FaceText>
 
                   <Led x={-60} y={25} z={35} color="#38bdf8" pulse />
@@ -973,8 +1006,8 @@ export default function CarbotraceMediQRPage() {
                     </FaceText>
                   </g>
 
-                  {/* PIPE 3: PHONE ➔ ESP32 ROUTER (192.168.4.1 WPA2-PSK MESH) */}
-                  <g id="pipe-phone-esp32">
+                  {/* PIPE 3: PHONE ➔ RELAY (ISOLATED PEER MESH) */}
+                  <g id="pipe-phone-relay">
                     <path
                       d={lineOf([iso(-200, 120, 20), iso(-120, 120, 20), iso(-85, 20, 20)])}
                       stroke="rgba(6, 182, 212, 0.15)"
@@ -999,12 +1032,12 @@ export default function CarbotraceMediQRPage() {
                       className="flow-pipe"
                     />
                     <FaceText x={-140} y={90} z={30} size={5.5} fill="#06b6d4" weight={700} anchor="middle">
-                      ▶ ▶ 192.168.4.1 MESH ▶
+                      ▶ ▶ PEER RELAY MESH ▶
                     </FaceText>
                   </g>
 
-                  {/* PIPE 4: ESP32 ROUTER ➔ APOLLO VAULT A :5001 (AES-256-GCM) */}
-                  <g id="pipe-esp32-apollo">
+                  {/* PIPE 4: RELAY ➔ APOLLO VAULT A :5001 (AES-256-GCM) */}
+                  <g id="pipe-relay-apollo">
                     <path
                       d={lineOf([iso(65, -15, 20), iso(130, -15, 20), iso(195, -85, 20)])}
                       stroke="rgba(56, 189, 248, 0.15)"
@@ -1033,8 +1066,8 @@ export default function CarbotraceMediQRPage() {
                     </FaceText>
                   </g>
 
-                  {/* PIPE 5: ESP32 ROUTER ➔ FORTIS VAULT B :5002 (AES-256-GCM) */}
-                  <g id="pipe-esp32-fortis">
+                  {/* PIPE 5: RELAY ROUTER ➔ FORTIS VAULT B :5002 (AES-256-GCM) */}
+                  <g id="pipe-relay-fortis">
                     <path
                       d={lineOf([iso(65, 15, 20), iso(130, 15, 20), iso(195, 75, 20)])}
                       stroke="rgba(129, 140, 248, 0.15)"
@@ -1177,7 +1210,7 @@ export default function CarbotraceMediQRPage() {
                 {curChapter.cta && (
                   <div className="pt-4 flex flex-wrap items-center gap-3">
                     <Link
-                      href="/book"
+                      href={patientUser ? '/book' : '/login?redirect=/book'}
                       className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/25 transition transform hover:-translate-y-0.5 inline-flex items-center gap-2"
                     >
                       <span>Book Consultation (₹500)</span>
@@ -1642,6 +1675,9 @@ export default function CarbotraceMediQRPage() {
 
       {/* Outbound Email Modal */}
       <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+
+      {/* Patient Account & Notification Hub Modal */}
+      <PatientAccountModal isOpen={patientModalOpen} onClose={() => setPatientModalOpen(false)} />
     </div>
   );
 }

@@ -70,12 +70,19 @@ function DoctorPortalContent() {
   const [ledgerSource, setLedgerSource] = useState<string>('federation-state');
   const [tamperingRecordId, setTamperingRecordId] = useState<string | null>(null);
 
-  // Biometrics
+  // Biometrics & Gatekeeper
   const [mounted, setMounted] = useState<boolean>(false);
-  const [appointmentFilter, setAppointmentFilter] = useState<'ALL' | 'ASSIGNED'>('ALL');
-  const [allConsortiumAppointments, setAllConsortiumAppointments] = useState<Appointment[]>([]);
   const [isBiometricUnlocked, setIsBiometricUnlocked] = useState<boolean>(false);
   const [enrolledBiometric, setEnrolledBiometric] = useState<ReturnType<typeof getBiometricForDoctor>>(undefined);
+  const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null);
+
+  const copyTokenToClipboard = (token: string) => {
+    if (typeof window !== 'undefined' && navigator?.clipboard) {
+      navigator.clipboard.writeText(token);
+      setCopiedTokenId(token);
+      setTimeout(() => setCopiedTokenId(null), 2000);
+    }
+  };
 
   const [queryStatus, setQueryStatus] = useState<{
     type: 'success' | 'empty' | 'error' | 'loading';
@@ -83,10 +90,8 @@ function DoctorPortalContent() {
     timestamp: string;
   } | null>(null);
 
-  // Refresh appointments for active doctor and all consortium
+  // Refresh appointments strictly for this active doctor (Zero cross-doctor visibility)
   function refreshAppointments() {
-    const all = getStoredAppointments();
-    setAllConsortiumAppointments(all);
     const list = getAppointmentsForDoctor(activeDoctor);
     setDoctorAppointments(list);
   }
@@ -396,6 +401,99 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
     }
   }
 
+  // =========================================================================
+  // BIOMETRIC GATEKEEPER: CLINICAL WORKSTATION LOCKED
+  // UI is completely inaccessible until practitioner authenticates fingerprint!
+  // =========================================================================
+  if (!mounted || !isBiometricUnlocked) {
+    return (
+      <div className="max-w-2xl mx-auto py-10 px-4 sm:px-6">
+        <div className="bg-slate-900 border-2 border-amber-500/40 rounded-3xl p-8 sm:p-10 shadow-2xl text-center space-y-6 backdrop-blur-xl">
+          <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-3xl mx-auto shadow-inner">
+            🔒
+          </div>
+          <div className="space-y-2">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+              PHYSICIAN BIOMETRIC GATEKEEPER • ACCESS QUARANTINED
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Clinical Workstation Locked
+            </h1>
+            <p className="text-xs text-slate-300 max-w-lg mx-auto leading-relaxed">
+              Under medical confidentiality (HIPAA / ABDM) and consortium consensus rules, clinical queues, AES-256 patient records, and consultation suites are completely quarantined until practitioner physical biometric identity is authenticated.
+            </p>
+          </div>
+
+          {/* Active Doctor Credential Card & Switching */}
+          <div className="bg-slate-950 border border-white/10 rounded-2xl p-5 text-left space-y-3">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+              Active Physician Credentials
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="font-bold text-white text-base">{doctorDetails?.name || 'Dr. Physician'}</div>
+                <div className="text-xs text-cyan-300 font-mono font-semibold">{doctorDetails?.hospital || 'Hospital Network'}</div>
+                <div className="text-[11px] font-mono text-slate-500 truncate max-w-xs">{activeDoctor}</div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveDoctor('0x70997970c51812dc3a010c7d01b50e0d17dc79c8')}
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-mono font-bold transition cursor-pointer ${
+                    activeDoctor.toLowerCase() === '0x70997970c51812dc3a010c7d01b50e0d17dc79c8'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
+                  }`}
+                >
+                  Apollo Doctor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveDoctor('0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc')}
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-mono font-bold transition cursor-pointer ${
+                    activeDoctor.toLowerCase() === '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
+                  }`}
+                >
+                  Fortis Doctor
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Biometric Sensor & Authenticate Button */}
+          <div className="bg-black/50 border border-amber-500/20 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-center gap-2 text-xs font-mono text-amber-300">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>Hardware Sensor Status: Optical Biometric Scanner #BIO-FP-882 (Online)</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                createBiometricSession(activeDoctor, doctorDetails?.name || 'Dr. Physician');
+                setIsBiometricUnlocked(true);
+              }}
+              className="w-full py-4 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-slate-950 font-extrabold text-sm rounded-2xl shadow-xl shadow-amber-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-3 cursor-pointer"
+            >
+              <span className="text-xl">🖐️</span>
+              <span>Authenticate Fingerprint</span>
+            </button>
+          </div>
+
+          <div className="text-[11px] font-mono text-slate-500">
+            Air-gapped node security active · Zero unauthenticated DOM access
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // UNLOCKED CLINICAL WORKSTATION & CONSULTATION SUITE
+  // Accessible ONLY after practitioner authenticates biometric fingerprint
+  // =========================================================================
   return (
     <div className="space-y-6">
       {/* Top Banner (Laptop 2: Doctor Workstation) */}
@@ -412,13 +510,26 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
           </p>
         </div>
 
-        {/* Doctor Status & Biometric Quick Button */}
+        {/* Doctor Status, Biometric Lock, Email and Blockchain buttons */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="bg-white/10 border border-white/20 rounded-xl p-3 text-xs">
             <div className="text-[10px] text-indigo-300 font-bold uppercase">Active Physician</div>
             <div className="font-bold text-white text-sm">{doctorDetails?.name || 'Dr. Physician'}</div>
             <div className="text-[11px] text-indigo-200">{doctorDetails?.hospital}</div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              clearBiometricSession();
+              setIsBiometricUnlocked(false);
+            }}
+            className="px-3.5 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Lock Physician Session"
+          >
+            <span>🔒</span>
+            <span>Lock Workstation</span>
+          </button>
 
           <button
             type="button"
@@ -438,31 +549,6 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
         </div>
       </div>
 
-      {/* Biometric Gatekeeper Status Notice - rendered post-mount to eliminate hydration error */}
-      {mounted && !isBiometricUnlocked && (
-        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="font-bold text-sm text-amber-950 flex items-center gap-2">
-              <span>🔒</span>
-              <span>Practitioner Biometric Verification Required</span>
-            </div>
-            <p className="text-xs text-amber-800">
-              Under medical privacy regulations, high-privilege operations require physical biometric fingerprint verification against your enrolled template.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              createBiometricSession(activeDoctor, doctorDetails?.name || 'Dr. Practitioner');
-              setIsBiometricUnlocked(true);
-            }}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition whitespace-nowrap cursor-pointer"
-          >
-            🔓 Authenticate Fingerprint
-          </button>
-        </div>
-      )}
-
       {/* Doctor Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
         <button
@@ -475,7 +561,7 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
           }`}
         >
           <span>📅</span>
-          <span>Scheduled Appointments ({doctorAppointments.length})</span>
+          <span>Assigned Appointments ({doctorAppointments.length})</span>
         </button>
 
         <button
@@ -505,38 +591,20 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
         </button>
       </div>
 
-      {/* TAB 1: SCHEDULED APPOINTMENTS QUEUE */}
+      {/* TAB 1: SCHEDULED APPOINTMENTS QUEUE (STRICTLY ISOLATED TO THIS PHYSICIAN) */}
       {activeTab === 'appointments' && (
         <div className="space-y-4">
           
-          {/* Queue Filter & Auto-Sync Bar */}
+          {/* Isolation & Auto-Sync Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-100 p-2.5 rounded-2xl border border-slate-200">
-            <div className="flex items-center gap-1.5 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setAppointmentFilter('ALL')}
-                className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                  appointmentFilter === 'ALL'
-                    ? 'bg-blue-600 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
-                }`}
-              >
-                <span>🌐</span>
-                <span>All Consortium Queue ({allConsortiumAppointments.length})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAppointmentFilter('ASSIGNED')}
-                className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-                  appointmentFilter === 'ASSIGNED'
-                    ? 'bg-blue-600 text-white font-bold shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
-                }`}
-              >
-                <span>🩺</span>
-                <span>Assigned to {doctorDetails?.name ? doctorDetails.name.split(' ')[1] || 'You' : 'You'} ({doctorAppointments.length})</span>
-              </button>
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+              <span className="text-base">🩺</span>
+              <span>
+                Assigned to <strong>{doctorDetails?.name || 'Dr. Physician'}</strong> ({doctorDetails?.hospital || 'Hospital Vault'})
+              </span>
+              <span className="text-[10px] font-mono bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full border border-blue-200">
+                STRICT DOCTOR ISOLATION
+              </span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -556,25 +624,14 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
             </div>
           </div>
 
-          {(appointmentFilter === 'ALL' ? allConsortiumAppointments : doctorAppointments).length === 0 ? (
+          {doctorAppointments.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
               <div className="text-3xl">📭</div>
-              <h3 className="font-bold text-slate-800 text-sm">No Appointments in Queue</h3>
+              <h3 className="font-bold text-slate-800 text-sm">No Appointments Assigned to {doctorDetails?.name || 'You'}</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {appointmentFilter === 'ASSIGNED' && allConsortiumAppointments.length > 0
-                  ? `There are ${allConsortiumAppointments.length} appointment(s) in the Consortium queue assigned to other doctors. Switch to 'All Consortium Queue' above to view and examine them.`
-                  : 'No patients are currently scheduled. Book a paid consultation from the Applicant Booking portal (/book) to see it appear here immediately!'}
+                No patients are currently scheduled for this doctor at {doctorDetails?.hospital}. Other doctors&apos; patients remain quarantined under consortium isolation policy. Book a consultation from the Applicant Booking portal (/book) or switch doctor roles in the navigation bar.
               </p>
               <div className="pt-2 flex items-center justify-center gap-2">
-                {appointmentFilter === 'ASSIGNED' && allConsortiumAppointments.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setAppointmentFilter('ALL')}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
-                  >
-                    View All Consortium Queue ({allConsortiumAppointments.length}) →
-                  </button>
-                )}
                 <Link
                   href="/book"
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition"
@@ -585,7 +642,7 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(appointmentFilter === 'ALL' ? allConsortiumAppointments : doctorAppointments).map((apt) => {
+              {doctorAppointments.map((apt) => {
                 const isCompleted = apt.status === 'COMPLETED';
 
                 return (
@@ -598,7 +655,20 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Token ID</span>
-                        <div className="font-mono text-base font-extrabold text-blue-700">{apt.id}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-mono text-base font-extrabold text-blue-700">{apt.id}</div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyTokenToClipboard(apt.id);
+                            }}
+                            className="px-2 py-0.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 rounded text-[11px] font-mono border border-slate-200 transition flex items-center gap-1 cursor-pointer"
+                            title="Copy Token ID"
+                          >
+                            {copiedTokenId === apt.id ? '✓ Copied' : '📋 Copy Token'}
+                          </button>
+                        </div>
                         <span className="text-[10px] font-mono text-slate-500 block">
                           Doctor: {apt.doctorName}
                         </span>
@@ -635,7 +705,7 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
                       </div>
                     </div>
 
-                    {apt.criticalAllergies.length > 0 && (
+                    {apt.criticalAllergies && apt.criticalAllergies.length > 0 && (
                       <div className="bg-rose-50 border border-rose-200 rounded-xl p-2.5 text-xs text-rose-900 flex items-center gap-2">
                         <span className="font-bold">⚠️ Allergies:</span>
                         <span className="truncate">{apt.criticalAllergies.join(', ')}</span>
@@ -694,7 +764,14 @@ STATUS: OFFLINE AIR-GAPPED VERIFIED`;
                     <span className="text-xs font-bold uppercase bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-lg">
                       Active Examination
                     </span>
-                    <span className="font-mono text-xs text-slate-400">Token: {selectedAppointment.id}</span>
+                    <span className="font-mono text-xs text-slate-500">Token: <strong className="text-blue-700">{selectedAppointment.id}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => copyTokenToClipboard(selectedAppointment.id)}
+                      className="px-2 py-0.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 rounded text-[10px] font-mono border border-slate-200 transition cursor-pointer"
+                    >
+                      {copiedTokenId === selectedAppointment.id ? '✓ Copied' : '📋 Copy Token'}
+                    </button>
                   </div>
                   <h2 className="text-xl font-extrabold text-slate-900 mt-1">
                     {selectedAppointment.patientName} ({selectedAppointment.age} yrs, {selectedAppointment.gender})

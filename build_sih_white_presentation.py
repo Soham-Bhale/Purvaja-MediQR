@@ -466,7 +466,7 @@ def build_presentation(output_pptx_path="MediQR_Project_Presentation.pptx"):
          "✓ Roadside Emergency Terminal (/emergency).\n✓ Doctor Workstation with Biometrics (/doctor).\n*Milestone 2: Sub-2s offline triage verified.*"),
         
         ("Phase 3: Field Hardening & Kiosks (IN PROGRESS)",
-         "✓ Forensic Tamper Simulation Lab (/simulator).\n✓ ESP32 IoT Ambulance mini-terminal & ABHA connector.\n*Milestone 3: Ready for state emergency fleets.*")
+         "✓ Forensic Tamper Simulation Lab (/simulator).\n✓ Sovereign Air-Gapped Ambulance mini-terminal & ABHA connector.\n*Milestone 3: Ready for state emergency fleets.*")
     ]
     p_top = Inches(1.32)
     for p_title, p_desc in phases:

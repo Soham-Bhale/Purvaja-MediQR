@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   saveAppointment,
   getStoredAppointments,
@@ -9,9 +10,12 @@ import {
 } from '../../lib/appointments';
 import { mineNewBlock } from '../../lib/blockchain-blocks';
 import { sendAppointmentConfirmationEmail } from '../../lib/email-service';
+import { PatientUser, getCurrentPatientUser } from '../../lib/patient-auth';
 import EmailInboxModal from '../../components/EmailInboxModal';
 
 export default function AppointmentBookingPage() {
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<PatientUser | null>(null);
   const [bookingStep, setBookingStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Patient Registration Details
@@ -26,6 +30,19 @@ export default function AppointmentBookingPage() {
   const [emergencyContactName, setEmergencyContactName] = useState('Pooja Sharma (Spouse)');
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('+91-98765-43211');
   const [nationalId, setNationalId] = useState('IN-AADHAAR-9012-3482-1984');
+  const [copiedTokenText, setCopiedTokenText] = useState(false);
+
+  // Redirect to login if unauthenticated
+  useEffect(() => {
+    const user = getCurrentPatientUser();
+    if (!user) {
+      router.push('/login?redirect=/book');
+      return;
+    }
+    setCurrentUser(user);
+    if (user.displayName) setFullName(user.displayName);
+    if (user.email) setEmail(user.email);
+  }, [router]);
 
   // Appointment & Doctor Selection
   const [selectedHospital, setSelectedHospital] = useState<'apollo' | 'fortis'>('apollo');
@@ -101,6 +118,7 @@ export default function AppointmentBookingPage() {
         patientId,
         patientName: fullName,
         email,
+        userId: currentUser?.uid || 'USR-ANONYMOUS',
         phone,
         age: Number(age) || 30,
         gender,
@@ -116,7 +134,7 @@ export default function AppointmentBookingPage() {
         hospitalNodeUrl,
         doctorId: selectedDoctor,
         doctorName,
-        department: selectedHospital === 'apollo' ? 'Cardiology' : 'Trauma Care',
+        department: selectedHospital === 'apollo' ? 'Lead Emergency & Cardiology' : 'Trauma Care',
         appointmentDate,
         timeSlot,
         consultationReason,
@@ -125,6 +143,9 @@ export default function AppointmentBookingPage() {
         paymentMethod: paymentMethod === 'demo' ? '1-Click Instant Demo Pay' : paymentMethod.toUpperCase(),
         paymentTxRef: txRef,
         status: 'PENDING_EXAMINATION',
+        rescheduleCount: 0,
+        hasRescheduled: false,
+        applicationStage: 'ALL_SET',
         bookedAt: Date.now(),
       });
 
@@ -575,6 +596,21 @@ export default function AppointmentBookingPage() {
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   type="button"
+                  onClick={() => {
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(confirmedAppointment.id);
+                      setCopiedTokenText(true);
+                      setTimeout(() => setCopiedTokenText(false), 2500);
+                    }
+                  }}
+                  className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
+                >
+                  <span>{copiedTokenText ? '✓' : '📋'}</span>
+                  <span>{copiedTokenText ? 'Copied Token Number!' : 'Copy Token Number'}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setEmailModalOpen(true)}
                   className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
                 >
@@ -618,8 +654,24 @@ export default function AppointmentBookingPage() {
           </form>
 
           {lookupResult && (
-            <div className="p-4 rounded-xl bg-black/60 border border-emerald-500/40 text-left text-xs space-y-1 font-mono">
-              <div className="text-emerald-400 font-bold">✓ Token Active on Blockchain</div>
+            <div className="p-4 rounded-xl bg-black/60 border border-emerald-500/40 text-left text-xs space-y-2 font-mono">
+              <div className="flex items-center justify-between">
+                <div className="text-emerald-400 font-bold">✓ Token Active on Blockchain</div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(lookupResult.id);
+                      setCopiedTokenText(true);
+                      setTimeout(() => setCopiedTokenText(false), 2000);
+                    }
+                  }}
+                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-cyan-300 rounded text-[11px] font-bold border border-white/15 transition flex items-center gap-1 cursor-pointer"
+                >
+                  <span>{copiedTokenText ? '✓ Copied' : '📋 Copy Token Number'}</span>
+                </button>
+              </div>
+              <div>Token ID: <span className="text-cyan-400 font-bold">{lookupResult.id}</span></div>
               <div>Patient: <strong className="text-white">{lookupResult.patientName}</strong></div>
               <div>Doctor: {lookupResult.doctorName} ({lookupResult.hospitalName})</div>
               <div>Date: {lookupResult.appointmentDate} ({lookupResult.timeSlot})</div>

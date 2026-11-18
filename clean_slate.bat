@@ -1,2 +1,2 @@
 @echo off
-call "%~dp0\clean_the_slate.bat"
+call "%~dp0clean_the_slate.bat"

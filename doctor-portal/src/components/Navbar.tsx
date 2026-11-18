@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { VERIFIED_DOCTORS, ROOT_ADMIN_ADDRESS, getStoredDoctors } from '../lib/blockchain';
 import { hasActiveBiometricSession, createBiometricSession, clearBiometricSession } from '../lib/biometrics';
+import { PatientUser, getCurrentPatientUser } from '../lib/patient-auth';
 import EmailInboxModal from './EmailInboxModal';
+import PatientAccountModal from './PatientAccountModal';
 
 interface NavbarProps {
   activeDoctor: string;
@@ -46,6 +48,23 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   const [isBioUnlocked, setIsBioUnlocked] = useState<boolean>(false);
   const [doctorOptions, setDoctorOptions] = useState(INITIAL_DOCTOR_OPTIONS);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [patientUser, setPatientUser] = useState<PatientUser | null>(null);
+  const [patientModalOpen, setPatientModalOpen] = useState(false);
+
+  useEffect(() => {
+    function syncPatient() {
+      if (typeof window !== 'undefined') {
+        setPatientUser(getCurrentPatientUser());
+      }
+    }
+    syncPatient();
+    window.addEventListener('mediqr_patient_auth_change', syncPatient);
+    window.addEventListener('storage', syncPatient);
+    return () => {
+      window.removeEventListener('mediqr_patient_auth_change', syncPatient);
+      window.removeEventListener('storage', syncPatient);
+    };
+  }, []);
 
   useEffect(() => {
     function refreshDoctorOptions() {
@@ -172,12 +191,31 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                 <a href="/#the-crisis" className="hover:text-white transition">The Crisis</a>
                 <a href="/#the-breakthrough" className="hover:text-white transition">The Breakthrough</a>
                 <a href="/#hardware-showcase" className="hover:text-white transition">Hardware &amp; Card</a>
-                <Link href="/book" className="text-slate-200 hover:text-cyan-400 transition">Book Consultation</Link>
+                <Link
+                  href={patientUser ? '/book' : '/login?redirect=/book'}
+                  className="text-slate-200 hover:text-cyan-400 transition"
+                >
+                  Book Consultation
+                </Link>
                 <a href="/#faq" className="hover:text-white transition">FAQ</a>
               </nav>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3">
+                {/* Patient Hub Notification Button (Visible strictly when patient is logged in) */}
+                {patientUser && (
+                  <button
+                    type="button"
+                    onClick={() => setPatientModalOpen(true)}
+                    className="relative px-3 py-2 rounded-xl text-xs font-mono font-medium bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 hover:text-white border border-cyan-500/40 transition flex items-center gap-2 cursor-pointer shadow-sm"
+                    title="Patient Hub & Status (Click to view membership, stages, reschedule)"
+                  >
+                    <span className="text-sm">🔔</span>
+                    <span className="hidden sm:inline font-bold">{patientUser.displayName.split(' ')[0]}</span>
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setEmailModalOpen(true)}
@@ -189,7 +227,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                 </button>
 
                 <Link
-                  href="/book"
+                  href={patientUser ? '/book' : '/login?redirect=/book'}
                   className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow-md shadow-cyan-600/25 transition-all transform hover:-translate-y-0.5"
                 >
                   Book Care (₹500) →
@@ -200,6 +238,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
           </div>
         </header>
 
+        <PatientAccountModal isOpen={patientModalOpen} onClose={() => setPatientModalOpen(false)} />
         <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
       </>
     );
@@ -466,29 +505,58 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
   }
 
   // =========================================================================
-  // VIEW 6: ESP32 SETUP / GENERAL FALLBACK HEADER
+  // VIEW 7: CONSORTIUM GATEWAY / GENERAL FALLBACK HEADER
   // =========================================================================
   return (
-    <header className="bg-slate-950 border-b border-slate-800 text-white sticky top-0 z-40 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg">
-              📡
+    <>
+      <header className="bg-slate-950 border-b border-slate-800 text-white sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg">
+                📡
+              </div>
+              <div>
+                <span className="font-bold text-sm text-white">Consortium Gateway</span>
+                <p className="text-[11px] text-slate-400">MediQR Private Mesh &amp; Ledger</p>
+              </div>
+            </Link>
+
+            <div className="flex items-center gap-3">
+              {patientUser && (
+                <button
+                  type="button"
+                  onClick={() => setPatientModalOpen(true)}
+                  className="relative px-3 py-1.5 rounded-xl text-xs font-mono font-medium bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 hover:text-white border border-cyan-500/40 transition flex items-center gap-2 cursor-pointer shadow-sm"
+                  title="Patient Hub & Status (Click to view membership, stages, reschedule)"
+                >
+                  <span className="text-sm">🔔</span>
+                  <span className="hidden sm:inline font-bold">{patientUser.displayName.split(' ')[0]}</span>
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setEmailModalOpen(true)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-mono border border-slate-700 transition cursor-pointer"
+              >
+                ✉️ Emails
+              </button>
+
+              <Link
+                href="/doctor"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition"
+              >
+                Doctor Terminal →
+              </Link>
             </div>
-            <div>
-              <span className="font-bold text-sm text-white">ESP32 Hardware Gateway</span>
-              <p className="text-[11px] text-slate-400">MediQR Private Mesh Setup</p>
-            </div>
-          </Link>
-          <Link
-            href="/doctor"
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition"
-          >
-            Doctor Terminal →
-          </Link>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <PatientAccountModal isOpen={patientModalOpen} onClose={() => setPatientModalOpen(false)} />
+      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+    </>
   );
 }

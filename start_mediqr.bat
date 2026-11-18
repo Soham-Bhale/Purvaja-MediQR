@@ -48,7 +48,6 @@ echo.
 echo  Additional Diagnostic Terminals:
 echo  - Blockchain Consortium Explorer:   http://localhost:3000/blockchain
 echo  - Roadside Emergency Mobile Triage: http://localhost:3000/emergency
-echo  - ESP32 Mesh Network Gateway:       http://localhost:3000/esp32-setup
 echo  - Hospital Node A Storage API:      http://localhost:5001/health
 echo  - Hospital Node B Storage API:      http://localhost:5002/health
 echo =========================================================================
