@@ -440,8 +440,6 @@ export default function CarbotraceMediQRPage() {
   const [active, setActive] = useState(0);
 
   // Modals
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<'crisis' | 'solution' | 'card' | 'blockchain' | 'hero'>('card');
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [patientUser, setPatientUser] = useState<PatientUser | null>(null);
@@ -579,17 +577,6 @@ export default function CarbotraceMediQRPage() {
 
               {/* Utility Action Links */}
               <div className="flex items-center gap-2.5 shrink-0">
-                
-                {/* Watch Incident Videos Modal Button */}
-                <button
-                  type="button"
-                  onClick={() => setVideoModalOpen(true)}
-                  className="px-2.5 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/50 border border-rose-500/40 text-xs text-rose-300 font-mono flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <span>🎬</span>
-                  <span className="hidden sm:inline">Videos</span>
-                </button>
-
                 {/* Patient Hub Notification Button (Visible strictly when patient is logged in) */}
                 {patientUser && (
                   <button
@@ -602,22 +589,6 @@ export default function CarbotraceMediQRPage() {
                     <span className="hidden sm:inline font-bold">{patientUser.displayName.split(' ')[0]}</span>
                   </button>
                 )}
-
-                {/* Blockchain Explorer */}
-                <Link
-                  href="/blockchain"
-                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-xs text-amber-300 hover:text-amber-200 font-mono transition hidden lg:inline-block"
-                >
-                  Blockchain
-                </Link>
-
-                {/* Direct Patient Booking Link (Redirects to Login if unauthenticated) */}
-                <Link
-                  href={patientUser ? '/book' : '/login?redirect=/book'}
-                  className="px-3.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition shadow-sm"
-                >
-                  Book Care (₹500)
-                </Link>
 
                 {/* Restart Chapter Button */}
                 <button
@@ -1431,73 +1402,32 @@ export default function CarbotraceMediQRPage() {
 
           </div>
 
-          {/* THE EMBEDDED VIDEO SHOWING CARD */}
+          {/* THE EMBEDDED DUAL-SIDED HARDWARE VIDEO */}
           <div className="rounded-3xl bg-slate-950 border border-white/15 p-6 sm:p-10 shadow-2xl space-y-6">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">
-                  CINEMATIC PRODUCT RECONSTRUCTION
+                  CONTINUOUS LIFELINE · DUAL-SURFACE GUARDIAN
                 </span>
-                <h3 className="text-2xl font-bold text-white mt-1">
-                  Watch MediQR Hardware &amp; Consortium Protocol in Action
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+                  Your Partner in Every Critical Second
                 </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Aerospace titanium keycard and optical wristband engineered for zero-battery, zero-cloud emergency survival.
+                </p>
               </div>
 
-              {/* Video Selector Tabs */}
-              <div className="flex items-center gap-2 overflow-x-auto font-mono text-xs">
-                <button
-                  type="button"
-                  onClick={() => setSelectedVideo('card')}
-                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
-                    selectedVideo === 'card' ? 'bg-cyan-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                  }`}
-                >
-                  Dual-Sided Card
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedVideo('solution')}
-                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
-                    selectedVideo === 'solution' ? 'bg-emerald-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                  }`}
-                >
-                  0.018s Scan
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedVideo('crisis')}
-                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
-                    selectedVideo === 'crisis' ? 'bg-rose-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                  }`}
-                >
-                  The Crisis
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedVideo('blockchain')}
-                  className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap cursor-pointer ${
-                    selectedVideo === 'blockchain' ? 'bg-amber-600 text-white font-bold' : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                  }`}
-                >
-                  Blockchain Seal
-                </button>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-xs font-semibold self-start sm:self-auto">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span>Dual-Sided 3D Turntable</span>
               </div>
             </div>
 
-            {/* Embedded Active Video Player */}
+            {/* Embedded Active Video Player (Dual-Sided Card Only) */}
             <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl">
               <video
-                key={selectedVideo}
-                src={
-                  selectedVideo === 'card'
-                    ? '/videos/smart-card-mockup.mp4'
-                    : selectedVideo === 'solution'
-                    ? '/videos/the-solution.mp4'
-                    : selectedVideo === 'crisis'
-                    ? '/videos/the-crisis.mp4'
-                    : '/videos/blockchain-seal.mp4'
-                }
+                src="/videos/smart-card-mockup.mp4"
                 autoPlay
                 loop
                 muted
@@ -1509,18 +1439,15 @@ export default function CarbotraceMediQRPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs font-mono text-slate-400">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Format: 1080p 60fps Macro Render</span>
+                <span>Side A: 0.018s Roadside QR</span>
                 <span>•</span>
-                <span>Dual-Segment Visual Encoding</span>
+                <span>Side B: 32-Byte Physician Key</span>
+                <span>•</span>
+                <span>Zero Battery / Zero Cloud</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setVideoModalOpen(true)}
-                className="text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <span>Expand Full Video Showcase Modal</span>
-                <span>→</span>
-              </button>
+              <span className="text-cyan-400 font-semibold">
+                Continuous 360° Physical Protection
+              </span>
             </div>
 
           </div>
@@ -1530,151 +1457,111 @@ export default function CarbotraceMediQRPage() {
       </section>
 
       {/* =========================================================================
-          VIDEO SHOWCASE MODAL (INSPECT ALL 5 INCIDENT RECONSTRUCTION VIDEOS)
+          DEDICATED BOTTOM BLOCK: BOOK AN APPOINTMENT WITH A CONSORTIUM PHYSICIAN
       ========================================================================= */}
-      {videoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg">
-          <div className="relative w-full max-w-4xl bg-[#0a0d14] border border-white/20 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <section id="book-consultation" className="py-24 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-gradient-to-b from-slate-950 via-[#07090e] to-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.15),rgba(255,255,255,0))] pointer-events-none" />
+        
+        <div className="max-w-5xl mx-auto space-y-12 relative z-10">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-xs font-semibold uppercase tracking-wider">
+              <span>✦</span>
+              <span>Official Consortium Care Protocol</span>
+            </div>
             
-            <div className="flex items-center justify-between p-5 border-b border-white/10">
-              <div className="flex items-center gap-2 font-mono text-sm font-bold text-white">
-                <span className="text-rose-400">🎬</span>
-                <span>MediQR Incident Reconstructions &amp; Architecture Showcases</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Book an Appointment with a Certified Physician
+            </h2>
+            
+            <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
+              Schedule your clinical examination, secure your unique cryptographic MediQR physical health card, and anchor your vital medical records on the consortium ledger.
+            </p>
+          </div>
+
+          {/* 3 Value Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 shadow-xl backdrop-blur-sm">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg">
+                🏥
               </div>
-              <button
-                type="button"
-                onClick={() => setVideoModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-sm transition cursor-pointer"
-              >
-                ✕
-              </button>
+              <h3 className="font-bold text-base text-white">Consortium Vault Nodes</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Choose between Apollo Speciality Hospital (Node A :5001) or Fortis Healthcare (Node B :5002) for air-gapped clinical record sharding.
+              </p>
             </div>
 
-            <div className="flex overflow-x-auto p-3 gap-2 border-b border-white/10 bg-slate-950/60 font-mono text-xs">
-              <button
-                type="button"
-                onClick={() => setSelectedVideo('crisis')}
-                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
-                  selectedVideo === 'crisis' ? 'bg-rose-600 text-white font-bold' : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                1. The Crisis (Trauma Accident)
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedVideo('solution')}
-                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
-                  selectedVideo === 'solution' ? 'bg-emerald-600 text-white font-bold' : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                2. The Solution (Optical Triage)
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedVideo('card')}
-                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
-                  selectedVideo === 'card' ? 'bg-cyan-600 text-white font-bold' : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                3. Titanium Keycard &amp; Wristband
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedVideo('blockchain')}
-                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
-                  selectedVideo === 'blockchain' ? 'bg-amber-600 text-white font-bold' : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                4. Blockchain Consortium Seal
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedVideo('hero')}
-                className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
-                  selectedVideo === 'hero' ? 'bg-indigo-600 text-white font-bold' : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                5. Ambient Hospital Corridors
-              </button>
-            </div>
-
-            <div className="p-6 flex-1 overflow-y-auto space-y-4">
-              <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl">
-                <video
-                  key={selectedVideo}
-                  src={
-                    selectedVideo === 'crisis'
-                      ? '/videos/the-crisis.mp4'
-                      : selectedVideo === 'solution'
-                      ? '/videos/the-solution.mp4'
-                      : selectedVideo === 'card'
-                      ? '/videos/smart-card-mockup.mp4'
-                      : selectedVideo === 'blockchain'
-                      ? '/videos/blockchain-seal.mp4'
-                      : '/videos/hero.mp4'
-                  }
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover pointer-events-none"
-                />
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 shadow-xl backdrop-blur-sm">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-lg">
+                🛡️
               </div>
+              <h3 className="font-bold text-base text-white">AES-256-GCM Immutable Sealing</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Every consultation record is cryptographically signed, SHA-256 anchored to Ethereum blockchain, and dispatched with an offline-compatible MediQR.
+              </p>
+            </div>
 
-              <div className="p-4 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-slate-300 space-y-1 font-mono">
-                {selectedVideo === 'crisis' && (
-                  <>
-                    <div className="font-bold text-rose-400">SCENE: Roadside Collision Incident Reconstruction</div>
-                    <div>Demonstrates why unconscious patients with conflicting anaphylactic allergies suffer fatal ER delays when central cloud servers fail.</div>
-                  </>
-                )}
-                {selectedVideo === 'solution' && (
-                  <>
-                    <div className="font-bold text-emerald-400">SCENE: 0.018s Dual-Segment Optical Matrix Acquisition</div>
-                    <div>Shows emergency medical personnel pointing standard phone camera at MediQR glyph for instant roadside vitals decoding.</div>
-                  </>
-                )}
-                {selectedVideo === 'card' && (
-                  <>
-                    <div className="font-bold text-cyan-400">SCENE: Aerospace Titanium Keycard &amp; Passive Wristband</div>
-                    <div>Physical hardware prototype engineered to survive 850°C trauma without battery or cellular network connectivity.</div>
-                  </>
-                )}
-                {selectedVideo === 'blockchain' && (
-                  <>
-                    <div className="font-bold text-amber-400">SCENE: Solidity Smart Contract Hash Verification</div>
-                    <div>32-byte cryptographic SHA-256 seal guarantees 100% Zero-PII compliance and instantaneous bit-flip tamper rejection.</div>
-                  </>
-                )}
-                {selectedVideo === 'hero' && (
-                  <>
-                    <div className="font-bold text-indigo-400">SCENE: MediQR Healthcare Consortium Infrastructure</div>
-                    <div>Next-generation hospital data centers operating with air-gapped sovereign mesh routing.</div>
-                  </>
-                )}
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 shadow-xl backdrop-blur-sm">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg">
+                ⚡
               </div>
+              <h3 className="font-bold text-base text-white">Instant Token &amp; 1-Time Reschedule</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Receive an immediate official Token ID with 1-click clipboard copy, 3-stage live status tracking, and single-use self-service rescheduling.
+              </p>
+            </div>
+          </div>
+
+          {/* Booking Action Box */}
+          <div className="rounded-3xl bg-slate-900/90 border-2 border-cyan-500/40 p-8 sm:p-10 shadow-2xl backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-2 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 text-emerald-400 font-mono text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Consortium Clinical Shifts Live · Guaranteed Shift Slot</span>
+              </div>
+              <h3 className="text-2xl font-extrabold text-white">
+                Fixed Consortium Consultation Fee: ₹500.00
+              </h3>
+              <p className="text-xs text-slate-400 max-w-lg">
+                Includes clinical physician consultation, optical MediQR card encoding, biometric audit log, and Ethereum blockchain hash anchoring.
+              </p>
             </div>
 
-            <div className="p-4 border-t border-white/10 bg-slate-950 flex justify-between items-center text-xs font-mono">
-              <span className="text-slate-400">MediQR Video Telemetry Suite v2.6</span>
-              <button
-                type="button"
-                onClick={() => setVideoModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition cursor-pointer"
-              >
-                Close Showcase
-              </button>
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+              {patientUser ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setPatientModalOpen(true)}
+                    className="w-full sm:w-auto px-5 py-3.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-mono text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>🔔</span>
+                    <span>View My Status Hub</span>
+                  </button>
+                  <Link
+                    href="/book"
+                    className="w-full sm:w-auto px-7 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white font-sans text-xs font-extrabold rounded-xl shadow-xl shadow-cyan-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-center"
+                  >
+                    <span>Book Appointment Now →</span>
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/login?redirect=/book"
+                  className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-sans text-sm font-extrabold rounded-2xl shadow-xl shadow-cyan-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-center"
+                >
+                  <span>Book Care (₹500.00) →</span>
+                </Link>
+              )}
             </div>
-
           </div>
         </div>
-      )}
+      </section>
 
       {/* AI Prompts Modal */}
       <AssetPromptModal isOpen={promptModalOpen} onClose={() => setPromptModalOpen(false)} />
 
       {/* Outbound Email Modal */}
-      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} filterEmail={patientUser?.email} />
 
       {/* Patient Account & Notification Hub Modal */}
       <PatientAccountModal isOpen={patientModalOpen} onClose={() => setPatientModalOpen(false)} />

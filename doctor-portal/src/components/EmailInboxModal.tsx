@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getStoredEmails, SentEmail } from '../lib/email-service';
+import { getCurrentPatientUser, PatientUser } from '../lib/patient-auth';
 
 interface EmailInboxModalProps {
   isOpen: boolean;
@@ -12,31 +13,52 @@ interface EmailInboxModalProps {
 export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailInboxModalProps) {
   const [emails, setEmails] = useState<SentEmail[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<SentEmail | null>(null);
+  const [patientUser, setPatientUser] = useState<PatientUser | null>(null);
 
   useEffect(() => {
     function refresh() {
+      const user = getCurrentPatientUser();
+      setPatientUser(user);
       const all = getStoredEmails();
-      if (filterEmail) {
-        setEmails(all.filter((e) => e.to.toLowerCase() === filterEmail.toLowerCase()));
+      const targetEmail = (filterEmail || user?.email || '').toLowerCase().trim();
+
+      if (targetEmail) {
+        // Strictly filter to only emails addressed to this patient account (Zero cross-user leakage)
+        const userEmails = all.filter((e) => (e.to || '').toLowerCase().trim() === targetEmail);
+        setEmails(userEmails);
+        setSelectedEmail((prev) => {
+          if (prev && userEmails.some((e) => e.id === prev.id)) {
+            return prev;
+          }
+          return userEmails[0] || null;
+        });
       } else {
         setEmails(all);
+        setSelectedEmail((prev) => {
+          if (prev && all.some((e) => e.id === prev.id)) {
+            return prev;
+          }
+          return all[0] || null;
+        });
       }
     }
 
     if (isOpen) {
       refresh();
       window.addEventListener('mediqr_email_dispatched', refresh);
-      return () => window.removeEventListener('mediqr_email_dispatched', refresh);
+      window.addEventListener('mediqr_patient_auth_change', refresh);
+      window.addEventListener('storage', refresh);
+      return () => {
+        window.removeEventListener('mediqr_email_dispatched', refresh);
+        window.removeEventListener('mediqr_patient_auth_change', refresh);
+        window.removeEventListener('storage', refresh);
+      };
     }
   }, [isOpen, filterEmail]);
 
-  useEffect(() => {
-    if (emails.length > 0 && !selectedEmail) {
-      setSelectedEmail(emails[0]);
-    }
-  }, [emails, selectedEmail]);
-
   if (!isOpen) return null;
+
+  const targetEmail = (filterEmail || patientUser?.email || '').toLowerCase().trim();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
@@ -48,16 +70,20 @@ export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailI
               ✉️
             </div>
             <div>
-              <h2 className="font-bold text-base">Consortium Dispatch Mail Server</h2>
+              <h2 className="font-bold text-base">
+                {targetEmail ? `Patient Dispatch Inbox: ${patientUser?.displayName || targetEmail}` : 'Consortium Dispatch Mail Server'}
+              </h2>
               <p className="text-xs text-slate-400">
-                Live Outbound Dispatch Logs for Appointment Tokens &amp; Emergency MediQR Codes
+                {targetEmail
+                  ? `Live Dispatched Appointment Tokens & MediQR Records for ${targetEmail}`
+                  : 'Live Outbound Dispatch Logs for Appointment Tokens & Emergency MediQR Codes'}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition"
+            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold transition cursor-pointer"
           >
             ✕
           </button>
@@ -67,12 +93,23 @@ export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailI
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 overflow-hidden">
           {/* Left Email List */}
           <div className="md:col-span-5 border-r border-slate-200 overflow-y-auto p-3 space-y-2 bg-slate-50">
-            <div className="text-[11px] font-bold text-slate-500 uppercase px-2 py-1">
-              Outbound Queue ({emails.length})
+            <div className="text-[11px] font-bold text-slate-500 uppercase px-2 py-1 flex items-center justify-between">
+              <span>{targetEmail ? 'My Inbox' : 'Outbound Queue'} ({emails.length})</span>
+              {targetEmail && (
+                <span className="text-[10px] font-mono text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                  {patientUser?.displayName?.split(' ')[0] || 'Patient'}
+                </span>
+              )}
             </div>
             {emails.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400">
-                No outbound emails dispatched yet. Book an appointment to trigger delivery!
+              <div className="p-8 text-center text-xs text-slate-400 space-y-2">
+                <div className="text-2xl">📭</div>
+                <div className="font-semibold text-slate-700">No Emails Dispatched Yet</div>
+                <p className="text-[11px] text-slate-500">
+                  {targetEmail
+                    ? `No notification emails have been dispatched to ${targetEmail} yet. Book a doctor consultation on the portal to receive your token and MediQR records!`
+                    : 'No outbound emails dispatched yet. Book an appointment to trigger delivery!'}
+                </p>
               </div>
             ) : (
               emails.map((email) => {
@@ -128,7 +165,9 @@ export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailI
               </div>
             ) : (
               <div className="p-12 text-center text-slate-400 text-xs">
-                Select an email from the left to view the complete dispatched message.
+                {emails.length === 0
+                  ? 'Your personal inbox is clear. Book an appointment to trigger official confirmation emails.'
+                  : 'Select an email from the left to view the complete dispatched message.'}
               </div>
             )}
 
@@ -137,7 +176,7 @@ export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailI
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium text-xs transition"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium text-xs transition cursor-pointer"
               >
                 Close Preview
               </button>

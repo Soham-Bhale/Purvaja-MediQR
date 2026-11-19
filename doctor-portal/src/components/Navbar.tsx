@@ -191,12 +191,12 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                 <a href="/#the-crisis" className="hover:text-white transition">The Crisis</a>
                 <a href="/#the-breakthrough" className="hover:text-white transition">The Breakthrough</a>
                 <a href="/#hardware-showcase" className="hover:text-white transition">Hardware &amp; Card</a>
-                <Link
-                  href={patientUser ? '/book' : '/login?redirect=/book'}
+                <a
+                  href="/#book-consultation"
                   className="text-slate-200 hover:text-cyan-400 transition"
                 >
                   Book Consultation
-                </Link>
+                </a>
                 <a href="/#faq" className="hover:text-white transition">FAQ</a>
               </nav>
 
@@ -226,12 +226,12 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
                   <span className="hidden sm:inline">Emails</span>
                 </button>
 
-                <Link
-                  href={patientUser ? '/book' : '/login?redirect=/book'}
+                <a
+                  href="/#book-consultation"
                   className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow-md shadow-cyan-600/25 transition-all transform hover:-translate-y-0.5"
                 >
                   Book Care (₹500) →
-                </Link>
+                </a>
               </div>
 
             </div>
@@ -239,7 +239,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
         </header>
 
         <PatientAccountModal isOpen={patientModalOpen} onClose={() => setPatientModalOpen(false)} />
-        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} filterEmail={patientUser?.email} />
       </>
     );
   }
@@ -370,16 +370,10 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               </div>
 
               <div className="flex items-center gap-3">
-                <Link
-                  href="/doctor"
-                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 transition"
-                >
-                  🩺 Doctor Terminal →
-                </Link>
                 <button
                   type="button"
                   onClick={() => setEmailModalOpen(true)}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 transition"
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 transition cursor-pointer"
                 >
                   ✉️ Outbox
                 </button>
@@ -387,7 +381,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
             </div>
           </div>
         </header>
-        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} filterEmail={patientUser?.email} />
       </>
     );
   }
@@ -539,24 +533,17 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
               <button
                 type="button"
                 onClick={() => setEmailModalOpen(true)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-mono border border-slate-700 transition cursor-pointer"
+                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-mono border border-slate-700 transition cursor-pointer"
               >
                 ✉️ Emails
               </button>
-
-              <Link
-                href="/doctor"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition"
-              >
-                Doctor Terminal →
-              </Link>
             </div>
           </div>
         </div>
       </header>
 
       <PatientAccountModal isOpen={patientModalOpen} onClose={() => setPatientModalOpen(false)} />
-      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} filterEmail={patientUser?.email} />
     </>
   );
 }

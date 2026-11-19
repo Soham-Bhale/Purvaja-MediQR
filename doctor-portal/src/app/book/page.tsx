@@ -688,7 +688,7 @@ export default function AppointmentBookingPage() {
 
       </div>
 
-      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+      <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} filterEmail={currentUser?.email} />
     </div>
   );
 }
