@@ -340,7 +340,7 @@ export default function Navbar({ activeDoctor, onDoctorChange }: NavbarProps) {
           </div>
         </header>
 
-        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} />
+        <EmailInboxModal isOpen={emailModalOpen} onClose={() => setEmailModalOpen(false)} isConsortiumAdmin={true} />
       </>
     );
   }

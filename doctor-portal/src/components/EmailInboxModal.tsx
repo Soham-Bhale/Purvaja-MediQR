@@ -8,9 +8,15 @@ interface EmailInboxModalProps {
   isOpen: boolean;
   onClose: () => void;
   filterEmail?: string;
+  isConsortiumAdmin?: boolean;
 }
 
-export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailInboxModalProps) {
+export default function EmailInboxModal({
+  isOpen,
+  onClose,
+  filterEmail,
+  isConsortiumAdmin = false,
+}: EmailInboxModalProps) {
   const [emails, setEmails] = useState<SentEmail[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<SentEmail | null>(null);
   const [patientUser, setPatientUser] = useState<PatientUser | null>(null);
@@ -32,7 +38,8 @@ export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailI
           }
           return userEmails[0] || null;
         });
-      } else {
+      } else if (isConsortiumAdmin) {
+        // Only accredited consortium doctors or dispatch server monitors may view full outbound queue
         setEmails(all);
         setSelectedEmail((prev) => {
           if (prev && all.some((e) => e.id === prev.id)) {
@@ -40,6 +47,10 @@ export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailI
           }
           return all[0] || null;
         });
+      } else {
+        // Unauthenticated or patient without email: zero emails shown, zero leakage
+        setEmails([]);
+        setSelectedEmail(null);
       }
     }
 
@@ -54,7 +65,7 @@ export default function EmailInboxModal({ isOpen, onClose, filterEmail }: EmailI
         window.removeEventListener('storage', refresh);
       };
     }
-  }, [isOpen, filterEmail]);
+  }, [isOpen, filterEmail, isConsortiumAdmin]);
 
   if (!isOpen) return null;
 

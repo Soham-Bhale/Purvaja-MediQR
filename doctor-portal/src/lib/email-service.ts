@@ -18,34 +18,7 @@ export interface SentEmail {
 
 export const EMAILS_STORAGE_KEY = 'mediqr_consortium_sent_emails_v10';
 
-export const INITIAL_EMAILS: SentEmail[] = [
-  {
-    id: 'EML-2026-001',
-    to: 'jane.doe@healthmail.com',
-    recipientName: 'Jane Doe',
-    subject: 'Confirmed: Your MediQR Appointment Token at Apollo Speciality Hospital',
-    sentAt: Date.now() - 86400000,
-    type: 'APPOINTMENT_CONFIRMATION',
-    appointmentToken: 'APT-APO-2026-8812',
-    hospitalName: 'Apollo Speciality Hospital',
-    doctorName: 'Dr. Ramesh Gupta',
-    bodyPreview: 'Your appointment has been confirmed. Service fee ₹500 paid. Token ID: APT-APO-2026-8812.',
-    bodyHtml: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-        <h2 style="color: #1e3a8a;">MediQR Healthcare Consortium</h2>
-        <p>Dear <strong>Jane Doe</strong>,</p>
-        <p>Your paid healthcare appointment has been registered and anchored on the MediQR blockchain ledger.</p>
-        <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; margin: 15px 0;">
-          <p><strong>Appointment Token ID:</strong> <span style="font-family: monospace; color: #2563eb; font-size: 16px;">APT-APO-2026-8812</span></p>
-          <p><strong>Attending Physician:</strong> Dr. Ramesh Gupta (Apollo Speciality)</p>
-          <p><strong>Consultation Fee:</strong> ₹500.00 (PAID via UPI)</p>
-          <p><strong>Status:</strong> Ready for Doctor Consultation</p>
-        </div>
-        <p>Please present this Token ID upon arriving at the clinic or during telemedicine check-in.</p>
-      </div>
-    `,
-  },
-];
+export const INITIAL_EMAILS: SentEmail[] = [];
 
 let inMemoryEmails: SentEmail[] = [...INITIAL_EMAILS];
 

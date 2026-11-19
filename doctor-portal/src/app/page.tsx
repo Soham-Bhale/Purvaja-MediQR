@@ -2,10 +2,23 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import AssetPromptModal from '../components/AssetPromptModal';
 import EmailInboxModal from '../components/EmailInboxModal';
 import PatientAccountModal from '../components/PatientAccountModal';
 import { PatientUser, getCurrentPatientUser } from '../lib/patient-auth';
+
+const InteractiveSmartCard3D = dynamic(
+  () => import('../components/InteractiveSmartCard3D'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/15 bg-slate-950 flex items-center justify-center font-mono text-xs text-slate-400">
+        Loading 3D WebGL Canvas...
+      </div>
+    ),
+  }
+);
 
 /* ─────────────────────────────────────────────────────────────────────────────
    MEDIQR CARBOTRACE-GRADE SCROLLYTELLING ENGINE v2.6
@@ -439,11 +452,12 @@ export default function CarbotraceMediQRPage() {
 
   const [active, setActive] = useState(0);
 
-  // Modals
+  // Modals & Display
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [patientUser, setPatientUser] = useState<PatientUser | null>(null);
   const [patientModalOpen, setPatientModalOpen] = useState(false);
+  const [cardDisplayMode, setCardDisplayMode] = useState<'3D' | 'VIDEO'>('3D');
 
   // Sync patient auth state
   useEffect(() => {
@@ -1402,10 +1416,10 @@ export default function CarbotraceMediQRPage() {
 
           </div>
 
-          {/* THE EMBEDDED DUAL-SIDED HARDWARE VIDEO */}
+          {/* THE EMBEDDED 3D INTERACTIVE SMART CARD & SHOWCASE */}
           <div className="rounded-3xl bg-slate-950 border border-white/15 p-6 sm:p-10 shadow-2xl space-y-6">
             
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-6">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">
                   CONTINUOUS LIFELINE · DUAL-SURFACE GUARDIAN
@@ -1418,23 +1432,59 @@ export default function CarbotraceMediQRPage() {
                 </p>
               </div>
 
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-xs font-semibold self-start sm:self-auto">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span>Dual-Sided 3D Turntable</span>
+              {/* View Mode Toggle: Interactive 3D WebGL vs 360° Cinematic Video */}
+              <div className="flex flex-wrap items-center gap-2 self-start lg:self-auto font-mono text-xs">
+                <button
+                  type="button"
+                  onClick={() => setCardDisplayMode('3D')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                    cardDisplayMode === '3D'
+                      ? 'bg-cyan-600 text-white font-bold shadow-md shadow-cyan-600/30'
+                      : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/10'
+                  }`}
+                >
+                  <span>🎮</span>
+                  <span>Interactive 3D Card</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCardDisplayMode('VIDEO')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                    cardDisplayMode === 'VIDEO'
+                      ? 'bg-cyan-600 text-white font-bold shadow-md shadow-cyan-600/30'
+                      : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/10'
+                  }`}
+                >
+                  <span>🎬</span>
+                  <span>Cinematic Video</span>
+                </button>
+
+                <Link
+                  href="/card-3d"
+                  className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-cyan-300 text-xs font-mono transition flex items-center gap-1"
+                  title="Open Standalone 3D Card Fullscreen"
+                >
+                  <span>Standalone 3D ↗</span>
+                </Link>
               </div>
             </div>
 
-            {/* Embedded Active Video Player (Dual-Sided Card Only) */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl">
-              <video
-                src="/videos/smart-card-mockup.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover pointer-events-none"
-              />
-            </div>
+            {/* Display Area: Interactive 3D Canvas or Cinematic Video */}
+            {cardDisplayMode === '3D' ? (
+              <InteractiveSmartCard3D />
+            ) : (
+              <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl">
+                <video
+                  src="/videos/smart-card-mockup.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs font-mono text-slate-400">
               <div className="flex items-center gap-2">
@@ -1446,7 +1496,7 @@ export default function CarbotraceMediQRPage() {
                 <span>Zero Battery / Zero Cloud</span>
               </div>
               <span className="text-cyan-400 font-semibold">
-                Continuous 360° Physical Protection
+                {cardDisplayMode === '3D' ? 'Interactive 3D WebGL Orbit Active' : 'Continuous 360° Physical Protection'}
               </span>
             </div>
 
